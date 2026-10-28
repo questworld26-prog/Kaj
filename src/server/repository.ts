@@ -19,8 +19,13 @@ function generateId(prefix: "prj" | "tsk"): string {
   return `${prefix}_${Date.now().toString(36)}_${crypto.randomBytes(4).toString("hex")}`;
 }
 
-export function shiftDate(dateStr: string, rule: RepeatRule): string {
+export function shiftDate(
+  dateStr: string,
+  rule: RepeatRule,
+  targetDay?: number,
+): string {
   const [y, m, d] = dateStr.split("-").map(Number);
+  const preferredDay = targetDay ?? d;
   if (rule === "weekly") {
     const dt = new Date(Date.UTC(y, m - 1, d + 7));
     return dt.toISOString().slice(0, 10);
@@ -35,7 +40,7 @@ export function shiftDate(dateStr: string, rule: RepeatRule): string {
     const daysInNextMonth = new Date(
       Date.UTC(nextYear, nextMonth, 0),
     ).getUTCDate();
-    const clampedDay = Math.min(d, daysInNextMonth);
+    const clampedDay = Math.min(preferredDay, daysInNextMonth);
     const mm = String(nextMonth).padStart(2, "0");
     const dd = String(clampedDay).padStart(2, "0");
     return `${nextYear}-${mm}-${dd}`;
@@ -43,7 +48,7 @@ export function shiftDate(dateStr: string, rule: RepeatRule): string {
   if (rule === "yearly") {
     const nextYear = y + 1;
     const daysInMonth = new Date(Date.UTC(nextYear, m, 0)).getUTCDate();
-    const clampedDay = Math.min(d, daysInMonth);
+    const clampedDay = Math.min(preferredDay, daysInMonth);
     const mm = String(m).padStart(2, "0");
     const dd = String(clampedDay).padStart(2, "0");
     return `${nextYear}-${mm}-${dd}`;
@@ -132,6 +137,15 @@ export class ProjectRepository {
   }
 
   reorderProjects(projectIds: string[]): void {
+    if (projectIds.length === 0) return;
+    const placeholders = projectIds.map(() => "?").join(",");
+    const existingRows = this.db
+      .prepare(`SELECT id FROM projects WHERE id IN (${placeholders})`)
+      .all(...projectIds) as { id: string }[];
+    if (existingRows.length !== projectIds.length) {
+      throw new Error("One or more project IDs are invalid");
+    }
+
     const now = new Date().toISOString();
     this.db.exec("BEGIN TRANSACTION;");
     try {
@@ -246,12 +260,47 @@ export class TaskRepository {
         : existing.sort_order;
     const now = new Date().toISOString();
 
+    if (validated.status === "done" && existing.status !== "done") {
+      this.db
+        .prepare(
+          `UPDATE tasks
+           SET title = ?, details = ?, project_id = ?, priority = ?,
+               action_date = ?, due_date = ?, repeat_rule = ?, waiting_on = ?,
+               sort_order = ?, updated_at = ?
+           WHERE id = ?`,
+        )
+        .run(
+          title,
+          details,
+          projectId,
+          priority,
+          actionDate,
+          dueDate,
+          repeatRule,
+          waitingOn,
+          sortOrder,
+          now,
+          id,
+        );
+      this.completeTask(id);
+      return this.getTask(id);
+    }
+
+    let completedAt = existing.completed_at;
+    if (
+      validated.status !== undefined &&
+      validated.status !== "done" &&
+      existing.status === "done"
+    ) {
+      completedAt = null;
+    }
+
     this.db
       .prepare(
         `UPDATE tasks
          SET title = ?, status = ?, details = ?, project_id = ?, priority = ?,
              action_date = ?, due_date = ?, repeat_rule = ?, waiting_on = ?,
-             sort_order = ?, updated_at = ?
+             sort_order = ?, completed_at = ?, updated_at = ?
          WHERE id = ?`,
       )
       .run(
@@ -265,6 +314,7 @@ export class TaskRepository {
         repeatRule,
         waitingOn,
         sortOrder,
+        completedAt,
         now,
         id,
       );
@@ -279,6 +329,10 @@ export class TaskRepository {
     const task = this.getTask(id);
     if (!task) {
       throw new Error(`Task ${id} not found`);
+    }
+
+    if (task.status === "done") {
+      return { completed_task: task, spawned_task: null };
     }
 
     const now = new Date().toISOString();
@@ -297,11 +351,43 @@ export class TaskRepository {
 
     let spawnedTask: Task | null = null;
     if (task.repeat_rule !== "none") {
+      let anchorActionDay: number | undefined;
+      if (task.action_date) {
+        if (task.parent_recurring_id) {
+          const parent = this.db
+            .prepare("SELECT action_date FROM tasks WHERE id = ?")
+            .get(task.parent_recurring_id) as
+            { action_date: string | null } | undefined;
+          if (parent?.action_date) {
+            anchorActionDay = Number(parent.action_date.split("-")[2]);
+          }
+        }
+        if (!anchorActionDay) {
+          anchorActionDay = Number(task.action_date.split("-")[2]);
+        }
+      }
+
+      let anchorDueDay: number | undefined;
+      if (task.due_date) {
+        if (task.parent_recurring_id) {
+          const parent = this.db
+            .prepare("SELECT due_date FROM tasks WHERE id = ?")
+            .get(task.parent_recurring_id) as
+            { due_date: string | null } | undefined;
+          if (parent?.due_date) {
+            anchorDueDay = Number(parent.due_date.split("-")[2]);
+          }
+        }
+        if (!anchorDueDay) {
+          anchorDueDay = Number(task.due_date.split("-")[2]);
+        }
+      }
+
       const nextAction = task.action_date
-        ? shiftDate(task.action_date, task.repeat_rule)
+        ? shiftDate(task.action_date, task.repeat_rule, anchorActionDay)
         : null;
       const nextDue = task.due_date
-        ? shiftDate(task.due_date, task.repeat_rule)
+        ? shiftDate(task.due_date, task.repeat_rule, anchorDueDay)
         : null;
       const newId = generateId("tsk");
 
@@ -341,14 +427,18 @@ export class TaskRepository {
     return { completed_task: completedTask, spawned_task: spawnedTask };
   }
 
-  reopenTask(id: string): Task {
+  reopenTask(id: string): Task | null {
+    const existing = this.getTask(id);
+    if (!existing) {
+      return null;
+    }
     const now = new Date().toISOString();
     this.db
       .prepare(
         "UPDATE tasks SET status = ?, completed_at = NULL, updated_at = ? WHERE id = ?",
       )
       .run("todo", now, id);
-    return this.getTask(id)!;
+    return this.getTask(id);
   }
 
   deleteTask(id: string, soft = true): boolean {
@@ -453,7 +543,8 @@ export class TaskRepository {
 
         // Virtual recurrence projections for action date
         if (task.repeat_rule !== "none") {
-          let curr = shiftDate(task.action_date, task.repeat_rule);
+          const anchorDay = Number(task.action_date.split("-")[2]);
+          let curr = shiftDate(task.action_date, task.repeat_rule, anchorDay);
           while (curr <= endDate) {
             if (curr >= startDate) {
               events.push({
@@ -467,7 +558,7 @@ export class TaskRepository {
                 is_virtual: true,
               });
             }
-            curr = shiftDate(curr, task.repeat_rule);
+            curr = shiftDate(curr, task.repeat_rule, anchorDay);
           }
         }
       }
@@ -485,6 +576,27 @@ export class TaskRepository {
             date_type: "due",
             is_virtual: false,
           });
+        }
+
+        // Virtual recurrence projections for due date
+        if (task.repeat_rule !== "none") {
+          const anchorDay = Number(task.due_date.split("-")[2]);
+          let curr = shiftDate(task.due_date, task.repeat_rule, anchorDay);
+          while (curr <= endDate) {
+            if (curr >= startDate) {
+              events.push({
+                task_id: task.id,
+                title: task.title,
+                status: task.status,
+                project_id: task.project_id,
+                priority: task.priority,
+                date: curr,
+                date_type: "due",
+                is_virtual: true,
+              });
+            }
+            curr = shiftDate(curr, task.repeat_rule, anchorDay);
+          }
         }
       }
     }

@@ -367,4 +367,44 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
     const goodRes = await app.request(goodReq);
     expect(goodRes.status).toBe(200);
   });
+
+  // [verifies: MCP-002/AC-MCP-002.1]
+  it("handles multiple sequential and concurrent POST /mcp requests without transport collision", async () => {
+    const app = createApp({ db, eventBus });
+
+    const makeRequest = (id: number) =>
+      new Request("http://127.0.0.1:4820/mcp", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: "http://127.0.0.1:4820",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id,
+          method: "initialize",
+          params: {
+            protocolVersion: "2024-11-05",
+            capabilities: {},
+            clientInfo: { name: "agent", version: "1.0" },
+          },
+        }),
+      });
+
+    // Sequential calls (request 2, 3, 4, 5)
+    for (let i = 1; i <= 5; i++) {
+      const res = await app.request(makeRequest(i));
+      expect(res.status).toBe(200);
+    }
+
+    // Concurrent calls
+    const concurrentResponses = await Promise.all([
+      app.request(makeRequest(10)),
+      app.request(makeRequest(11)),
+      app.request(makeRequest(12)),
+    ]);
+    for (const res of concurrentResponses) {
+      expect(res.status).toBe(200);
+    }
+  });
 });

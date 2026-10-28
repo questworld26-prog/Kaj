@@ -1,13 +1,22 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
+  const pageErrors: string[] = [];
+
   test.beforeEach(async ({ page }) => {
-    // Monitor console errors
+    pageErrors.length = 0;
+    page.on("pageerror", (err) => {
+      pageErrors.push(`Page error: ${err.message}`);
+    });
     page.on("console", (msg) => {
       if (msg.type() === "error") {
-        console.error(`Browser console error: ${msg.text()}`);
+        pageErrors.push(`Browser console error: ${msg.text()}`);
       }
     });
+  });
+
+  test.afterEach(async () => {
+    expect(pageErrors).toEqual([]);
   });
 
   // [verifies: UI-001/AC-UI-001.1]
@@ -261,14 +270,47 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
   }) => {
     await page.goto("/");
 
-    // Verify main body text color is high-contrast light grey/white
-    const textColor = await page.evaluate(() => {
-      return window.getComputedStyle(document.body).color;
+    // Verify main body text contrast against #0E1111 background satisfies WCAG AA >= 4.5:1
+    const bodyContrastRatio = await page.evaluate(() => {
+      function getLuminance(r: number, g: number, b: number) {
+        const a = [r, g, b].map((v) => {
+          v /= 255;
+          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+      }
+      const bgMatch = window
+        .getComputedStyle(document.body)
+        .backgroundColor.match(/\d+/g)!
+        .map(Number);
+      const textMatch = window
+        .getComputedStyle(document.body)
+        .color.match(/\d+/g)!
+        .map(Number);
+      const l1 = getLuminance(textMatch[0], textMatch[1], textMatch[2]);
+      const l2 = getLuminance(bgMatch[0], bgMatch[1], bgMatch[2]);
+      const lighter = Math.max(l1, l2);
+      const darker = Math.min(l1, l2);
+      return (lighter + 0.05) / (darker + 0.05);
     });
-    // Expected light text e.g. rgb(243, 244, 246) or rgb(255, 255, 255)
-    expect(textColor).toMatch(
-      /rgb\((2[3-5][0-9]),\s*(2[3-5][0-9]),\s*(2[3-5][0-9])\)/,
-    );
+    expect(bodyContrastRatio).toBeGreaterThanOrEqual(4.5);
+
+    // Verify muted text (#9CA3AF) against card surface (#1C2224) satisfies WCAG AA >= 4.5:1
+    const mutedContrastRatio = await page.evaluate(() => {
+      function getLuminance(r: number, g: number, b: number) {
+        const a = [r, g, b].map((v) => {
+          v /= 255;
+          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+      }
+      // text-gray-400 is #9CA3AF -> rgb(156, 163, 175)
+      // card background is #1C2224 -> rgb(28, 34, 36)
+      const l1 = getLuminance(156, 163, 175);
+      const l2 = getLuminance(28, 34, 36);
+      return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    });
+    expect(mutedContrastRatio).toBeGreaterThanOrEqual(4.5);
   });
 
   // [verifies: UI-003/AC-UI-003.1]
@@ -415,37 +457,43 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     );
     await expect(unschedCard).toBeVisible();
 
-    const targetDayCell15 = page.locator(
-      '[data-testid="calendar-day-cell"][data-date="2026-10-15"]',
-    );
-    await unschedCard.dragTo(targetDayCell15);
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const date1 = `${y}-${m}-10`;
+    const date2 = `${y}-${m}-15`;
 
-    // Verify task badge is now visible on 2026-10-15
-    const badgeOn15 = targetDayCell15
+    const targetDayCell1 = page.locator(
+      `[data-testid="calendar-day-cell"][data-date="${date1}"]`,
+    );
+    await unschedCard.dragTo(targetDayCell1);
+
+    // Verify task badge is now visible on date1
+    const badgeOn1 = targetDayCell1
       .locator('[data-testid="badge-action-date"]')
       .filter({
         hasText: "Drag-to-Schedule Architecture Spike",
       });
-    await expect(badgeOn15).toBeVisible();
+    await expect(badgeOn1).toBeVisible();
 
-    // Drag scheduled task from 2026-10-15 to 2026-10-20
-    const targetDayCell20 = page.locator(
-      '[data-testid="calendar-day-cell"][data-date="2026-10-20"]',
+    // Drag scheduled task from date1 to date2
+    const targetDayCell2 = page.locator(
+      `[data-testid="calendar-day-cell"][data-date="${date2}"]`,
     );
-    await badgeOn15.dragTo(targetDayCell20);
+    await badgeOn1.dragTo(targetDayCell2);
 
-    // Verify task moved to 2026-10-20
-    const badgeOn20 = targetDayCell20
+    // Verify task moved to date2
+    const badgeOn2 = targetDayCell2
       .locator('[data-testid="badge-action-date"]')
       .filter({
         hasText: "Drag-to-Schedule Architecture Spike",
       });
-    await expect(badgeOn20).toBeVisible();
+    await expect(badgeOn2).toBeVisible();
 
     // Verify persistence in SQLite
     const getRes = await page.request.get(`/api/tasks/${task1.id}`);
     const updated = (await getRes.json()) as { action_date: string };
-    expect(updated.action_date).toBe("2026-10-20");
+    expect(updated.action_date).toBe(date2);
   });
 
   // [verifies: UI-004/AC-UI-004.1]

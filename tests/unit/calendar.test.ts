@@ -129,4 +129,28 @@ describe("Calendar Dual-Date Scheduling & Horizon Projections (TASK-005)", () =>
       .get() as { count: number };
     expect(currentCount.count).toBe(initialCount.count + 1);
   });
+
+  // [verifies: TASK-005/AC-TASK-005.4]
+  it("projects virtual recurrence instances for due_date anchors within calendar window", () => {
+    // Recurring monthly task anchored on due_date (e.g. rent / monthly bill)
+    const monthlyDueTask = taskRepo.createTask({
+      title: "Cloud Infrastructure Invoice",
+      repeat_rule: "monthly",
+      action_date: null,
+      due_date: "2026-10-31",
+      status: "todo",
+    });
+
+    // Query 3-month window: 2026-10-01 to 2026-12-31
+    const events = taskRepo.queryCalendarEvents("2026-10-01", "2026-12-31");
+    const dueEvents = events.filter(
+      (e) => e.task_id === monthlyDueTask.id && e.date_type === "due",
+    );
+
+    const dates = dueEvents.map((e) => e.date).sort();
+    expect(dates).toEqual(["2026-10-31", "2026-11-30", "2026-12-31"]);
+
+    const virtualEvents = dueEvents.filter((e) => e.is_virtual);
+    expect(virtualEvents.length).toBe(2);
+  });
 });

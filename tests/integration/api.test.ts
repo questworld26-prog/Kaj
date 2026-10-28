@@ -115,4 +115,57 @@ describe("Hono REST API & SSE Live Sync", () => {
     const doneList = (await doneRes.json()) as { id: string }[];
     expect(doneList.some((t) => t.id === task.id)).toBe(true);
   });
+
+  // [verifies: MCP-003/AC-MCP-003.4]
+  it("rejects cross-origin requests to /api from unauthorized web origins", async () => {
+    const evilRes = await app.request("/api/tasks", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: "http://malicious.evil.com",
+      },
+      body: JSON.stringify({ title: "CSRF Task" }),
+    });
+    expect(evilRes.status).toBe(403);
+  });
+
+  // [verifies: TASK-002/AC-TASK-002.1]
+  it("rejects mutating requests with body lacking application/json content-type", async () => {
+    const textRes = await app.request("/api/tasks", {
+      method: "POST",
+      headers: {
+        "content-type": "text/plain",
+      },
+      body: JSON.stringify({ title: "Plain Text Task" }),
+    });
+    expect(textRes.status).toBe(415);
+  });
+
+  // [verifies: TASK-001/AC-TASK-001.4]
+  it("returns 404 when reopening a non-existent task", async () => {
+    const res = await app.request("/api/tasks/tsk_missing/reopen", {
+      method: "POST",
+    });
+    expect(res.status).toBe(404);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBeDefined();
+  });
+
+  // [verifies: PROJ-001/AC-PROJ-001.4]
+  it("returns 400 when reordering with invalid or non-existent project IDs", async () => {
+    const res = await app.request("/api/projects/reorder", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ project_ids: ["prj_invalid_1", "prj_invalid_2"] }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  // [verifies: MCP-002/AC-MCP-002.1]
+  it("returns 404 JSON for unknown /api/* endpoints", async () => {
+    const res = await app.request("/api/unknown/subpath");
+    expect(res.status).toBe(404);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Endpoint not found");
+  });
 });

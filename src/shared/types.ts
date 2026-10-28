@@ -29,6 +29,15 @@ export type RepeatRule = (typeof REPEAT_RULES)[number];
 export const DateStringSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be in YYYY-MM-DD format")
+  .refine((val) => {
+    const [y, m, d] = val.split("-").map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    return (
+      dt.getUTCFullYear() === y &&
+      dt.getUTCMonth() === m - 1 &&
+      dt.getUTCDate() === d
+    );
+  }, "Invalid calendar date (e.g. leap year or non-existent day)")
   .nullable();
 
 export const CreateTaskInputSchema = z.object({

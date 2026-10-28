@@ -241,4 +241,74 @@ describe("Tasks Core Workflow & Attributes (TASK-001, TASK-002, TASK-003)", () =
     expect(updated?.priority).toBe("year");
     expect(updated?.status).toBe("in_progress_today");
   });
+
+  // [verifies: TASK-004/AC-TASK-004.1]
+  // [verifies: TASK-004/AC-TASK-004.5]
+  it("triggers recurrence rollover and sets completed_at when status is updated to done via updateTask", () => {
+    const recurring = taskRepo.createTask({
+      title: "Weekly Review Meeting",
+      status: "todo",
+      repeat_rule: "weekly",
+      action_date: "2026-10-28",
+      due_date: "2026-10-29",
+    });
+
+    const updated = taskRepo.updateTask(recurring.id, { status: "done" });
+    expect(updated?.status).toBe("done");
+    expect(updated?.completed_at).not.toBeNull();
+
+    // Verify next recurrence instance was spawned
+    const activeTasks = taskRepo.listUnscheduledTasks();
+    const board = taskRepo.getBoardSwimlanes(projectRepo);
+    const allActive = board.flatMap((l) => l.tasks);
+    const spawned = allActive.find(
+      (t) => t.parent_recurring_id === recurring.id,
+    );
+    expect(spawned).toBeDefined();
+    expect(spawned?.status).toBe("todo");
+    expect(spawned?.action_date).toBe("2026-11-04");
+    expect(spawned?.due_date).toBe("2026-11-05");
+  });
+
+  // [verifies: TASK-004/AC-TASK-004.1]
+  it("completeTask is idempotent and does not create duplicate rollover tasks when called repeatedly", () => {
+    const recurring = taskRepo.createTask({
+      title: "Monthly Invoicing",
+      status: "todo",
+      repeat_rule: "monthly",
+      action_date: "2026-10-28",
+    });
+
+    const firstComplete = taskRepo.completeTask(recurring.id);
+    expect(firstComplete.completed_task.status).toBe("done");
+    expect(firstComplete.spawned_task).not.toBeNull();
+
+    // Call completeTask second time on already done task
+    const secondComplete = taskRepo.completeTask(recurring.id);
+    expect(secondComplete.completed_task.status).toBe("done");
+    expect(secondComplete.spawned_task).toBeNull();
+
+    // Count tasks with parent_recurring_id === recurring.id
+    const rows = db
+      .prepare("SELECT * FROM tasks WHERE parent_recurring_id = ?")
+      .all(recurring.id) as unknown[];
+    expect(rows.length).toBe(1);
+  });
+
+  // [verifies: TASK-002/AC-TASK-002.4]
+  it("rejects impossible calendar dates such as Feb 31 or Nov 31", () => {
+    expect(() =>
+      taskRepo.createTask({
+        title: "Impossible Feb Date",
+        action_date: "2026-02-31",
+      }),
+    ).toThrow();
+
+    expect(() =>
+      taskRepo.createTask({
+        title: "Impossible Nov Date",
+        due_date: "2026-11-31",
+      }),
+    ).toThrow();
+  });
 });

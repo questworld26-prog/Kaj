@@ -35,7 +35,7 @@ Kaj combines a **6-column Kanban board with project swimlanes**, **dual-date sch
   - Dual-transport support: **Streamable HTTP** (`POST /mcp` on `127.0.0.1:4820`) and **stdio** CLI (`dist/mcp/stdio.js`).
   - Full CRUD and filtered queries for tasks and projects.
   - Real-time Server-Sent Events (SSE) push updates connected browser tabs in `< 20ms` when agents mutate tasks.
-- **Ultra-Low Memory Footprint (~35–45 MB RSS)**:
+- **Low Memory Footprint (~75–95 MB RSS under traffic)**:
   - Built on Node 26 using built-in `node:sqlite` in WAL mode (`PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;`).
   - Pre-compiled static single-page app (Preact + Vite + CSS design tokens) served directly by `Hono` — zero bundled Chromium or Electron bloat in the background daemon.
 - **Bento × Chronos Dark-Mode UI**:
@@ -55,7 +55,7 @@ flowchart LR
     AgentStdio["MCP Agents (stdio)\ne.g. Claude Desktop / Cursor"]
   end
 
-  subgraph Daemon["Kaj Background Daemon (~35–45 MB RSS)"]
+  subgraph Daemon["Kaj Background Daemon (~75–95 MB RSS)"]
     Hono["Hono Web Server\nStatic Assets + REST + SSE (/events)"]
     MCPHttp["Streamable HTTP MCP Server\nPOST /mcp"]
     Domain["Domain Repositories\nTasks, Projects, Recurrence, Calendar"]

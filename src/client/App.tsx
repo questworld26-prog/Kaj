@@ -35,6 +35,11 @@ export function App() {
   const [unscheduledTasks, setUnscheduledTasks] = useState<Task[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [memoryMb, setMemoryMb] = useState<number | undefined>(undefined);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [calendarRange, setCalendarRange] = useState<{
+    start: string;
+    end: string;
+  } | null>(null);
 
   // Modal / Drawer visibility
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -60,14 +65,21 @@ export function App() {
       setCompletedTasks(completed);
       setUnscheduledTasks(unscheduled);
 
-      // Load calendar events for current window (e.g. +/- 2 months)
-      const now = new Date();
-      const start = formatDateToYMD(
-        new Date(now.getFullYear(), now.getMonth() - 1, 1),
-      );
-      const end = formatDateToYMD(
-        new Date(now.getFullYear(), now.getMonth() + 2, 0),
-      );
+      // Load calendar events for current window
+      let start: string;
+      let end: string;
+      if (calendarRange) {
+        start = calendarRange.start;
+        end = calendarRange.end;
+      } else {
+        const now = new Date();
+        start = formatDateToYMD(
+          new Date(now.getFullYear(), now.getMonth() - 1, 1),
+        );
+        end = formatDateToYMD(
+          new Date(now.getFullYear(), now.getMonth() + 2, 0),
+        );
+      }
       const events = await api.getCalendar(start, end);
       setCalendarEvents(events);
 
@@ -77,7 +89,20 @@ export function App() {
     } catch (err) {
       console.error("Failed to load Kaj app state:", err);
     }
-  }, []);
+  }, [calendarRange]);
+
+  const handleCalendarRangeChange = useCallback(
+    async (start: string, end: string) => {
+      setCalendarRange({ start, end });
+      try {
+        const events = await api.getCalendar(start, end);
+        setCalendarEvents(events);
+      } catch (err) {
+        console.error("Failed to load calendar events for range:", err);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     loadData();
@@ -130,7 +155,7 @@ export function App() {
       setSelectedTask(null);
       await loadData();
     } catch (err) {
-      alert((err as Error).message);
+      setErrorMessage((err as Error).message);
     }
   };
 
@@ -141,7 +166,7 @@ export function App() {
       setSelectedTask(null);
       await loadData();
     } catch (err) {
-      alert((err as Error).message);
+      setErrorMessage((err as Error).message);
     }
   };
 
@@ -157,7 +182,7 @@ export function App() {
       }
       await loadData();
     } catch (err) {
-      alert((err as Error).message);
+      setErrorMessage((err as Error).message);
     }
   };
 
@@ -178,7 +203,7 @@ export function App() {
       }
       await loadData();
     } catch (err) {
-      alert((err as Error).message);
+      setErrorMessage((err as Error).message);
     }
   };
 
@@ -187,7 +212,7 @@ export function App() {
       await api.completeTask(taskId);
       await loadData();
     } catch (err) {
-      alert((err as Error).message);
+      setErrorMessage((err as Error).message);
     }
   };
 
@@ -196,7 +221,7 @@ export function App() {
       await api.reopenTask(taskId);
       await loadData();
     } catch (err) {
-      alert((err as Error).message);
+      setErrorMessage((err as Error).message);
     }
   };
 
@@ -213,7 +238,7 @@ export function App() {
       }
       await loadData();
     } catch (err) {
-      alert((err as Error).message);
+      setErrorMessage((err as Error).message);
     }
   };
 
@@ -222,7 +247,7 @@ export function App() {
       await api.reorderProjects(projectIds);
       await loadData();
     } catch (err) {
-      alert((err as Error).message);
+      setErrorMessage((err as Error).message);
     }
   };
 
@@ -231,7 +256,7 @@ export function App() {
       await api.createProject(name, color);
       await loadData();
     } catch (err) {
-      alert((err as Error).message);
+      setErrorMessage((err as Error).message);
     }
   };
 
@@ -265,6 +290,7 @@ export function App() {
             unscheduledTasks={unscheduledTasks}
             onSelectTask={handleSelectTask}
             onScheduleTask={handleScheduleTask}
+            onRangeChange={handleCalendarRangeChange}
           />
         )}
       </main>
@@ -299,6 +325,25 @@ export function App() {
         onReorder={handleReorderProjects}
         onCreateProject={handleCreateProject}
       />
+
+      {/* Non-blocking Accessible Error Notification Toast */}
+      {errorMessage && (
+        <div
+          data-testid="error-toast"
+          className="fixed bottom-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl bg-[#241315] border border-rose-700/80 text-rose-200 text-xs shadow-2xl backdrop-blur-md transition-all"
+        >
+          <span className="font-bold text-rose-400">Error:</span>
+          <span>{errorMessage}</span>
+          <button
+            type="button"
+            onClick={() => setErrorMessage(null)}
+            className="ml-2 text-rose-400 hover:text-white font-bold p-1 rounded hover:bg-rose-900/50"
+            aria-label="Dismiss error"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -21,6 +21,21 @@ export interface AppOptions {
   eventBus: EventBus;
 }
 
+function isLoopbackOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    const host = url.hostname;
+    return (
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "[::1]" ||
+      host.endsWith(".localhost")
+    );
+  } catch {
+    return false;
+  }
+}
+
 // [spec: MCP-002]
 // [spec: MCP-003]
 export function createApp(options: AppOptions): Hono {
@@ -30,15 +45,54 @@ export function createApp(options: AppOptions): Hono {
 
   const app = new Hono();
 
-  // Enable CORS
-  app.use("*", cors());
+  // Loopback Origin Guard (AC-MCP-003.4)
+  app.use("*", async (c, next) => {
+    const origin = c.req.header("origin");
+    if (origin && !isLoopbackOrigin(origin)) {
+      return c.text("Forbidden: Unauthorized cross-origin request", 403);
+    }
+    await next();
+  });
+
+  // Enable CORS strictly for loopback origins
+  app.use(
+    "*",
+    cors({
+      origin: (origin) => (origin && isLoopbackOrigin(origin) ? origin : null),
+      allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+      allowHeaders: ["Content-Type", "Authorization", "Accept"],
+    }),
+  );
+
+  // Content-Type Guard for mutating JSON requests with bodies
+  app.use("/api/*", async (c, next) => {
+    const method = c.req.method.toUpperCase();
+    if (["POST", "PATCH", "PUT"].includes(method)) {
+      const contentType = c.req.header("content-type") || "";
+      const contentLength = c.req.header("content-length");
+      const transferEncoding = c.req.header("transfer-encoding");
+      if (
+        (contentLength && contentLength !== "0") ||
+        transferEncoding ||
+        contentType
+      ) {
+        if (!contentType.toLowerCase().includes("application/json")) {
+          return c.json(
+            { error: "Unsupported Media Type: expected application/json" },
+            415,
+          );
+        }
+      }
+    }
+    await next();
+  });
 
   // Health check
   app.get("/api/health", (c) => {
     return c.json({
       status: "ok",
       service: "kaj",
-      version: "0.1.0",
+      version: "1.0.1",
       uptime: process.uptime(),
       memory_rss_mb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
       timestamp: new Date().toISOString(),
@@ -201,6 +255,9 @@ export function createApp(options: AppOptions): Hono {
     try {
       const id = c.req.param("id");
       const task = taskRepo.reopenTask(id);
+      if (!task) {
+        return c.json({ error: "Task not found" }, 404);
+      }
       eventBus.broadcast({ type: "task", action: "reopened", id, data: task });
       return c.json(task);
     } catch (err) {
@@ -302,26 +359,17 @@ export function createApp(options: AppOptions): Hono {
   });
 
   // MCP Streamable HTTP endpoint (POST, GET, DELETE /mcp)
-  const mcpServer = createMcpServer({ db, eventBus });
-
   app.all("/mcp", async (c) => {
     // DNS rebinding guard (AC-MCP-003.4)
     const origin = c.req.header("origin");
-    if (origin) {
-      const isLoopback =
-        origin.startsWith("http://127.0.0.1") ||
-        origin.startsWith("http://localhost") ||
-        origin.startsWith("https://127.0.0.1") ||
-        origin.startsWith("https://localhost");
-
-      if (!isLoopback) {
-        return c.text(
-          "Forbidden: Unauthorized cross-origin request to local MCP server",
-          403,
-        );
-      }
+    if (origin && !isLoopbackOrigin(origin)) {
+      return c.text(
+        "Forbidden: Unauthorized cross-origin request to local MCP server",
+        403,
+      );
     }
 
+    const mcpServer = createMcpServer({ db, eventBus });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined, // stateless HTTP per spec
     });
@@ -355,6 +403,9 @@ export function createApp(options: AppOptions): Hono {
     )._webStandardTransport.handleRequest(normalizedReq);
     return response;
   });
+
+  // Explicit 404 handler for unknown /api/* endpoints
+  app.all("/api/*", (c) => c.json({ error: "Endpoint not found" }, 404));
 
   // [spec: UI-001]
   // [spec: UI-002]

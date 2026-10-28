@@ -340,7 +340,7 @@ export function SwimlaneBoard({
 
                               {/* Quick Status Select */}
                               <div className="pt-2 border-t border-[#2A3235]/60 flex items-center justify-between">
-                                <label className="text-[10px] text-gray-500 font-medium">
+                                <label className="text-[10px] text-gray-400 font-medium">
                                   Move:
                                 </label>
                                 <select

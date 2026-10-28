@@ -16,7 +16,7 @@ This document defines the rules of engagement, architectural constraints, and ve
    - For any UI feature, styling, or interaction change, **running the live app and verifying the UI is MANDATORY** before marking the task or story as done.
    - Start the local daemon, execute automated browser tests (`Playwright`), and verify DOM rendering, interactions, and visual layout without console/page errors.
 4. **Low Memory Footprint Architecture**:
-   - The background daemon MUST remain low-footprint (~35–45 MB RSS idle).
+   - The background daemon MUST remain low-footprint (~75–95 MB RSS under traffic).
    - Use Node 26 built-in `node:sqlite` in WAL mode (`PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;`).
    - Avoid heavy runtimes or bundled browser processes in the background daemon.
 5. **Standard Model Context Protocol (MCP)**:

@@ -88,7 +88,7 @@ export function ProjectReorderModal({
         {/* Project List for Reordering */}
         <div className="py-4 space-y-2 max-h-[300px] overflow-y-auto">
           {projects.length === 0 ? (
-            <p className="text-xs text-gray-500 italic text-center py-4">
+            <p className="text-xs text-gray-400 italic text-center py-4">
               No custom projects created yet.
             </p>
           ) : (

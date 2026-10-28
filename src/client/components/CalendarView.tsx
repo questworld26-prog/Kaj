@@ -1,6 +1,6 @@
 // [spec: UI-003]
 import { h } from "preact";
-import { useState, useMemo } from "preact/hooks";
+import { useState, useMemo, useEffect } from "preact/hooks";
 import type { Task, CalendarEvent } from "../../shared/types.js";
 
 interface CalendarViewProps {
@@ -13,6 +13,7 @@ interface CalendarViewProps {
     dateStr: string,
     dateType?: "action" | "due",
   ) => void;
+  onRangeChange?: (start: string, end: string) => void;
 }
 
 type HorizonView = "month" | "week";
@@ -31,6 +32,7 @@ export function CalendarView({
   unscheduledTasks,
   onSelectTask,
   onScheduleTask,
+  onRangeChange,
 }: CalendarViewProps) {
   const [horizon, setHorizon] = useState<HorizonView>("month");
   const [filter, setFilter] = useState<FilterType>("all");
@@ -111,6 +113,19 @@ export function CalendarView({
 
     return map;
   }, [calendarEvents]);
+
+  // Dynamic range update when navigating
+  useEffect(() => {
+    if (!onRangeChange) return;
+    if (horizon === "month" && monthDays.length > 0) {
+      onRangeChange(
+        monthDays[0].dateStr,
+        monthDays[monthDays.length - 1].dateStr,
+      );
+    } else if (horizon === "week" && weekDays.length > 0) {
+      onRangeChange(weekDays[0].dateStr, weekDays[weekDays.length - 1].dateStr);
+    }
+  }, [horizon, currentDate, onRangeChange, monthDays, weekDays]);
 
   // Navigation handlers
   const handlePrev = () => {
@@ -606,7 +621,7 @@ export function CalendarView({
 
         <div className="flex-1 flex flex-col gap-2.5 overflow-y-auto max-h-[600px]">
           {unscheduledTasks.length === 0 ? (
-            <div className="text-center py-8 text-xs text-gray-500 italic">
+            <div className="text-center py-8 text-xs text-gray-400 italic">
               All active tasks are scheduled!
             </div>
           ) : (

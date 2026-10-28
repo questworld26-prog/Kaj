@@ -68,7 +68,7 @@ export function CompletedDrawer({
         {/* Task List */}
         <div className="flex-1 overflow-y-auto space-y-3 pr-1">
           {tasks.length === 0 ? (
-            <div className="text-center py-12 text-xs text-gray-500 italic">
+            <div className="text-center py-12 text-xs text-gray-400 italic">
               No completed tasks archived yet.
             </div>
           ) : (

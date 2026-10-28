@@ -11,6 +11,21 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v1.0.1`: Architectural Stability, Security & Recurrence Hardening
+
+- **Status**: 🚀 RELEASE CANDIDATE
+- **Focus**: Resolves multi-request transport reuse crash in MCP HTTP daemon, patches CORS/CSRF vulnerabilities, enforces idempotent task completion and recurrence rollover on PATCH/status transitions, eliminates date/monthly recurrence drift, adds dynamic calendar date fetching on horizon navigation, upgrades muted text contrast to WCAG AA >= 4.5:1, and replaces blocking modal dialogs with non-blocking error notifications.
+- **Deliverables**:
+  - [x] **C1 Fix**: Fresh `McpServer` instance per HTTP request on `POST /mcp` eliminating transport connection collisions.
+  - [x] **C2 Fix**: Strict loopback-only CORS and Origin validation across all `/api/*`, `/events`, and `/mcp` endpoints; Content-Type enforcement on mutating requests; explicit 404 for unknown API routes.
+  - [x] **H1 & H2 Fix**: Idempotent `completeTask` and automatic repeat rollover trigger when `status` transitions to `done` via `updateTask` (PATCH or MCP).
+  - [x] **H3 & H4 Fix**: Removal of unsupported `daily` option in `TaskModal` and strict calendar date validation in `DateStringSchema`.
+  - [x] **H5 Fix**: Dynamic range refetching in `CalendarView` across month and week navigations.
+  - [x] **H6 & H7 Fix**: Proper 404 return on missing task reopen/restore; project reorder ID validation; monthly recurrence anchor tracking preventing month-end date degradation.
+  - [x] **H8 Fix**: Calendar projection for recurring `due_date` instances alongside `action_date`.
+  - [x] **UI & Test Hardening**: Replaced raw `alert()` with non-blocking error toast; ensured all text tokens meet WCAG AA >= 4.5:1 contrast; made Playwright tests fail on console/page errors.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (57/57), 54 unit & integration tests + 12 Playwright E2E tests passing, clean working tree, version bumped to `1.0.1`.
+
 ### Release `v1.0.0`: Production Baseline Release
 
 - **Status**: ✅ RELEASED
