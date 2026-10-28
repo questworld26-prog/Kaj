@@ -1,5 +1,5 @@
 {
-  "last_audited_at": "2026-10-28T09:11:13.125573+00:00",
+  "last_audited_at": "2026-10-28T09:20:44.630110+00:00",
   "total_requirements": 14,
   "total_criteria": 57,
   "verified_criteria_count": 57,
@@ -27,9 +27,7 @@
         "AC-MCP-001.5",
         "AC-MCP-001.6"
       ],
-      "implementation_files": [
-        "src/mcp/server.ts"
-      ],
+      "implementation_files": ["src/mcp/server.ts"],
       "status": "VERIFIED"
     },
     {
@@ -38,16 +36,8 @@
       "spec_file": "specs/mcp.md",
       "sha256": "cd31d4711ed1eb93a35260bcbc2afcb40419be15c39f996b92c6194414d4a7d8",
       "verified_sha256": "cd31d4711ed1eb93a35260bcbc2afcb40419be15c39f996b92c6194414d4a7d8",
-      "acceptance_criteria": [
-        "AC-MCP-002.1",
-        "AC-MCP-002.2",
-        "AC-MCP-002.3"
-      ],
-      "verified_criteria": [
-        "AC-MCP-002.1",
-        "AC-MCP-002.2",
-        "AC-MCP-002.3"
-      ],
+      "acceptance_criteria": ["AC-MCP-002.1", "AC-MCP-002.2", "AC-MCP-002.3"],
+      "verified_criteria": ["AC-MCP-002.1", "AC-MCP-002.2", "AC-MCP-002.3"],
       "implementation_files": [
         "src/mcp/server.ts",
         "src/mcp/stdio.ts",
@@ -74,10 +64,7 @@
         "AC-MCP-003.3",
         "AC-MCP-003.4"
       ],
-      "implementation_files": [
-        "src/mcp/server.ts",
-        "src/server/app.ts"
-      ],
+      "implementation_files": ["src/mcp/server.ts", "src/server/app.ts"],
       "status": "VERIFIED"
     },
     {
@@ -98,9 +85,7 @@
         "AC-PROJ-001.3",
         "AC-PROJ-001.4"
       ],
-      "implementation_files": [
-        "src/server/repository.ts"
-      ],
+      "implementation_files": ["src/server/repository.ts"],
       "status": "VERIFIED"
     },
     {
@@ -114,14 +99,8 @@
         "AC-PROJ-002.2",
         "AC-PROJ-002.3"
       ],
-      "verified_criteria": [
-        "AC-PROJ-002.1",
-        "AC-PROJ-002.2",
-        "AC-PROJ-002.3"
-      ],
-      "implementation_files": [
-        "src/server/repository.ts"
-      ],
+      "verified_criteria": ["AC-PROJ-002.1", "AC-PROJ-002.2", "AC-PROJ-002.3"],
+      "implementation_files": ["src/server/repository.ts"],
       "status": "VERIFIED"
     },
     {
@@ -142,9 +121,7 @@
         "AC-TASK-001.3",
         "AC-TASK-001.4"
       ],
-      "implementation_files": [
-        "src/server/repository.ts"
-      ],
+      "implementation_files": ["src/server/repository.ts"],
       "status": "VERIFIED"
     },
     {
@@ -167,9 +144,7 @@
         "AC-TASK-002.4",
         "AC-TASK-002.5"
       ],
-      "implementation_files": [
-        "src/server/repository.ts"
-      ],
+      "implementation_files": ["src/server/repository.ts"],
       "status": "VERIFIED"
     },
     {
@@ -183,14 +158,8 @@
         "AC-TASK-003.2",
         "AC-TASK-003.3"
       ],
-      "verified_criteria": [
-        "AC-TASK-003.1",
-        "AC-TASK-003.2",
-        "AC-TASK-003.3"
-      ],
-      "implementation_files": [
-        "src/server/repository.ts"
-      ],
+      "verified_criteria": ["AC-TASK-003.1", "AC-TASK-003.2", "AC-TASK-003.3"],
+      "implementation_files": ["src/server/repository.ts"],
       "status": "VERIFIED"
     },
     {
@@ -213,9 +182,7 @@
         "AC-TASK-004.4",
         "AC-TASK-004.5"
       ],
-      "implementation_files": [
-        "src/server/repository.ts"
-      ],
+      "implementation_files": ["src/server/repository.ts"],
       "status": "VERIFIED"
     },
     {
@@ -236,9 +203,7 @@
         "AC-TASK-005.3",
         "AC-TASK-005.4"
       ],
-      "implementation_files": [
-        "src/server/repository.ts"
-      ],
+      "implementation_files": ["src/server/repository.ts"],
       "status": "VERIFIED"
     },
     {
@@ -276,16 +241,8 @@
       "spec_file": "specs/ui.md",
       "sha256": "ecea013727fd7e579f993e19b693410e6270831902f49f3753c7ee3b638798c0",
       "verified_sha256": "ecea013727fd7e579f993e19b693410e6270831902f49f3753c7ee3b638798c0",
-      "acceptance_criteria": [
-        "AC-UI-002.1",
-        "AC-UI-002.2",
-        "AC-UI-002.3"
-      ],
-      "verified_criteria": [
-        "AC-UI-002.1",
-        "AC-UI-002.2",
-        "AC-UI-002.3"
-      ],
+      "acceptance_criteria": ["AC-UI-002.1", "AC-UI-002.2", "AC-UI-002.3"],
+      "verified_criteria": ["AC-UI-002.1", "AC-UI-002.2", "AC-UI-002.3"],
       "implementation_files": [
         "src/client/App.tsx",
         "src/client/components/SwimlaneBoard.tsx",
@@ -326,16 +283,8 @@
       "spec_file": "specs/ui.md",
       "sha256": "384e18bb59b900826b3a4eaacab301b7a3b24676489a5d7a168dd0c603b1b9fd",
       "verified_sha256": "384e18bb59b900826b3a4eaacab301b7a3b24676489a5d7a168dd0c603b1b9fd",
-      "acceptance_criteria": [
-        "AC-UI-004.1",
-        "AC-UI-004.2",
-        "AC-UI-004.3"
-      ],
-      "verified_criteria": [
-        "AC-UI-004.1",
-        "AC-UI-004.2",
-        "AC-UI-004.3"
-      ],
+      "acceptance_criteria": ["AC-UI-004.1", "AC-UI-004.2", "AC-UI-004.3"],
+      "verified_criteria": ["AC-UI-004.1", "AC-UI-004.2", "AC-UI-004.3"],
       "implementation_files": [
         "src/client/App.tsx",
         "src/client/components/CompletedDrawer.tsx",

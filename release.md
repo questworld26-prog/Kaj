@@ -1,6 +1,7 @@
 # Release Plan & Version Roadmap: Kaj (কাজ)
 
 ## Release Strategy
+
 - **Versioning**: Semantic Versioning (`MAJOR.MINOR.PATCH`).
 - **Human-in-the-Loop Approval**: Always ask the user for explicit confirmation before releasing any MAJOR or MINOR versions.
 - **Spec-Driven Governance**: Every release candidate must pass strict Spec Guardian verification (0 untested criteria, 0 hash drift).
@@ -11,6 +12,7 @@
 ## Roadmap & Milestones (Latest at Top)
 
 ### Release `v1.0.0`: Production Baseline Release
+
 - **Status**: ✅ RELEASED
 - **Focus**: Complete full-width Bento × Chronos dark-mode task management system with Model Context Protocol (MCP) daemon, SQLite WAL engine, dual date scheduling, and interactive Calendar.
 - **Deliverables**:
