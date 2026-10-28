@@ -102,3 +102,4 @@ describe('Calendar Dual-Date Scheduling & Horizon Projections (TASK-005)', () =>
     expect(currentCount.count).toBe(initialCount.count + 1);
   });
 });
+

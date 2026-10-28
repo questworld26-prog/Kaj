@@ -63,3 +63,4 @@ export function initSchema(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_projects_sort_order ON projects(sort_order);
   `);
 }
+

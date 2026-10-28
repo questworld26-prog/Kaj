@@ -126,3 +126,4 @@ describe('Project Entity Management & Swimlane Ordering (PROJ-001, PROJ-002)', (
     expect(unassigned?.project_id).toBeNull();
   });
 });
+

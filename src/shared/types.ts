@@ -125,3 +125,4 @@ export interface CalendarEvent {
   date_type: 'action' | 'due';
   is_virtual?: boolean;
 }
+
