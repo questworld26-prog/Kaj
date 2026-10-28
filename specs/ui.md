@@ -37,6 +37,7 @@ Acceptance Criteria:
 - AC-UI-003.2: The Calendar filter toggle shall allow viewing Action Dates only, Due Dates only, or both concurrently.
 - AC-UI-003.3: The Unscheduled sidebar shall list active tasks lacking an action date, allowing scheduling onto a calendar date.
 - AC-UI-003.4: The Calendar view shall provide a toggle between Month view (multi-week month grid) and Week view (detailed 7-day grid), adapting layout and task density to the selected timeframe.
+- AC-UI-003.5: The Calendar view shall allow dragging scheduled tasks between calendar day cells to update their action date.
 
 ---
 

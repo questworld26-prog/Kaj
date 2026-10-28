@@ -1,8 +1,8 @@
 {
-  "last_audited_at": "2026-10-28T08:58:53.051791+00:00",
+  "last_audited_at": "2026-10-28T09:11:13.125573+00:00",
   "total_requirements": 14,
-  "total_criteria": 56,
-  "verified_criteria_count": 56,
+  "total_criteria": 57,
+  "verified_criteria_count": 57,
   "status": "PASS",
   "requirements": [
     {
@@ -298,19 +298,21 @@
       "requirement_id": "UI-003",
       "title": "Interactive Calendar with Dual-Date Badges and Scheduling Sidebar",
       "spec_file": "specs/ui.md",
-      "sha256": "fb1a6e50cb6545bad9374534629dac02c47c3b3c2bf0b97ba2aecf53e0e8e24b",
-      "verified_sha256": "fb1a6e50cb6545bad9374534629dac02c47c3b3c2bf0b97ba2aecf53e0e8e24b",
+      "sha256": "021d69ebb7516d7836043d303d0e624c6f6de7599abc50549fd678bd86b77294",
+      "verified_sha256": "021d69ebb7516d7836043d303d0e624c6f6de7599abc50549fd678bd86b77294",
       "acceptance_criteria": [
         "AC-UI-003.1",
         "AC-UI-003.2",
         "AC-UI-003.3",
-        "AC-UI-003.4"
+        "AC-UI-003.4",
+        "AC-UI-003.5"
       ],
       "verified_criteria": [
         "AC-UI-003.1",
         "AC-UI-003.2",
         "AC-UI-003.3",
-        "AC-UI-003.4"
+        "AC-UI-003.4",
+        "AC-UI-003.5"
       ],
       "implementation_files": [
         "src/client/App.tsx",

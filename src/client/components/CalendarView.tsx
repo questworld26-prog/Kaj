@@ -8,7 +8,7 @@ interface CalendarViewProps {
   calendarEvents: CalendarEvent[];
   unscheduledTasks: Task[];
   onSelectTask: (task: Task) => void;
-  onScheduleTask: (taskId: string, dateStr: string) => void;
+  onScheduleTask: (taskId: string, dateStr: string, dateType?: 'action' | 'due') => void;
 }
 
 type HorizonView = 'month' | 'week';
@@ -31,6 +31,7 @@ export function CalendarView({
   const [horizon, setHorizon] = useState<HorizonView>('month');
   const [filter, setFilter] = useState<FilterType>('all');
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [dragOverDate, setDragOverDate] = useState<string | null>(null);
 
   const todayStr = useMemo(() => {
     return formatDateToYMD(new Date());
@@ -267,15 +268,48 @@ export function CalendarView({
                 const showAction = filter === 'all' || filter === 'action';
                 const showDue = filter === 'all' || filter === 'due';
                 const isToday = day.dateStr === todayStr;
+                const isDragOver = dragOverDate === day.dateStr;
 
                 return (
                   <div
                     key={day.dateStr}
-                    className={`min-h-[90px] rounded-xl p-2 border flex flex-col transition-colors ${
-                      day.isCurrentMonth
+                    data-testid="calendar-day-cell"
+                    data-date={day.dateStr}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+                      if (dragOverDate !== day.dateStr) setDragOverDate(day.dateStr);
+                    }}
+                    onDragLeave={() => {
+                      if (dragOverDate === day.dateStr) setDragOverDate(null);
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setDragOverDate(null);
+                      const raw =
+                        e.dataTransfer?.getData('application/kaj-task') ||
+                        e.dataTransfer?.getData('text/plain');
+                      if (!raw) return;
+                      try {
+                        const data = JSON.parse(raw);
+                        if (data.taskId) {
+                          onScheduleTask(
+                            data.taskId,
+                            day.dateStr,
+                            data.type === 'due' ? 'due' : 'action'
+                          );
+                        }
+                      } catch (err) {
+                        console.error('Error handling calendar drop:', err);
+                      }
+                    }}
+                    className={`min-h-[90px] rounded-xl p-2 border flex flex-col transition-all ${
+                      isDragOver
+                        ? 'bg-emerald-500/20 ring-2 ring-emerald-400 border-emerald-400 shadow-lg'
+                        : day.isCurrentMonth
                         ? 'bg-[#1C2224]/50 border-[#2A3235]'
                         : 'bg-[#121718]/30 border-[#2A3235]/40 opacity-40'
-                    } ${isToday ? 'ring-2 ring-emerald-500/40' : ''}`}
+                    } ${isToday && !isDragOver ? 'ring-2 ring-emerald-500/40' : ''}`}
                   >
                     <div className="flex items-center justify-between text-[11px] font-semibold mb-1">
                       <span className={isToday ? 'text-emerald-400 font-bold' : 'text-gray-400'}>
@@ -290,12 +324,24 @@ export function CalendarView({
                           <div
                             key={`act-${ev.task_id}-${ev.date}`}
                             data-testid="badge-action-date"
+                            draggable={!ev.is_virtual}
+                            onDragStart={(e) => {
+                              e.stopPropagation();
+                              const payload = JSON.stringify({
+                                taskId: ev.task_id,
+                                type: 'action',
+                                fromDate: ev.date,
+                              });
+                              e.dataTransfer?.setData('application/kaj-task', payload);
+                              e.dataTransfer?.setData('text/plain', payload);
+                              if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                            }}
                             onClick={() => {
                               const t = tasks.find((x) => x.id === ev.task_id);
                               if (t) onSelectTask(t);
                             }}
-                            className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium truncate cursor-pointer bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 ${
-                              ev.is_virtual ? 'border-dashed' : ''
+                            className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium truncate cursor-grab active:cursor-grabbing bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 ${
+                              ev.is_virtual ? 'border-dashed opacity-80 cursor-pointer' : ''
                             }`}
                             title={`Action Date: ${ev.title}`}
                           >
@@ -310,12 +356,24 @@ export function CalendarView({
                           <div
                             key={`due-${ev.task_id}-${ev.date}`}
                             data-testid="badge-due-date"
+                            draggable={!ev.is_virtual}
+                            onDragStart={(e) => {
+                              e.stopPropagation();
+                              const payload = JSON.stringify({
+                                taskId: ev.task_id,
+                                type: 'due',
+                                fromDate: ev.date,
+                              });
+                              e.dataTransfer?.setData('application/kaj-task', payload);
+                              e.dataTransfer?.setData('text/plain', payload);
+                              if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                            }}
                             onClick={() => {
                               const t = tasks.find((x) => x.id === ev.task_id);
                               if (t) onSelectTask(t);
                             }}
-                            className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium truncate cursor-pointer bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20 ${
-                              ev.is_virtual ? 'border-dashed' : ''
+                            className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium truncate cursor-grab active:cursor-grabbing bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20 ${
+                              ev.is_virtual ? 'border-dashed opacity-80 cursor-pointer' : ''
                             }`}
                             title={`Due Date: ${ev.title}`}
                           >
@@ -337,14 +395,46 @@ export function CalendarView({
               const showAction = filter === 'all' || filter === 'action';
               const showDue = filter === 'all' || filter === 'due';
               const isToday = day.dateStr === todayStr;
+              const isDragOver = dragOverDate === day.dateStr;
 
               return (
                 <div
                   key={day.dateStr}
                   data-testid="week-day-column"
-                  className={`flex flex-col rounded-xl p-3 bg-[#1C2224]/60 border border-[#2A3235] min-h-[350px] ${
-                    isToday ? 'ring-2 ring-emerald-500/40' : ''
-                  }`}
+                  data-date={day.dateStr}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+                    if (dragOverDate !== day.dateStr) setDragOverDate(day.dateStr);
+                  }}
+                  onDragLeave={() => {
+                    if (dragOverDate === day.dateStr) setDragOverDate(null);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOverDate(null);
+                    const raw =
+                      e.dataTransfer?.getData('application/kaj-task') ||
+                      e.dataTransfer?.getData('text/plain');
+                    if (!raw) return;
+                    try {
+                      const data = JSON.parse(raw);
+                      if (data.taskId) {
+                        onScheduleTask(
+                          data.taskId,
+                          day.dateStr,
+                          data.type === 'due' ? 'due' : 'action'
+                        );
+                      }
+                    } catch (err) {
+                      console.error('Error handling week drop:', err);
+                    }
+                  }}
+                  className={`flex flex-col rounded-xl p-3 border min-h-[350px] transition-all ${
+                    isDragOver
+                      ? 'bg-emerald-500/20 ring-2 ring-emerald-400 border-emerald-400 shadow-lg'
+                      : 'bg-[#1C2224]/60 border-[#2A3235]'
+                  } ${isToday && !isDragOver ? 'ring-2 ring-emerald-500/40' : ''}`}
                 >
                   <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#2A3235]">
                     <span className="text-xs font-bold text-gray-300">{day.dayName}</span>
@@ -364,12 +454,24 @@ export function CalendarView({
                         <div
                           key={`act-w-${ev.task_id}-${ev.date}`}
                           data-testid="badge-action-date"
+                          draggable={!ev.is_virtual}
+                          onDragStart={(e) => {
+                            e.stopPropagation();
+                            const payload = JSON.stringify({
+                              taskId: ev.task_id,
+                              type: 'action',
+                              fromDate: ev.date,
+                            });
+                            e.dataTransfer?.setData('application/kaj-task', payload);
+                            e.dataTransfer?.setData('text/plain', payload);
+                            if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                          }}
                           onClick={() => {
                             const t = tasks.find((x) => x.id === ev.task_id);
                             if (t) onSelectTask(t);
                           }}
-                          className={`flex items-start gap-1.5 p-2 rounded-lg text-xs font-medium cursor-pointer bg-emerald-500/10 text-emerald-200 border border-emerald-500/30 hover:bg-emerald-500/20 ${
-                            ev.is_virtual ? 'border-dashed' : ''
+                          className={`flex items-start gap-1.5 p-2 rounded-lg text-xs font-medium cursor-grab active:cursor-grabbing bg-emerald-500/10 text-emerald-200 border border-emerald-500/30 hover:bg-emerald-500/20 ${
+                            ev.is_virtual ? 'border-dashed opacity-80 cursor-pointer' : ''
                           }`}
                         >
                           <span className="text-emerald-400 font-bold">▶</span>
@@ -383,12 +485,24 @@ export function CalendarView({
                         <div
                           key={`due-w-${ev.task_id}-${ev.date}`}
                           data-testid="badge-due-date"
+                          draggable={!ev.is_virtual}
+                          onDragStart={(e) => {
+                            e.stopPropagation();
+                            const payload = JSON.stringify({
+                              taskId: ev.task_id,
+                              type: 'due',
+                              fromDate: ev.date,
+                            });
+                            e.dataTransfer?.setData('application/kaj-task', payload);
+                            e.dataTransfer?.setData('text/plain', payload);
+                            if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                          }}
                           onClick={() => {
                             const t = tasks.find((x) => x.id === ev.task_id);
                             if (t) onSelectTask(t);
                           }}
-                          className={`flex items-start gap-1.5 p-2 rounded-lg text-xs font-medium cursor-pointer bg-rose-500/10 text-rose-200 border border-rose-500/30 hover:bg-rose-500/20 ${
-                            ev.is_virtual ? 'border-dashed' : ''
+                          className={`flex items-start gap-1.5 p-2 rounded-lg text-xs font-medium cursor-grab active:cursor-grabbing bg-rose-500/10 text-rose-200 border border-rose-500/30 hover:bg-rose-500/20 ${
+                            ev.is_virtual ? 'border-dashed opacity-80 cursor-pointer' : ''
                           }`}
                         >
                           <span className="text-rose-400 font-bold">⚑</span>
@@ -429,7 +543,17 @@ export function CalendarView({
               <div
                 key={t.id}
                 data-task-id={t.id}
-                className="rounded-xl p-3 bg-[#1C2224] border border-[#2A3235] hover:border-gray-500 transition-colors flex flex-col gap-2"
+                draggable={true}
+                onDragStart={(e) => {
+                  const payload = JSON.stringify({
+                    taskId: t.id,
+                    type: 'action',
+                  });
+                  e.dataTransfer?.setData('application/kaj-task', payload);
+                  e.dataTransfer?.setData('text/plain', payload);
+                  if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                }}
+                className="rounded-xl p-3 bg-[#1C2224] border border-[#2A3235] hover:border-gray-500 transition-colors flex flex-col gap-2 cursor-grab active:cursor-grabbing"
               >
                 <div className="flex items-start justify-between gap-1">
                   <span className="text-xs font-semibold text-gray-200 leading-snug">

@@ -105,3 +105,4 @@ export function subscribeToLiveEvents(onMutation: () => void): () => void {
     es.close();
   };
 }
+

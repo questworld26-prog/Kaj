@@ -129,6 +129,15 @@ test.describe('Kaj (কাজ) Bento × Chronos UI Verification', () => {
     const getRes = await page.request.get(`/api/tasks/${task.id}`);
     const updated = (await getRes.json()) as { status: string };
     expect(updated.status).toBe('in_progress_today');
+
+    // Drag-and-drop across columns (from in_progress_today to tracking)
+    const targetTrackingCol = page.locator('[data-testid="swimlane-pod-unassigned"] [data-col="tracking"]');
+    await taskCard.dragTo(targetTrackingCol);
+
+    await expect(page.locator(`[data-col="tracking"] [data-task-id="${task.id}"]`)).toBeVisible();
+    const getRes2 = await page.request.get(`/api/tasks/${task.id}`);
+    const updated2 = (await getRes2.json()) as { status: string };
+    expect(updated2.status).toBe('tracking');
   });
 
   // [verifies: UI-001/AC-UI-001.5]
@@ -303,6 +312,57 @@ test.describe('Kaj (কাজ) Bento × Chronos UI Verification', () => {
     await weekViewBtn.click();
     await expect(page.locator('[data-testid="calendar-week-grid"]')).toBeVisible();
     await expect(page.locator('[data-testid="week-day-column"]')).toHaveCount(7);
+  });
+
+  // [verifies: UI-003/AC-UI-003.3]
+  // [verifies: UI-003/AC-UI-003.5]
+  test('allows dragging unscheduled tasks and scheduled tasks across calendar days', async ({ page }) => {
+    await page.goto('/');
+
+    // Create an unscheduled task
+    const res1 = await page.request.post('/api/tasks', {
+      data: {
+        title: 'Drag-to-Schedule Architecture Spike',
+        status: 'todo',
+        priority: 'week',
+      },
+    });
+    const task1 = (await res1.json()) as { id: string };
+
+    await page.reload();
+
+    // Switch to Calendar view
+    await page.locator('[data-testid="nav-calendar-btn"]').click();
+    const calendarRoot = page.locator('[data-testid="calendar-view"]');
+    await expect(calendarRoot).toBeVisible();
+
+    // Drag unscheduled task to a specific day cell in Month view
+    const unschedCard = page.locator(`[data-testid="unscheduled-sidebar"] [data-task-id="${task1.id}"]`);
+    await expect(unschedCard).toBeVisible();
+
+    const targetDayCell15 = page.locator('[data-testid="calendar-day-cell"][data-date="2026-10-15"]');
+    await unschedCard.dragTo(targetDayCell15);
+
+    // Verify task badge is now visible on 2026-10-15
+    const badgeOn15 = targetDayCell15.locator('[data-testid="badge-action-date"]').filter({
+      hasText: 'Drag-to-Schedule Architecture Spike',
+    });
+    await expect(badgeOn15).toBeVisible();
+
+    // Drag scheduled task from 2026-10-15 to 2026-10-20
+    const targetDayCell20 = page.locator('[data-testid="calendar-day-cell"][data-date="2026-10-20"]');
+    await badgeOn15.dragTo(targetDayCell20);
+
+    // Verify task moved to 2026-10-20
+    const badgeOn20 = targetDayCell20.locator('[data-testid="badge-action-date"]').filter({
+      hasText: 'Drag-to-Schedule Architecture Spike',
+    });
+    await expect(badgeOn20).toBeVisible();
+
+    // Verify persistence in SQLite
+    const getRes = await page.request.get(`/api/tasks/${task1.id}`);
+    const updated = (await getRes.json()) as { action_date: string };
+    expect(updated.action_date).toBe('2026-10-20');
   });
 
   // [verifies: UI-004/AC-UI-004.1]

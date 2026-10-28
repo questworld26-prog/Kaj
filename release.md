@@ -29,10 +29,10 @@
     - [x] **MCP-003**: Safety annotations (`readOnlyHint`, `destructiveHint`), soft-delete protection (`deleted_at`), and DNS rebinding origin guard.
     - [x] REST API and Server-Sent Events (`/events`) live sync hub.
   - [x] Phase 4: Bento × Chronos Dark-Mode UI with Live Playwright Verification:
-    - [x] **UI-001**: Bento full-width 6-column Kanban board, rounded swimlane pods, dashed tracking cards, and swimlane reordering.
+    - [x] **UI-001**: Bento full-width 6-column Kanban board, rounded swimlane pods, dashed tracking cards, swimlane reordering, and HTML5 drag-and-drop between columns.
     - [x] **UI-002**: Chronos dark-mode design system (`#0E1111`, `#121718`, `#1C2224`, `#10B981`, `#EAB308`), accessible contrast.
-    - [x] **UI-003**: Interactive Calendar view with Month and Week grids, Action (`▶`) and Due (`⚑`) badges, filter toggles, and Unscheduled sidebar.
+    - [x] **UI-003**: Interactive Calendar view with Month and Week grids, Action (`▶`) and Due (`⚑`) badges, filter toggles, Unscheduled sidebar, and drag-and-drop scheduling across calendar days.
     - [x] **UI-004**: Native `<dialog closedby="any">` task editor modal with light-dismiss, and Completed Archive slide-over drawer with 1-click restore.
-    - [x] Live UI automated browser verification gate (Playwright Chromium, 11/11 tests passing).
+    - [x] Live UI automated browser verification gate (Playwright Chromium, 12/12 tests passing).
   - [ ] Phase 5: macOS `launchd` Background Service Configuration & End-to-End Packaging.
-- **Exit Criteria**: 100% active criteria verified in Spec Guardian (56/56), 44 unit & integration tests + 11 live UI Playwright tests passing, clean working tree.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (57/57), 44 unit & integration tests + 12 live UI Playwright tests passing, clean working tree.

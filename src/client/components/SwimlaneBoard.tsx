@@ -8,6 +8,7 @@ interface SwimlaneBoardProps {
   swimlanes: SwimlaneGroup[];
   onSelectTask: (task: Task) => void;
   onUpdateTaskStatus: (taskId: string, newStatus: TaskStatus) => void;
+  onMoveTask?: (taskId: string, newStatus: TaskStatus, newProjectId: string | null) => void;
   onCompleteTask: (taskId: string) => void;
   onReorderProject?: (projectId: string, direction: 'up' | 'down') => void;
 }
@@ -33,9 +34,11 @@ export function SwimlaneBoard({
   swimlanes,
   onSelectTask,
   onUpdateTaskStatus,
+  onMoveTask,
   onCompleteTask,
 }: SwimlaneBoardProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [dragOverKey, setDragOverKey] = useState<string | null>(null);
 
   const toggleCollapse = (id: string) => {
     setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -127,12 +130,48 @@ export function SwimlaneBoard({
                 >
                   {COLUMNS.map((col) => {
                     const colTasks = lane.tasks.filter((t) => t.status === col.key);
+                    const cellKey = `${podId}-${col.key}`;
+                    const isDragOver = dragOverKey === cellKey;
 
                     return (
                       <div
                         key={col.key}
                         data-col={col.key}
-                        className="flex flex-col space-y-2.5 rounded-xl p-2 bg-[#121718]/40 border border-[#2A3235]/40 min-h-[110px]"
+                        data-swimlane={podId}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+                          if (dragOverKey !== cellKey) setDragOverKey(cellKey);
+                        }}
+                        onDragLeave={() => {
+                          if (dragOverKey === cellKey) setDragOverKey(null);
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setDragOverKey(null);
+                          const raw =
+                            e.dataTransfer?.getData('application/kaj-task') ||
+                            e.dataTransfer?.getData('text/plain');
+                          if (!raw) return;
+                          try {
+                            const data = JSON.parse(raw);
+                            if (data.taskId) {
+                              const targetProjectId = lane.project?.id || null;
+                              if (onMoveTask) {
+                                onMoveTask(data.taskId, col.key, targetProjectId);
+                              } else {
+                                onUpdateTaskStatus(data.taskId, col.key);
+                              }
+                            }
+                          } catch (err) {
+                            console.error('Error handling drop on board:', err);
+                          }
+                        }}
+                        className={`flex flex-col space-y-2.5 rounded-xl p-2 min-h-[110px] transition-all ${
+                          isDragOver
+                            ? 'bg-emerald-500/10 ring-2 ring-emerald-500/50 border border-emerald-500/40 shadow-inner'
+                            : 'bg-[#121718]/40 border border-[#2A3235]/40'
+                        }`}
                       >
                         {colTasks.map((task) => {
                           const isTracking = task.status === 'tracking';
@@ -143,7 +182,20 @@ export function SwimlaneBoard({
                               key={task.id}
                               data-testid="task-card"
                               data-task-id={task.id}
-                              className={`group relative rounded-xl p-3 bg-[#1C2224] transition-all hover:border-gray-500 hover:shadow-md cursor-pointer ${
+                              draggable={true}
+                              onDragStart={(e) => {
+                                const payload = JSON.stringify({
+                                  taskId: task.id,
+                                  sourceStatus: task.status,
+                                  sourceProjectId: task.project_id,
+                                });
+                                e.dataTransfer?.setData('application/kaj-task', payload);
+                                e.dataTransfer?.setData('text/plain', payload);
+                                if (e.dataTransfer) {
+                                  e.dataTransfer.effectAllowed = 'move';
+                                }
+                              }}
+                              className={`group relative rounded-xl p-3 bg-[#1C2224] transition-all hover:border-gray-500 hover:shadow-md cursor-grab active:cursor-grabbing ${
                                 isTracking
                                   ? 'border-2 border-dashed border-amber-500/60 shadow-amber-950/20'
                                   : 'border border-[#2A3235]'
@@ -258,3 +310,4 @@ export function SwimlaneBoard({
     </div>
   );
 }
+

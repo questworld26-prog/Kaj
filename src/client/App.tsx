@@ -147,6 +147,24 @@ export function App() {
     }
   };
 
+  const handleMoveTask = async (
+    taskId: string,
+    newStatus: TaskStatus,
+    newProjectId: string | null = null
+  ) => {
+    try {
+      const updateData: Partial<Task> = { status: newStatus, project_id: newProjectId };
+      if (newStatus === 'done') {
+        await api.completeTask(taskId);
+      } else {
+        await api.updateTask(taskId, updateData);
+      }
+      await loadData();
+    } catch (err) {
+      alert((err as Error).message);
+    }
+  };
+
   const handleCompleteTask = async (taskId: string) => {
     try {
       await api.completeTask(taskId);
@@ -165,9 +183,17 @@ export function App() {
     }
   };
 
-  const handleScheduleTask = async (taskId: string, dateStr: string) => {
+  const handleScheduleTask = async (
+    taskId: string,
+    dateStr: string,
+    dateType: 'action' | 'due' = 'action'
+  ) => {
     try {
-      await api.updateTask(taskId, { action_date: dateStr });
+      if (dateType === 'due') {
+        await api.updateTask(taskId, { due_date: dateStr });
+      } else {
+        await api.updateTask(taskId, { action_date: dateStr });
+      }
       await loadData();
     } catch (err) {
       alert((err as Error).message);
@@ -212,6 +238,7 @@ export function App() {
             swimlanes={swimlanes}
             onSelectTask={handleSelectTask}
             onUpdateTaskStatus={handleUpdateTaskStatus}
+            onMoveTask={handleMoveTask}
             onCompleteTask={handleCompleteTask}
           />
         ) : (
