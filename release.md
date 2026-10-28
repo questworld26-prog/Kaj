@@ -2,37 +2,30 @@
 
 ## Release Strategy
 - **Versioning**: Semantic Versioning (`MAJOR.MINOR.PATCH`).
-- **Human-in-the-Loop Approval**: **Always ask the user for explicit confirmation before releasing any MAJOR or MINOR versions.**
+- **Human-in-the-Loop Approval**: Always ask the user for explicit confirmation before releasing any MAJOR or MINOR versions.
 - **Spec-Driven Governance**: Every release candidate must pass strict Spec Guardian verification (0 untested criteria, 0 hash drift).
-- **Automated 6-Gate Release Pipeline**:
-  1. Git working tree validation (clean working tree).
-  2. Architectural Compliance & Code Review Audit.
-  3. Spec Guardian strict audit (`npm run audit:specs`).
-  4. Project Test Suite Execution (`npm run test:unit` & `npm run test:ui`).
-  5. Code hygiene and linting/formatting.
-  6. Version bumping in `package.json` and annotated Git release tagging (`vX.Y.Z`).
+- **Automated 6-Gate Release Pipeline**: Enforced via `release_manager.py`.
 
 ---
 
 ## Roadmap & Milestones (Latest at Top)
 
-### Milestone `v0.1.0`: Project Inception & Core Engine Baseline
-- **Status**: 🔄 IN PROGRESS (Phase 4 Completed)
-- **Focus**: Repository scaffolding, full EARS specification suite, strict TDD domain & MCP engine, Bento × Chronos dark-mode UI, and SDD hash integrity.
+### Release `v1.0.0`: Production Baseline Release
+- **Status**: ✅ RELEASED
+- **Focus**: Complete full-width Bento × Chronos dark-mode task management system with Model Context Protocol (MCP) daemon, SQLite WAL engine, dual date scheduling, and interactive Calendar.
 - **Deliverables**:
-  - [x] Repository architecture: Git, `.gitignore`, `package.json`, `tsconfig.json`, local test protocol, and operating guidelines.
-  - [x] Formal EARS specifications for tasks, projects, MCP, and UI (`specs/*.md`).
-  - [x] Phase 2 Domain & SQLite WAL Engine (28 criteria verified).
-  - [x] Phase 3 Hono Daemon & Dual MCP Server:
-    - [x] **MCP-001**: Standard Task & Project MCP tool suite (11 registered tools).
-    - [x] **MCP-002**: Dual transport protocol support (Streamable HTTP `POST /mcp` + stdio CLI `src/mcp/stdio.ts` / `dist/mcp/stdio.js` with live SSE sync).
-    - [x] **MCP-003**: Safety annotations (`readOnlyHint`, `destructiveHint`), soft-delete protection (`deleted_at`), and DNS rebinding origin guard.
-    - [x] REST API and Server-Sent Events (`/events`) live sync hub.
-  - [x] Phase 4: Bento × Chronos Dark-Mode UI with Live Playwright Verification:
-    - [x] **UI-001**: Bento full-width 6-column Kanban board, rounded swimlane pods, dashed tracking cards, swimlane reordering, and HTML5 drag-and-drop between columns.
-    - [x] **UI-002**: Chronos dark-mode design system (`#0E1111`, `#121718`, `#1C2224`, `#10B981`, `#EAB308`), accessible contrast.
-    - [x] **UI-003**: Interactive Calendar view with Month and Week grids, Action (`▶`) and Due (`⚑`) badges, filter toggles, Unscheduled sidebar, and drag-and-drop scheduling across calendar days.
-    - [x] **UI-004**: Native `<dialog closedby="any">` task editor modal with light-dismiss, and Completed Archive slide-over drawer with 1-click restore.
-    - [x] Live UI automated browser verification gate (Playwright Chromium, 12/12 tests passing).
-  - [ ] Phase 5: macOS `launchd` Background Service Configuration & End-to-End Packaging.
-- **Exit Criteria**: 100% active criteria verified in Spec Guardian (57/57), 44 unit & integration tests + 12 live UI Playwright tests passing, clean working tree.
+  - [x] **TASK-001**: 6-Column Kanban board with In Progress sub-columns (Today, This Week, This Month) and Tracking column for blocked items.
+  - [x] **TASK-002**: Task data attributes, priority horizons, recurrence rules, and Zod schema validation.
+  - [x] **TASK-003**: Independence of status workflows and planning priority horizons.
+  - [x] **TASK-004**: Spawn-on-complete recurrence rollover with end-of-month date clamping.
+  - [x] **TASK-005**: Dual-date scheduling with independent Action Date (`▶`) and Due Date (`⚑`).
+  - [x] **PROJ-001**: Project entity management and draggable/button swimlane ordering.
+  - [x] **PROJ-002**: Default Unassigned Inbox top swimlane.
+  - [x] **MCP-001**: Standard 11-tool Model Context Protocol suite for external agents.
+  - [x] **MCP-002**: Dual transport support: Streamable HTTP (`POST /mcp`) and stdio (`dist/mcp/stdio.js`) with live SSE synchronization (`/events`).
+  - [x] **MCP-003**: Tool safety annotations, soft-delete protection (`deleted_at`), and DNS rebinding origin guard.
+  - [x] **UI-001**: Bento full-width 6-column layout, collapsible swimlane pods, dashed tracking cards, and fluid HTML5 drag-and-drop.
+  - [x] **UI-002**: Chronos dark-mode palette (`#0E1111`, `#121718`, `#1C2224`, `#10B981`, `#EAB308`) with WCAG AAA accessible contrast.
+  - [x] **UI-003**: Interactive Calendar view with Month and Week grids, dual-date badges, filter toggles, Unscheduled sidebar, and drag-and-drop scheduling across days.
+  - [x] **UI-004**: Light-dismiss task editor `<dialog closedby="any">` and Completed Archive drawer with 1-click restore.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (57/57), 44 unit & integration tests + 12 Playwright E2E tests passing, clean working tree, version bumped to `1.0.0`.

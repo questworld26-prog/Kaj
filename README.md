@@ -147,7 +147,7 @@ Add to `claude_desktop_config.json` or Cursor MCP settings:
     "kaj": {
       "command": "node",
       "args": [
-        "/Users/prithis/QuestWorld/TaskManagement/dist/mcp/stdio.js"
+        "<path-to-repo>/dist/mcp/stdio.js"
       ]
     }
   }
