@@ -21,3 +21,4 @@ main().catch((err) => {
   console.error('Fatal error in Kaj MCP stdio server:', err);
   process.exit(1);
 });
+

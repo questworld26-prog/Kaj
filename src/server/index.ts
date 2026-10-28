@@ -5,7 +5,7 @@ import { createApp } from './app.js';
 
 // [spec: MCP-002]
 async function startDaemon() {
-  const db = createDatabase();
+  const db = createDatabase(process.env.KAJ_DB_PATH);
   initSchema(db);
   const eventBus = new EventBus();
 
@@ -40,3 +40,4 @@ startDaemon().catch((err) => {
   console.error('Failed to start Kaj daemon:', err);
   process.exit(1);
 });
+

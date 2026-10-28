@@ -17,8 +17,8 @@
 ## Roadmap & Milestones (Latest at Top)
 
 ### Milestone `v0.1.0`: Project Inception & Core Engine Baseline
-- **Status**: 🔄 IN PROGRESS (Phase 3 Completed)
-- **Focus**: Repository scaffolding, full EARS specification suite, strict TDD domain & MCP engine, and SDD hash integrity.
+- **Status**: 🔄 IN PROGRESS (Phase 4 Completed)
+- **Focus**: Repository scaffolding, full EARS specification suite, strict TDD domain & MCP engine, Bento × Chronos dark-mode UI, and SDD hash integrity.
 - **Deliverables**:
   - [x] Repository architecture: Git, `.gitignore`, `package.json`, `tsconfig.json`, local test protocol, and operating guidelines.
   - [x] Formal EARS specifications for tasks, projects, MCP, and UI (`specs/*.md`).
@@ -28,6 +28,11 @@
     - [x] **MCP-002**: Dual transport protocol support (Streamable HTTP `POST /mcp` + stdio CLI `src/mcp/stdio.ts` / `dist/mcp/stdio.js` with live SSE sync).
     - [x] **MCP-003**: Safety annotations (`readOnlyHint`, `destructiveHint`), soft-delete protection (`deleted_at`), and DNS rebinding origin guard.
     - [x] REST API and Server-Sent Events (`/events`) live sync hub.
-  - [ ] Phase 4: Bento × Chronos Dark-Mode UI with Live Playwright Verification.
-  - [ ] Phase 5: macOS `launchd` Service & Final Audit.
-- **Exit Criteria**: 100% active criteria verified in Spec Guardian (41/41), all 44 unit & integration tests passing (`< 1s`), clean working tree.
+  - [x] Phase 4: Bento × Chronos Dark-Mode UI with Live Playwright Verification:
+    - [x] **UI-001**: Bento full-width 6-column Kanban board, rounded swimlane pods, dashed tracking cards, and swimlane reordering.
+    - [x] **UI-002**: Chronos dark-mode design system (`#0E1111`, `#121718`, `#1C2224`, `#10B981`, `#EAB308`), accessible contrast.
+    - [x] **UI-003**: Interactive Calendar view with Month and Week grids, Action (`▶`) and Due (`⚑`) badges, filter toggles, and Unscheduled sidebar.
+    - [x] **UI-004**: Native `<dialog closedby="any">` task editor modal with light-dismiss, and Completed Archive slide-over drawer with 1-click restore.
+    - [x] Live UI automated browser verification gate (Playwright Chromium, 11/11 tests passing).
+  - [ ] Phase 5: macOS `launchd` Background Service Configuration & End-to-End Packaging.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (56/56), 44 unit & integration tests + 11 live UI Playwright tests passing, clean working tree.

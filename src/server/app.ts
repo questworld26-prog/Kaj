@@ -1,7 +1,10 @@
 import { DatabaseSync } from 'node:sqlite';
+import path from 'node:path';
+import fs from 'node:fs';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
+import { serveStatic } from '@hono/node-server/serve-static';
 import { TaskRepository, ProjectRepository } from './repository.js';
 import { EventBus } from './events.js';
 import { createMcpServer } from '../mcp/server.js';
@@ -310,6 +313,15 @@ export function createApp(options: AppOptions): Hono {
     const response = await transport._webStandardTransport.handleRequest(normalizedReq);
     return response;
   });
+
+  // [spec: UI-001]
+  // [spec: UI-002]
+  // Serve static UI assets if built
+  const clientDist = path.resolve('./dist/client');
+  if (fs.existsSync(clientDist)) {
+    app.use('/*', serveStatic({ root: './dist/client' }));
+    app.get('*', serveStatic({ path: './dist/client/index.html' }));
+  }
 
   return app;
 }

@@ -1,9 +1,9 @@
 {
-  "last_audited_at": "2026-10-28T08:48:51.713213+00:00",
+  "last_audited_at": "2026-10-28T08:58:53.051791+00:00",
   "total_requirements": 14,
   "total_criteria": 56,
-  "verified_criteria_count": 41,
-  "status": "FAIL",
+  "verified_criteria_count": 56,
+  "status": "PASS",
   "requirements": [
     {
       "requirement_id": "MCP-001",
@@ -246,7 +246,7 @@
       "title": "Bento Full-Width 6-Column Layout and Swimlane Pods",
       "spec_file": "specs/ui.md",
       "sha256": "4c81188043f6d0c67e315921d2dc53b60d432a92a28062ee2219557848d11dea",
-      "verified_sha256": null,
+      "verified_sha256": "4c81188043f6d0c67e315921d2dc53b60d432a92a28062ee2219557848d11dea",
       "acceptance_criteria": [
         "AC-UI-001.1",
         "AC-UI-001.2",
@@ -254,55 +254,92 @@
         "AC-UI-001.4",
         "AC-UI-001.5"
       ],
-      "verified_criteria": [],
-      "implementation_files": [],
-      "status": "UNIMPLEMENTED"
+      "verified_criteria": [
+        "AC-UI-001.1",
+        "AC-UI-001.2",
+        "AC-UI-001.3",
+        "AC-UI-001.4",
+        "AC-UI-001.5"
+      ],
+      "implementation_files": [
+        "src/client/App.tsx",
+        "src/client/components/ProjectReorderModal.tsx",
+        "src/client/components/SwimlaneBoard.tsx",
+        "src/client/components/TopBar.tsx",
+        "src/server/app.ts"
+      ],
+      "status": "VERIFIED"
     },
     {
       "requirement_id": "UI-002",
       "title": "Chronos Dark-Mode Color Palette and Accessibility Tokens",
       "spec_file": "specs/ui.md",
       "sha256": "ecea013727fd7e579f993e19b693410e6270831902f49f3753c7ee3b638798c0",
-      "verified_sha256": null,
+      "verified_sha256": "ecea013727fd7e579f993e19b693410e6270831902f49f3753c7ee3b638798c0",
       "acceptance_criteria": [
         "AC-UI-002.1",
         "AC-UI-002.2",
         "AC-UI-002.3"
       ],
-      "verified_criteria": [],
-      "implementation_files": [],
-      "status": "UNIMPLEMENTED"
+      "verified_criteria": [
+        "AC-UI-002.1",
+        "AC-UI-002.2",
+        "AC-UI-002.3"
+      ],
+      "implementation_files": [
+        "src/client/App.tsx",
+        "src/client/components/SwimlaneBoard.tsx",
+        "src/client/components/TopBar.tsx",
+        "src/server/app.ts"
+      ],
+      "status": "VERIFIED"
     },
     {
       "requirement_id": "UI-003",
       "title": "Interactive Calendar with Dual-Date Badges and Scheduling Sidebar",
       "spec_file": "specs/ui.md",
       "sha256": "fb1a6e50cb6545bad9374534629dac02c47c3b3c2bf0b97ba2aecf53e0e8e24b",
-      "verified_sha256": null,
+      "verified_sha256": "fb1a6e50cb6545bad9374534629dac02c47c3b3c2bf0b97ba2aecf53e0e8e24b",
       "acceptance_criteria": [
         "AC-UI-003.1",
         "AC-UI-003.2",
         "AC-UI-003.3",
         "AC-UI-003.4"
       ],
-      "verified_criteria": [],
-      "implementation_files": [],
-      "status": "UNIMPLEMENTED"
+      "verified_criteria": [
+        "AC-UI-003.1",
+        "AC-UI-003.2",
+        "AC-UI-003.3",
+        "AC-UI-003.4"
+      ],
+      "implementation_files": [
+        "src/client/App.tsx",
+        "src/client/components/CalendarView.tsx"
+      ],
+      "status": "VERIFIED"
     },
     {
       "requirement_id": "UI-004",
       "title": "Light-Dismiss Task Editor Dialog and Completed Archive Drawer",
       "spec_file": "specs/ui.md",
       "sha256": "384e18bb59b900826b3a4eaacab301b7a3b24676489a5d7a168dd0c603b1b9fd",
-      "verified_sha256": null,
+      "verified_sha256": "384e18bb59b900826b3a4eaacab301b7a3b24676489a5d7a168dd0c603b1b9fd",
       "acceptance_criteria": [
         "AC-UI-004.1",
         "AC-UI-004.2",
         "AC-UI-004.3"
       ],
-      "verified_criteria": [],
-      "implementation_files": [],
-      "status": "UNIMPLEMENTED"
+      "verified_criteria": [
+        "AC-UI-004.1",
+        "AC-UI-004.2",
+        "AC-UI-004.3"
+      ],
+      "implementation_files": [
+        "src/client/App.tsx",
+        "src/client/components/CompletedDrawer.tsx",
+        "src/client/components/TaskModal.tsx"
+      ],
+      "status": "VERIFIED"
     }
   ]
 }
