@@ -16,13 +16,21 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
-### Milestone `v0.1.0`: Project Inception & EARS Specification Baseline
-- **Status**: 🔄 IN PROGRESS (Phase 1)
-- **Focus**: Repository scaffolding, full EARS specification suite, strict TDD protocol, and SDD hash integrity.
+### Milestone `v0.1.0`: Project Inception & Core Engine Baseline
+- **Status**: 🔄 IN PROGRESS (Phase 2 Completed)
+- **Focus**: Repository scaffolding, full EARS specification suite, strict TDD domain engine, and SDD hash integrity.
 - **Deliverables**:
   - [x] Repository architecture: Git, `.gitignore`, `package.json`, `tsconfig.json`, local test protocol, and operating guidelines.
-  - [x] `specs/tasks.md`: Formal EARS specifications for Kanban workflow, sub-columns, independent priority, spawn-on-complete repeat rollover, and calendar date projection.
-  - [x] `specs/projects.md`: Formal EARS specifications for project swimlanes, sorting, and unassigned inbox.
-  - [x] `specs/mcp.md`: Formal EARS specifications for standard MCP tool suite, streamable HTTP & stdio transports, and soft-delete protection.
-  - [x] `specs/ui.md`: Formal EARS specifications for Bento full-width layout, Chronos dark palette, interactive calendar, and light-dismiss task modal.
-- **Exit Criteria**: All spec blocks normalized and fingerprinted in `specs/traceability.json`.
+  - [x] Formal EARS specifications for tasks, projects, MCP, and UI (`specs/*.md`).
+  - [x] Phase 2 Domain & SQLite WAL Engine:
+    - [x] **PROJ-001**: Project entity management and swimlane reordering.
+    - [x] **PROJ-002**: Default Unassigned inbox swimlane.
+    - [x] **TASK-001**: Six-column Kanban workflow with In Progress sub-columns (`Today`, `This Week`, `This Month`) and Tracking.
+    - [x] **TASK-002**: Task data attributes & schema validation.
+    - [x] **TASK-003**: Independence of status and priority horizons.
+    - [x] **TASK-004**: Spawn-on-complete recurrence rollover (`weekly`, `monthly` with end-of-month clamping, `yearly`).
+    - [x] **TASK-005**: Dual-date scheduling and Calendar projections across Week and Month views.
+  - [ ] Phase 3: Hono Daemon & Dual MCP Server (`POST /mcp` + `dist/mcp/stdio.js`).
+  - [ ] Phase 4: Bento × Chronos Dark-Mode UI with Live Playwright Verification.
+  - [ ] Phase 5: macOS `launchd` Service & Final Audit.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian, all unit tests passing (`< 5s`), clean working tree.
