@@ -14,6 +14,7 @@
     "audit:specs": "python3 ~/.gemini/config/skills/spec-driven-development/scripts/guardian.py audit --strict"
   },
   "dependencies": {
+    "@hono/node-server": "^1.13.8",
     "@modelcontextprotocol/sdk": "^1.6.1",
     "hono": "^4.7.2",
     "preact": "^10.26.4",

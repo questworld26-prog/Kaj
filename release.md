@@ -17,20 +17,17 @@
 ## Roadmap & Milestones (Latest at Top)
 
 ### Milestone `v0.1.0`: Project Inception & Core Engine Baseline
-- **Status**: 🔄 IN PROGRESS (Phase 2 Completed)
-- **Focus**: Repository scaffolding, full EARS specification suite, strict TDD domain engine, and SDD hash integrity.
+- **Status**: 🔄 IN PROGRESS (Phase 3 Completed)
+- **Focus**: Repository scaffolding, full EARS specification suite, strict TDD domain & MCP engine, and SDD hash integrity.
 - **Deliverables**:
   - [x] Repository architecture: Git, `.gitignore`, `package.json`, `tsconfig.json`, local test protocol, and operating guidelines.
   - [x] Formal EARS specifications for tasks, projects, MCP, and UI (`specs/*.md`).
-  - [x] Phase 2 Domain & SQLite WAL Engine:
-    - [x] **PROJ-001**: Project entity management and swimlane reordering.
-    - [x] **PROJ-002**: Default Unassigned inbox swimlane.
-    - [x] **TASK-001**: Six-column Kanban workflow with In Progress sub-columns (`Today`, `This Week`, `This Month`) and Tracking.
-    - [x] **TASK-002**: Task data attributes & schema validation.
-    - [x] **TASK-003**: Independence of status and priority horizons.
-    - [x] **TASK-004**: Spawn-on-complete recurrence rollover (`weekly`, `monthly` with end-of-month clamping, `yearly`).
-    - [x] **TASK-005**: Dual-date scheduling and Calendar projections across Week and Month views.
-  - [ ] Phase 3: Hono Daemon & Dual MCP Server (`POST /mcp` + `dist/mcp/stdio.js`).
+  - [x] Phase 2 Domain & SQLite WAL Engine (28 criteria verified).
+  - [x] Phase 3 Hono Daemon & Dual MCP Server:
+    - [x] **MCP-001**: Standard Task & Project MCP tool suite (11 registered tools).
+    - [x] **MCP-002**: Dual transport protocol support (Streamable HTTP `POST /mcp` + stdio CLI `src/mcp/stdio.ts` / `dist/mcp/stdio.js` with live SSE sync).
+    - [x] **MCP-003**: Safety annotations (`readOnlyHint`, `destructiveHint`), soft-delete protection (`deleted_at`), and DNS rebinding origin guard.
+    - [x] REST API and Server-Sent Events (`/events`) live sync hub.
   - [ ] Phase 4: Bento × Chronos Dark-Mode UI with Live Playwright Verification.
   - [ ] Phase 5: macOS `launchd` Service & Final Audit.
-- **Exit Criteria**: 100% active criteria verified in Spec Guardian, all unit tests passing (`< 5s`), clean working tree.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (41/41), all 44 unit & integration tests passing (`< 1s`), clean working tree.

@@ -216,3 +216,4 @@ Add to `claude_desktop_config.json` or Cursor MCP settings:
 ## License
 
 MIT
+

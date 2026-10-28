@@ -1,8 +1,8 @@
 {
-  "last_audited_at": "2026-10-28T08:44:18.268278+00:00",
+  "last_audited_at": "2026-10-28T08:48:51.713213+00:00",
   "total_requirements": 14,
   "total_criteria": 56,
-  "verified_criteria_count": 28,
+  "verified_criteria_count": 41,
   "status": "FAIL",
   "requirements": [
     {
@@ -10,7 +10,7 @@
       "title": "Task and Project MCP Tool Suite",
       "spec_file": "specs/mcp.md",
       "sha256": "7e391474e71c37b169c6689e146e9365bcb25641af8188dfb0645f9ba67f23df",
-      "verified_sha256": null,
+      "verified_sha256": "7e391474e71c37b169c6689e146e9365bcb25641af8188dfb0645f9ba67f23df",
       "acceptance_criteria": [
         "AC-MCP-001.1",
         "AC-MCP-001.2",
@@ -19,40 +19,66 @@
         "AC-MCP-001.5",
         "AC-MCP-001.6"
       ],
-      "verified_criteria": [],
-      "implementation_files": [],
-      "status": "UNIMPLEMENTED"
+      "verified_criteria": [
+        "AC-MCP-001.1",
+        "AC-MCP-001.2",
+        "AC-MCP-001.3",
+        "AC-MCP-001.4",
+        "AC-MCP-001.5",
+        "AC-MCP-001.6"
+      ],
+      "implementation_files": [
+        "src/mcp/server.ts"
+      ],
+      "status": "VERIFIED"
     },
     {
       "requirement_id": "MCP-002",
       "title": "Dual Transport Protocol Support",
       "spec_file": "specs/mcp.md",
       "sha256": "cd31d4711ed1eb93a35260bcbc2afcb40419be15c39f996b92c6194414d4a7d8",
-      "verified_sha256": null,
+      "verified_sha256": "cd31d4711ed1eb93a35260bcbc2afcb40419be15c39f996b92c6194414d4a7d8",
       "acceptance_criteria": [
         "AC-MCP-002.1",
         "AC-MCP-002.2",
         "AC-MCP-002.3"
       ],
-      "verified_criteria": [],
-      "implementation_files": [],
-      "status": "UNIMPLEMENTED"
+      "verified_criteria": [
+        "AC-MCP-002.1",
+        "AC-MCP-002.2",
+        "AC-MCP-002.3"
+      ],
+      "implementation_files": [
+        "src/mcp/server.ts",
+        "src/mcp/stdio.ts",
+        "src/server/app.ts",
+        "src/server/index.ts"
+      ],
+      "status": "VERIFIED"
     },
     {
       "requirement_id": "MCP-003",
       "title": "Safety Annotations and Soft-Delete Protection",
       "spec_file": "specs/mcp.md",
       "sha256": "422fc681faf7bdaf752e58a4b4bedc788383ea9c781666346dcf2f5d2b367675",
-      "verified_sha256": null,
+      "verified_sha256": "422fc681faf7bdaf752e58a4b4bedc788383ea9c781666346dcf2f5d2b367675",
       "acceptance_criteria": [
         "AC-MCP-003.1",
         "AC-MCP-003.2",
         "AC-MCP-003.3",
         "AC-MCP-003.4"
       ],
-      "verified_criteria": [],
-      "implementation_files": [],
-      "status": "UNIMPLEMENTED"
+      "verified_criteria": [
+        "AC-MCP-003.1",
+        "AC-MCP-003.2",
+        "AC-MCP-003.3",
+        "AC-MCP-003.4"
+      ],
+      "implementation_files": [
+        "src/mcp/server.ts",
+        "src/server/app.ts"
+      ],
+      "status": "VERIFIED"
     },
     {
       "requirement_id": "PROJ-001",
