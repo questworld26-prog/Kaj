@@ -1,0 +1,28 @@
+{
+  "last_audited_at": "2026-10-28T08:14:41.375285+00:00",
+  "total_requirements": 1,
+  "total_criteria": 2,
+  "verified_criteria_count": 2,
+  "status": "PASS",
+  "requirements": [
+    {
+      "requirement_id": "CORE-001",
+      "title": "System Initialization & Configuration Validation",
+      "spec_file": "specs/core.md",
+      "sha256": "c1f931a54060f96f7ee8c236a9fc4694da51074a70e939a3fef0285249e89a3a",
+      "verified_sha256": "c1f931a54060f96f7ee8c236a9fc4694da51074a70e939a3fef0285249e89a3a",
+      "acceptance_criteria": [
+        "AC-CORE-001.1",
+        "AC-CORE-001.2"
+      ],
+      "verified_criteria": [
+        "AC-CORE-001.1",
+        "AC-CORE-001.2"
+      ],
+      "implementation_files": [
+        "src/core.py"
+      ],
+      "status": "VERIFIED"
+    }
+  ]
+}
