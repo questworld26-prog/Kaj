@@ -1,8 +1,8 @@
 {
-  "last_audited_at": "2026-10-28T08:18:26.759881+00:00",
+  "last_audited_at": "2026-10-28T08:37:51.879102+00:00",
   "total_requirements": 14,
-  "total_criteria": 54,
-  "verified_criteria_count": 0,
+  "total_criteria": 56,
+  "verified_criteria_count": 28,
   "status": "FAIL",
   "requirements": [
     {
@@ -58,55 +58,75 @@
       "requirement_id": "PROJ-001",
       "title": "Project Entity Management and Swimlane Ordering",
       "spec_file": "specs/projects.md",
-      "sha256": "52b025083ccbd67b573b5583db852285aff4a74b87c8965cf5ea3c238135eecf",
-      "verified_sha256": null,
+      "sha256": "1092a99919e7631e0da5f19b1a618eba83168f9b2e0a86c5910dbf2feaf7da1e",
+      "verified_sha256": "1092a99919e7631e0da5f19b1a618eba83168f9b2e0a86c5910dbf2feaf7da1e",
       "acceptance_criteria": [
         "AC-PROJ-001.1",
         "AC-PROJ-001.2",
         "AC-PROJ-001.3",
         "AC-PROJ-001.4"
       ],
-      "verified_criteria": [],
-      "implementation_files": [],
-      "status": "UNIMPLEMENTED"
+      "verified_criteria": [
+        "AC-PROJ-001.1",
+        "AC-PROJ-001.2",
+        "AC-PROJ-001.3",
+        "AC-PROJ-001.4"
+      ],
+      "implementation_files": [
+        "src/server/repository.ts"
+      ],
+      "status": "VERIFIED"
     },
     {
       "requirement_id": "PROJ-002",
       "title": "Default Unassigned Inbox Swimlane",
       "spec_file": "specs/projects.md",
       "sha256": "382d429159d9655afcb2c572e644231b331674e79f25eafc2ff08f4b0be0bfa9",
-      "verified_sha256": null,
+      "verified_sha256": "382d429159d9655afcb2c572e644231b331674e79f25eafc2ff08f4b0be0bfa9",
       "acceptance_criteria": [
         "AC-PROJ-002.1",
         "AC-PROJ-002.2",
         "AC-PROJ-002.3"
       ],
-      "verified_criteria": [],
-      "implementation_files": [],
-      "status": "UNIMPLEMENTED"
+      "verified_criteria": [
+        "AC-PROJ-002.1",
+        "AC-PROJ-002.2",
+        "AC-PROJ-002.3"
+      ],
+      "implementation_files": [
+        "src/server/repository.ts"
+      ],
+      "status": "VERIFIED"
     },
     {
       "requirement_id": "TASK-001",
       "title": "Six-Column Kanban Workflow with In Progress Sub-Columns",
       "spec_file": "specs/tasks.md",
-      "sha256": "6e4d20a0784e80615fe3e6f10b4a27935fc67c10aa8c8dc2e976e0cb3dd1d7d2",
-      "verified_sha256": null,
+      "sha256": "d3fd4bb43d13f912af33e78bfcf6d2a56763464f2013e9ad766d3f52f6cc58b9",
+      "verified_sha256": "d3fd4bb43d13f912af33e78bfcf6d2a56763464f2013e9ad766d3f52f6cc58b9",
       "acceptance_criteria": [
         "AC-TASK-001.1",
         "AC-TASK-001.2",
         "AC-TASK-001.3",
         "AC-TASK-001.4"
       ],
-      "verified_criteria": [],
-      "implementation_files": [],
-      "status": "UNIMPLEMENTED"
+      "verified_criteria": [
+        "AC-TASK-001.1",
+        "AC-TASK-001.2",
+        "AC-TASK-001.3",
+        "AC-TASK-001.4"
+      ],
+      "implementation_files": [
+        "src/server/repository.ts"
+      ],
+      "status": "VERIFIED"
     },
     {
       "requirement_id": "TASK-002",
       "title": "Task Data Attributes and Schema Validation",
       "spec_file": "specs/tasks.md",
-      "sha256": "b40da6fe73d6f711e4f92231412b91fcba2fd1c169e08b27751d5bade336752f",
-      "verified_sha256": null,
+      "sha256": "000cd04d1086a0af741f9bf40b05f5174127f225117a09a901b3e5c75473f582",
+      "verified_sha256": "000cd04d1086a0af741f9bf40b05f5174127f225117a09a901b3e5c75473f582",
       "acceptance_criteria": [
         "AC-TASK-002.1",
         "AC-TASK-002.2",
@@ -114,31 +134,45 @@
         "AC-TASK-002.4",
         "AC-TASK-002.5"
       ],
-      "verified_criteria": [],
-      "implementation_files": [],
-      "status": "UNIMPLEMENTED"
+      "verified_criteria": [
+        "AC-TASK-002.1",
+        "AC-TASK-002.2",
+        "AC-TASK-002.3",
+        "AC-TASK-002.4",
+        "AC-TASK-002.5"
+      ],
+      "implementation_files": [
+        "src/server/repository.ts"
+      ],
+      "status": "VERIFIED"
     },
     {
       "requirement_id": "TASK-003",
       "title": "Independence of Status and Priority Horizons",
       "spec_file": "specs/tasks.md",
       "sha256": "7e1b80cbb94f1666bc3f7c9c07684d619a38470c18293249b4ef2b37f292f0bc",
-      "verified_sha256": null,
+      "verified_sha256": "7e1b80cbb94f1666bc3f7c9c07684d619a38470c18293249b4ef2b37f292f0bc",
       "acceptance_criteria": [
         "AC-TASK-003.1",
         "AC-TASK-003.2",
         "AC-TASK-003.3"
       ],
-      "verified_criteria": [],
-      "implementation_files": [],
-      "status": "UNIMPLEMENTED"
+      "verified_criteria": [
+        "AC-TASK-003.1",
+        "AC-TASK-003.2",
+        "AC-TASK-003.3"
+      ],
+      "implementation_files": [
+        "src/server/repository.ts"
+      ],
+      "status": "VERIFIED"
     },
     {
       "requirement_id": "TASK-004",
       "title": "Spawn-on-Complete Recurrence Rollover",
       "spec_file": "specs/tasks.md",
-      "sha256": "c01c0e64a61d6125254e44beaf59b2df46c332f121e69ab8076861db833a5a83",
-      "verified_sha256": null,
+      "sha256": "8ad7ca88cddba23eb1620e4db307f94da8d6ba6f6f9ddb87016e8a38482a36df",
+      "verified_sha256": "8ad7ca88cddba23eb1620e4db307f94da8d6ba6f6f9ddb87016e8a38482a36df",
       "acceptance_criteria": [
         "AC-TASK-004.1",
         "AC-TASK-004.2",
@@ -146,37 +180,53 @@
         "AC-TASK-004.4",
         "AC-TASK-004.5"
       ],
-      "verified_criteria": [],
-      "implementation_files": [],
-      "status": "UNIMPLEMENTED"
+      "verified_criteria": [
+        "AC-TASK-004.1",
+        "AC-TASK-004.2",
+        "AC-TASK-004.3",
+        "AC-TASK-004.4",
+        "AC-TASK-004.5"
+      ],
+      "implementation_files": [
+        "src/server/repository.ts"
+      ],
+      "status": "VERIFIED"
     },
     {
       "requirement_id": "TASK-005",
       "title": "Dual Date Scheduling and Calendar Projection",
       "spec_file": "specs/tasks.md",
-      "sha256": "1ef277116c47fe20d443e8867dbaf97f2e19803231a45d2e54295d7f2e311a88",
-      "verified_sha256": null,
+      "sha256": "2a89c0774f6e59b04f4cb47732fcf2fe95046cbfcc3fc39c5b46d4ce9c8fda7a",
+      "verified_sha256": "2a89c0774f6e59b04f4cb47732fcf2fe95046cbfcc3fc39c5b46d4ce9c8fda7a",
       "acceptance_criteria": [
         "AC-TASK-005.1",
         "AC-TASK-005.2",
         "AC-TASK-005.3",
         "AC-TASK-005.4"
       ],
-      "verified_criteria": [],
-      "implementation_files": [],
-      "status": "UNIMPLEMENTED"
+      "verified_criteria": [
+        "AC-TASK-005.1",
+        "AC-TASK-005.2",
+        "AC-TASK-005.3",
+        "AC-TASK-005.4"
+      ],
+      "implementation_files": [
+        "src/server/repository.ts"
+      ],
+      "status": "VERIFIED"
     },
     {
       "requirement_id": "UI-001",
       "title": "Bento Full-Width 6-Column Layout and Swimlane Pods",
       "spec_file": "specs/ui.md",
-      "sha256": "4c2991447e77f3a40c94a858f62d08a1e3079b9a0295afe1fcd673b15e803bdb",
+      "sha256": "4c81188043f6d0c67e315921d2dc53b60d432a92a28062ee2219557848d11dea",
       "verified_sha256": null,
       "acceptance_criteria": [
         "AC-UI-001.1",
         "AC-UI-001.2",
         "AC-UI-001.3",
-        "AC-UI-001.4"
+        "AC-UI-001.4",
+        "AC-UI-001.5"
       ],
       "verified_criteria": [],
       "implementation_files": [],
@@ -201,12 +251,13 @@
       "requirement_id": "UI-003",
       "title": "Interactive Calendar with Dual-Date Badges and Scheduling Sidebar",
       "spec_file": "specs/ui.md",
-      "sha256": "209372dd4de6570ae09a1b1d238a6762dedfd020062ed3dcfda5e4898c12f918",
+      "sha256": "fb1a6e50cb6545bad9374534629dac02c47c3b3c2bf0b97ba2aecf53e0e8e24b",
       "verified_sha256": null,
       "acceptance_criteria": [
         "AC-UI-003.1",
         "AC-UI-003.2",
-        "AC-UI-003.3"
+        "AC-UI-003.3",
+        "AC-UI-003.4"
       ],
       "verified_criteria": [],
       "implementation_files": [],

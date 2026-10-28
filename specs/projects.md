@@ -10,9 +10,9 @@ The system shall organize the Kanban board into project swimlanes with custom co
 
 Acceptance Criteria:
 - AC-PROJ-001.1: Each project entity shall possess a unique identifier, unique name, color token, integer sort order, and archived flag.
-- AC-PROJ-001.2: The system shall provide endpoints to create, update, reorder, and archive projects.
+- AC-PROJ-001.2: The system shall provide operations to create, update, reorder project swimlanes (via individual sort order update or batch reordering), and archive projects.
 - AC-PROJ-001.3: Archiving a project shall hide its swimlane from the active board while preserving historical tasks and relations.
-- AC-PROJ-001.4: Renaming or recoloring a project shall update the swimlane header in real-time across connected clients.
+- AC-PROJ-001.4: Renaming, recoloring, or reordering a project shall update the swimlanes in real-time across connected clients.
 
 ---
 

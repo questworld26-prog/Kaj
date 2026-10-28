@@ -10,7 +10,7 @@ The system shall organize active tasks into six ordered column tracks: Triage, T
 
 Acceptance Criteria:
 - AC-TASK-001.1: Every active task shall hold exactly one status value from `triage`, `todo`, `in_progress_today`, `in_progress_week`, `in_progress_month`, or `tracking`.
-- AC-TASK-001.2: Moving a task to `tracking` shall preserve its project assignment and support an optional waiting-on note or parcel tracking link.
+- AC-TASK-001.2: Moving a task to `tracking` shall preserve its project assignment and support an optional waiting-on note which could be a parcel tracking link.
 - AC-TASK-001.3: When a task is marked complete, the system shall transition its status to `done` and remove it from the active Kanban columns into the completed archive.
 - AC-TASK-001.4: Reopening a completed task shall restore its status to `todo` at the top of its assigned project swimlane.
 
@@ -23,8 +23,8 @@ The system shall validate all task attributes including task name, status, detai
 Acceptance Criteria:
 - AC-TASK-002.1: The system shall reject task creation or update requests where the title is empty or contains only whitespace.
 - AC-TASK-002.2: Priority values shall be strictly validated against `today`, `week`, `month`, `quarter`, and `year`.
-- AC-TASK-002.3: Repeat rule values shall be strictly validated against `none`, `weekly`, `monthly`, and `yearly`.
-- AC-TASK-002.4: Action date and due date values shall be strictly validated as ISO-8601 calendar date strings in `YYYY-MM-DD` format or null.
+- AC-TASK-002.3: Repeat rule values shall be strictly validated against `none`, `weekly`, `monthly`, and `yearly`. Include an option when it repeats. Day of the week for the weekly tasks, Day of the month for the monthly tasks, Day of the year for the yearly tasks.
+- AC-TASK-002.4: Action date and due date values shall be strictly validated as ISO-8601 calendar date strings in `DD-MM-YYYY` format or null.
 - AC-TASK-002.5: The system shall allow creating tasks without an action date or without a due date.
 
 ---
@@ -45,9 +45,9 @@ Acceptance Criteria:
 When a task with a repeat rule other than `none` is marked `done`, the system shall record completion of the current occurrence and atomically spawn the next instance in `todo`.
 
 Acceptance Criteria:
-- AC-TASK-004.1: When a weekly task is marked complete, the system shall create the next task in `todo` with action date and due date shifted forward by exactly 7 days.
-- AC-TASK-004.2: When a monthly task is marked complete, the system shall create the next task in `todo` with action date and due date shifted forward by 1 calendar month with end-of-month clamping.
-- AC-TASK-004.3: When a yearly task is marked complete, the system shall create the next task in `todo` with action date and due date shifted forward by 1 year.
+- AC-TASK-004.1: When a weekly task is marked complete, the system shall create the next task in `todo` with action date and due date shifted forward to the repeat day of the week.
+- AC-TASK-004.2: When a monthly task is marked complete, the system shall create the next task in `todo` with action date and due date shifted forward the repeat date of the next month.
+- AC-TASK-004.3: When a yearly task is marked complete, the system shall create the next task in `todo` with action date and due date shifted forward to the repeat day of the next year.
 - AC-TASK-004.4: The newly spawned recurring task shall inherit the title, details, project, priority, and repeat rule of the parent task.
 - AC-TASK-004.5: The completed occurrence shall remain archived in status `done` with its `completed_at` timestamp recorded.
 
@@ -58,8 +58,8 @@ Acceptance Criteria:
 The system shall support independent action dates and due dates on tasks, allowing scheduling and calendar querying across Month and Week views.
 
 Acceptance Criteria:
-- AC-TASK-005.1: Querying a date window shall return all active tasks having an action date falling within that window.
-- AC-TASK-005.2: Querying a date window shall return all active tasks having a due date falling within that window.
+- AC-TASK-005.1: Querying a date window (including 7-day week and full-month spans) shall return all active tasks having an action date falling within that window.
+- AC-TASK-005.2: Querying a date window (including 7-day week and full-month spans) shall return all active tasks having a due date falling within that window.
 - AC-TASK-005.3: Tasks without an action date shall be returned in the unscheduled tasks query for drag-to-schedule assignment.
 - AC-TASK-005.4: For recurring active tasks, the system shall project virtual preview occurrences onto dates within the queried calendar window without generating duplicate database rows.
 

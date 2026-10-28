@@ -13,6 +13,7 @@ Acceptance Criteria:
 - AC-UI-001.2: Projects shall render as rounded container pods with collapsible swimlane headers and task counts.
 - AC-UI-001.3: Tracking column cards shall render with dashed borders and dedicated carrier/blocker badge indicators.
 - AC-UI-001.4: Dragging or selecting a card shall allow moving tasks across columns and swimlanes.
+- AC-UI-001.5: The UI shall provide controls to reorder project swimlanes, persisting the new sort order and updating the board layout immediately.
 
 ---
 
@@ -35,6 +36,7 @@ Acceptance Criteria:
 - AC-UI-003.1: The Calendar view shall display Action Dates (`▶`) and Due Dates (`⚑`) with distinct visual styling and icons.
 - AC-UI-003.2: The Calendar filter toggle shall allow viewing Action Dates only, Due Dates only, or both concurrently.
 - AC-UI-003.3: The Unscheduled sidebar shall list active tasks lacking an action date, allowing scheduling onto a calendar date.
+- AC-UI-003.4: The Calendar view shall provide a toggle between Month view (multi-week month grid) and Week view (detailed 7-day grid), adapting layout and task density to the selected timeframe.
 
 ---
 
