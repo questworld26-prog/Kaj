@@ -2,8 +2,14 @@ node_modules/
 dist/
 build/
 coverage/
+test-results/
+playwright-report/
+.vite/
 .env
 .env.local
 *.db
 *.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
 .DS_Store

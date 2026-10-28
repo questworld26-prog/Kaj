@@ -1,0 +1,35 @@
+{
+  "name": "kaj",
+  "version": "0.1.0",
+  "description": "Kaj (কাজ) — Low-footprint Kanban & Calendar task management app with Model Context Protocol (MCP) server daemon",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && tsc -p tsconfig.server.json",
+    "start": "node dist/server/index.js",
+    "daemon:start": "node dist/server/index.js",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:ui": "playwright test",
+    "audit:specs": "python3 ~/.gemini/config/skills/spec-driven-development/scripts/guardian.py audit --strict"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "hono": "^4.7.2",
+    "preact": "^10.26.4",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.1",
+    "@preact/preset-vite": "^2.10.1",
+    "@types/node": "^22.13.5",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0",
+    "vitest": "^3.0.6"
+  }
+}
+
