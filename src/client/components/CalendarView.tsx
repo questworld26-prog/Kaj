@@ -1,23 +1,27 @@
 // [spec: UI-003]
-import { h } from 'preact';
-import { useState, useMemo } from 'preact/hooks';
-import type { Task, CalendarEvent } from '../../shared/types.js';
+import { h } from "preact";
+import { useState, useMemo } from "preact/hooks";
+import type { Task, CalendarEvent } from "../../shared/types.js";
 
 interface CalendarViewProps {
   tasks: Task[];
   calendarEvents: CalendarEvent[];
   unscheduledTasks: Task[];
   onSelectTask: (task: Task) => void;
-  onScheduleTask: (taskId: string, dateStr: string, dateType?: 'action' | 'due') => void;
+  onScheduleTask: (
+    taskId: string,
+    dateStr: string,
+    dateType?: "action" | "due",
+  ) => void;
 }
 
-type HorizonView = 'month' | 'week';
-type FilterType = 'all' | 'action' | 'due';
+type HorizonView = "month" | "week";
+type FilterType = "all" | "action" | "due";
 
 function formatDateToYMD(d: Date): string {
   const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
@@ -28,8 +32,8 @@ export function CalendarView({
   onSelectTask,
   onScheduleTask,
 }: CalendarViewProps) {
-  const [horizon, setHorizon] = useState<HorizonView>('month');
-  const [filter, setFilter] = useState<FilterType>('all');
+  const [horizon, setHorizon] = useState<HorizonView>("month");
+  const [filter, setFilter] = useState<FilterType>("all");
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [dragOverDate, setDragOverDate] = useState<string | null>(null);
 
@@ -74,7 +78,7 @@ export function CalendarView({
     const monday = new Date(d.setDate(diff));
 
     const days: { date: Date; dateStr: string; dayName: string }[] = [];
-    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
     for (let i = 0; i < 7; i++) {
       const current = new Date(monday);
@@ -91,15 +95,18 @@ export function CalendarView({
 
   // Group events by date and type
   const eventsByDate = useMemo(() => {
-    const map = new Map<string, { action: CalendarEvent[]; due: CalendarEvent[] }>();
+    const map = new Map<
+      string,
+      { action: CalendarEvent[]; due: CalendarEvent[] }
+    >();
 
     for (const ev of calendarEvents) {
       if (!map.has(ev.date)) {
         map.set(ev.date, { action: [], due: [] });
       }
       const entry = map.get(ev.date)!;
-      if (ev.date_type === 'action') entry.action.push(ev);
-      if (ev.date_type === 'due') entry.due.push(ev);
+      if (ev.date_type === "action") entry.action.push(ev);
+      if (ev.date_type === "due") entry.due.push(ev);
     }
 
     return map;
@@ -107,8 +114,10 @@ export function CalendarView({
 
   // Navigation handlers
   const handlePrev = () => {
-    if (horizon === 'month') {
-      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    if (horizon === "month") {
+      setCurrentDate(
+        new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1),
+      );
     } else {
       const d = new Date(currentDate);
       d.setDate(d.getDate() - 7);
@@ -117,8 +126,10 @@ export function CalendarView({
   };
 
   const handleNext = () => {
-    if (horizon === 'month') {
-      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    if (horizon === "month") {
+      setCurrentDate(
+        new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1),
+      );
     } else {
       const d = new Date(currentDate);
       d.setDate(d.getDate() + 7);
@@ -130,9 +141,9 @@ export function CalendarView({
     setCurrentDate(new Date());
   };
 
-  const monthYearLabel = currentDate.toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric',
+  const monthYearLabel = currentDate.toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
   });
 
   return (
@@ -149,11 +160,11 @@ export function CalendarView({
             <button
               type="button"
               data-testid="view-month-btn"
-              onClick={() => setHorizon('month')}
+              onClick={() => setHorizon("month")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                horizon === 'month'
-                  ? 'bg-[#1C2224] text-emerald-400 border border-[#2A3235]'
-                  : 'text-gray-400 hover:text-gray-200'
+                horizon === "month"
+                  ? "bg-[#1C2224] text-emerald-400 border border-[#2A3235]"
+                  : "text-gray-400 hover:text-gray-200"
               }`}
             >
               Month View
@@ -161,11 +172,11 @@ export function CalendarView({
             <button
               type="button"
               data-testid="view-week-btn"
-              onClick={() => setHorizon('week')}
+              onClick={() => setHorizon("week")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                horizon === 'week'
-                  ? 'bg-[#1C2224] text-emerald-400 border border-[#2A3235]'
-                  : 'text-gray-400 hover:text-gray-200'
+                horizon === "week"
+                  ? "bg-[#1C2224] text-emerald-400 border border-[#2A3235]"
+                  : "text-gray-400 hover:text-gray-200"
               }`}
             >
               Week View
@@ -180,8 +191,18 @@ export function CalendarView({
               className="p-1.5 rounded-lg bg-[#1C2224] text-gray-300 hover:text-white border border-[#2A3235]"
               title="Previous"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
             <span className="text-sm font-bold text-gray-100 min-w-[130px] text-center">
@@ -193,8 +214,18 @@ export function CalendarView({
               className="p-1.5 rounded-lg bg-[#1C2224] text-gray-300 hover:text-white border border-[#2A3235]"
               title="Next"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
             <button
@@ -211,11 +242,11 @@ export function CalendarView({
             <button
               type="button"
               data-testid="filter-all-btn"
-              onClick={() => setFilter('all')}
+              onClick={() => setFilter("all")}
               className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                filter === 'all'
-                  ? 'bg-[#1C2224] text-white border border-[#2A3235]'
-                  : 'text-gray-400 hover:text-gray-200'
+                filter === "all"
+                  ? "bg-[#1C2224] text-white border border-[#2A3235]"
+                  : "text-gray-400 hover:text-gray-200"
               }`}
             >
               All
@@ -223,11 +254,11 @@ export function CalendarView({
             <button
               type="button"
               data-testid="filter-action-btn"
-              onClick={() => setFilter('action')}
+              onClick={() => setFilter("action")}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                filter === 'action'
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                  : 'text-gray-400 hover:text-gray-200'
+                filter === "action"
+                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                  : "text-gray-400 hover:text-gray-200"
               }`}
             >
               <span>▶</span> Action
@@ -235,11 +266,11 @@ export function CalendarView({
             <button
               type="button"
               data-testid="filter-due-btn"
-              onClick={() => setFilter('due')}
+              onClick={() => setFilter("due")}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                filter === 'due'
-                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
-                  : 'text-gray-400 hover:text-gray-200'
+                filter === "due"
+                  ? "bg-rose-500/10 text-rose-400 border border-rose-500/30"
+                  : "text-gray-400 hover:text-gray-200"
               }`}
             >
               <span>⚑</span> Due
@@ -248,7 +279,7 @@ export function CalendarView({
         </div>
 
         {/* View Horizon: Month Grid */}
-        {horizon === 'month' ? (
+        {horizon === "month" ? (
           <div className="flex-1 flex flex-col mt-4">
             {/* Weekday names */}
             <div className="grid grid-cols-7 gap-2 pb-2 text-center text-xs font-bold text-gray-400">
@@ -265,8 +296,8 @@ export function CalendarView({
             <div className="flex-1 grid grid-cols-7 gap-2">
               {monthDays.map((day) => {
                 const dayEvents = eventsByDate.get(day.dateStr);
-                const showAction = filter === 'all' || filter === 'action';
-                const showDue = filter === 'all' || filter === 'due';
+                const showAction = filter === "all" || filter === "action";
+                const showDue = filter === "all" || filter === "due";
                 const isToday = day.dateStr === todayStr;
                 const isDragOver = dragOverDate === day.dateStr;
 
@@ -277,8 +308,9 @@ export function CalendarView({
                     data-date={day.dateStr}
                     onDragOver={(e) => {
                       e.preventDefault();
-                      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-                      if (dragOverDate !== day.dateStr) setDragOverDate(day.dateStr);
+                      if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+                      if (dragOverDate !== day.dateStr)
+                        setDragOverDate(day.dateStr);
                     }}
                     onDragLeave={() => {
                       if (dragOverDate === day.dateStr) setDragOverDate(null);
@@ -287,8 +319,8 @@ export function CalendarView({
                       e.preventDefault();
                       setDragOverDate(null);
                       const raw =
-                        e.dataTransfer?.getData('application/kaj-task') ||
-                        e.dataTransfer?.getData('text/plain');
+                        e.dataTransfer?.getData("application/kaj-task") ||
+                        e.dataTransfer?.getData("text/plain");
                       if (!raw) return;
                       try {
                         const data = JSON.parse(raw);
@@ -296,23 +328,29 @@ export function CalendarView({
                           onScheduleTask(
                             data.taskId,
                             day.dateStr,
-                            data.type === 'due' ? 'due' : 'action'
+                            data.type === "due" ? "due" : "action",
                           );
                         }
                       } catch (err) {
-                        console.error('Error handling calendar drop:', err);
+                        console.error("Error handling calendar drop:", err);
                       }
                     }}
                     className={`min-h-[90px] rounded-xl p-2 border flex flex-col transition-all ${
                       isDragOver
-                        ? 'bg-emerald-500/20 ring-2 ring-emerald-400 border-emerald-400 shadow-lg'
+                        ? "bg-emerald-500/20 ring-2 ring-emerald-400 border-emerald-400 shadow-lg"
                         : day.isCurrentMonth
-                        ? 'bg-[#1C2224]/50 border-[#2A3235]'
-                        : 'bg-[#121718]/30 border-[#2A3235]/40 opacity-40'
-                    } ${isToday && !isDragOver ? 'ring-2 ring-emerald-500/40' : ''}`}
+                          ? "bg-[#1C2224]/50 border-[#2A3235]"
+                          : "bg-[#121718]/30 border-[#2A3235]/40 opacity-40"
+                    } ${isToday && !isDragOver ? "ring-2 ring-emerald-500/40" : ""}`}
                   >
                     <div className="flex items-center justify-between text-[11px] font-semibold mb-1">
-                      <span className={isToday ? 'text-emerald-400 font-bold' : 'text-gray-400'}>
+                      <span
+                        className={
+                          isToday
+                            ? "text-emerald-400 font-bold"
+                            : "text-gray-400"
+                        }
+                      >
                         {day.date.getDate()}
                       </span>
                     </div>
@@ -329,19 +367,25 @@ export function CalendarView({
                               e.stopPropagation();
                               const payload = JSON.stringify({
                                 taskId: ev.task_id,
-                                type: 'action',
+                                type: "action",
                                 fromDate: ev.date,
                               });
-                              e.dataTransfer?.setData('application/kaj-task', payload);
-                              e.dataTransfer?.setData('text/plain', payload);
-                              if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                              e.dataTransfer?.setData(
+                                "application/kaj-task",
+                                payload,
+                              );
+                              e.dataTransfer?.setData("text/plain", payload);
+                              if (e.dataTransfer)
+                                e.dataTransfer.effectAllowed = "move";
                             }}
                             onClick={() => {
                               const t = tasks.find((x) => x.id === ev.task_id);
                               if (t) onSelectTask(t);
                             }}
                             className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium truncate cursor-grab active:cursor-grabbing bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 ${
-                              ev.is_virtual ? 'border-dashed opacity-80 cursor-pointer' : ''
+                              ev.is_virtual
+                                ? "border-dashed opacity-80 cursor-pointer"
+                                : ""
                             }`}
                             title={`Action Date: ${ev.title}`}
                           >
@@ -361,19 +405,25 @@ export function CalendarView({
                               e.stopPropagation();
                               const payload = JSON.stringify({
                                 taskId: ev.task_id,
-                                type: 'due',
+                                type: "due",
                                 fromDate: ev.date,
                               });
-                              e.dataTransfer?.setData('application/kaj-task', payload);
-                              e.dataTransfer?.setData('text/plain', payload);
-                              if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                              e.dataTransfer?.setData(
+                                "application/kaj-task",
+                                payload,
+                              );
+                              e.dataTransfer?.setData("text/plain", payload);
+                              if (e.dataTransfer)
+                                e.dataTransfer.effectAllowed = "move";
                             }}
                             onClick={() => {
                               const t = tasks.find((x) => x.id === ev.task_id);
                               if (t) onSelectTask(t);
                             }}
                             className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium truncate cursor-grab active:cursor-grabbing bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20 ${
-                              ev.is_virtual ? 'border-dashed opacity-80 cursor-pointer' : ''
+                              ev.is_virtual
+                                ? "border-dashed opacity-80 cursor-pointer"
+                                : ""
                             }`}
                             title={`Due Date: ${ev.title}`}
                           >
@@ -389,11 +439,14 @@ export function CalendarView({
           </div>
         ) : (
           /* View Horizon: Week Grid */
-          <div data-testid="calendar-week-grid" className="flex-1 grid grid-cols-7 gap-3 mt-4">
+          <div
+            data-testid="calendar-week-grid"
+            className="flex-1 grid grid-cols-7 gap-3 mt-4"
+          >
             {weekDays.map((day) => {
               const dayEvents = eventsByDate.get(day.dateStr);
-              const showAction = filter === 'all' || filter === 'action';
-              const showDue = filter === 'all' || filter === 'due';
+              const showAction = filter === "all" || filter === "action";
+              const showDue = filter === "all" || filter === "due";
               const isToday = day.dateStr === todayStr;
               const isDragOver = dragOverDate === day.dateStr;
 
@@ -404,8 +457,9 @@ export function CalendarView({
                   data-date={day.dateStr}
                   onDragOver={(e) => {
                     e.preventDefault();
-                    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-                    if (dragOverDate !== day.dateStr) setDragOverDate(day.dateStr);
+                    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+                    if (dragOverDate !== day.dateStr)
+                      setDragOverDate(day.dateStr);
                   }}
                   onDragLeave={() => {
                     if (dragOverDate === day.dateStr) setDragOverDate(null);
@@ -414,8 +468,8 @@ export function CalendarView({
                     e.preventDefault();
                     setDragOverDate(null);
                     const raw =
-                      e.dataTransfer?.getData('application/kaj-task') ||
-                      e.dataTransfer?.getData('text/plain');
+                      e.dataTransfer?.getData("application/kaj-task") ||
+                      e.dataTransfer?.getData("text/plain");
                     if (!raw) return;
                     try {
                       const data = JSON.parse(raw);
@@ -423,24 +477,28 @@ export function CalendarView({
                         onScheduleTask(
                           data.taskId,
                           day.dateStr,
-                          data.type === 'due' ? 'due' : 'action'
+                          data.type === "due" ? "due" : "action",
                         );
                       }
                     } catch (err) {
-                      console.error('Error handling week drop:', err);
+                      console.error("Error handling week drop:", err);
                     }
                   }}
                   className={`flex flex-col rounded-xl p-3 border min-h-[350px] transition-all ${
                     isDragOver
-                      ? 'bg-emerald-500/20 ring-2 ring-emerald-400 border-emerald-400 shadow-lg'
-                      : 'bg-[#1C2224]/60 border-[#2A3235]'
-                  } ${isToday && !isDragOver ? 'ring-2 ring-emerald-500/40' : ''}`}
+                      ? "bg-emerald-500/20 ring-2 ring-emerald-400 border-emerald-400 shadow-lg"
+                      : "bg-[#1C2224]/60 border-[#2A3235]"
+                  } ${isToday && !isDragOver ? "ring-2 ring-emerald-500/40" : ""}`}
                 >
                   <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#2A3235]">
-                    <span className="text-xs font-bold text-gray-300">{day.dayName}</span>
+                    <span className="text-xs font-bold text-gray-300">
+                      {day.dayName}
+                    </span>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full font-bold ${
-                        isToday ? 'bg-emerald-500 text-[#0E1111]' : 'text-gray-400'
+                        isToday
+                          ? "bg-emerald-500 text-[#0E1111]"
+                          : "text-gray-400"
                       }`}
                     >
                       {day.date.getDate()}
@@ -459,19 +517,25 @@ export function CalendarView({
                             e.stopPropagation();
                             const payload = JSON.stringify({
                               taskId: ev.task_id,
-                              type: 'action',
+                              type: "action",
                               fromDate: ev.date,
                             });
-                            e.dataTransfer?.setData('application/kaj-task', payload);
-                            e.dataTransfer?.setData('text/plain', payload);
-                            if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                            e.dataTransfer?.setData(
+                              "application/kaj-task",
+                              payload,
+                            );
+                            e.dataTransfer?.setData("text/plain", payload);
+                            if (e.dataTransfer)
+                              e.dataTransfer.effectAllowed = "move";
                           }}
                           onClick={() => {
                             const t = tasks.find((x) => x.id === ev.task_id);
                             if (t) onSelectTask(t);
                           }}
                           className={`flex items-start gap-1.5 p-2 rounded-lg text-xs font-medium cursor-grab active:cursor-grabbing bg-emerald-500/10 text-emerald-200 border border-emerald-500/30 hover:bg-emerald-500/20 ${
-                            ev.is_virtual ? 'border-dashed opacity-80 cursor-pointer' : ''
+                            ev.is_virtual
+                              ? "border-dashed opacity-80 cursor-pointer"
+                              : ""
                           }`}
                         >
                           <span className="text-emerald-400 font-bold">▶</span>
@@ -490,19 +554,25 @@ export function CalendarView({
                             e.stopPropagation();
                             const payload = JSON.stringify({
                               taskId: ev.task_id,
-                              type: 'due',
+                              type: "due",
                               fromDate: ev.date,
                             });
-                            e.dataTransfer?.setData('application/kaj-task', payload);
-                            e.dataTransfer?.setData('text/plain', payload);
-                            if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                            e.dataTransfer?.setData(
+                              "application/kaj-task",
+                              payload,
+                            );
+                            e.dataTransfer?.setData("text/plain", payload);
+                            if (e.dataTransfer)
+                              e.dataTransfer.effectAllowed = "move";
                           }}
                           onClick={() => {
                             const t = tasks.find((x) => x.id === ev.task_id);
                             if (t) onSelectTask(t);
                           }}
                           className={`flex items-start gap-1.5 p-2 rounded-lg text-xs font-medium cursor-grab active:cursor-grabbing bg-rose-500/10 text-rose-200 border border-rose-500/30 hover:bg-rose-500/20 ${
-                            ev.is_virtual ? 'border-dashed opacity-80 cursor-pointer' : ''
+                            ev.is_virtual
+                              ? "border-dashed opacity-80 cursor-pointer"
+                              : ""
                           }`}
                         >
                           <span className="text-rose-400 font-bold">⚑</span>
@@ -530,7 +600,8 @@ export function CalendarView({
         </div>
 
         <p className="text-[11px] text-gray-400 my-3">
-          Tasks missing an action date. Schedule them directly onto the calendar:
+          Tasks missing an action date. Schedule them directly onto the
+          calendar:
         </p>
 
         <div className="flex-1 flex flex-col gap-2.5 overflow-y-auto max-h-[600px]">
@@ -547,11 +618,11 @@ export function CalendarView({
                 onDragStart={(e) => {
                   const payload = JSON.stringify({
                     taskId: t.id,
-                    type: 'action',
+                    type: "action",
                   });
-                  e.dataTransfer?.setData('application/kaj-task', payload);
-                  e.dataTransfer?.setData('text/plain', payload);
-                  if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                  e.dataTransfer?.setData("application/kaj-task", payload);
+                  e.dataTransfer?.setData("text/plain", payload);
+                  if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
                 }}
                 className="rounded-xl p-3 bg-[#1C2224] border border-[#2A3235] hover:border-gray-500 transition-colors flex flex-col gap-2 cursor-grab active:cursor-grabbing"
               >

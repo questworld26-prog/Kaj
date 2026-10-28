@@ -1,6 +1,6 @@
 // [spec: UI-004]
-import { h } from 'preact';
-import type { Task, Project } from '../../shared/types.js';
+import { h } from "preact";
+import type { Task, Project } from "../../shared/types.js";
 
 interface CompletedDrawerProps {
   isOpen: boolean;
@@ -31,7 +31,9 @@ export function CompletedDrawer({
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[#2A3235]">
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold text-white">Completed Archive</h3>
+            <h3 className="text-base font-bold text-white">
+              Completed Archive
+            </h3>
             <span className="text-xs px-2 py-0.5 rounded-full bg-[#1C2224] text-emerald-400 border border-[#2A3235] font-semibold">
               {tasks.length}
             </span>
@@ -43,8 +45,18 @@ export function CompletedDrawer({
             onClick={onClose}
             className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-[#1C2224] transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -61,7 +73,9 @@ export function CompletedDrawer({
             </div>
           ) : (
             tasks.map((task) => {
-              const proj = task.project_id ? projectMap.get(task.project_id) : null;
+              const proj = task.project_id
+                ? projectMap.get(task.project_id)
+                : null;
 
               return (
                 <div
@@ -96,7 +110,10 @@ export function CompletedDrawer({
 
                   <div className="flex items-center justify-between pt-2 border-t border-[#2A3235]/60 text-[10px] text-gray-400">
                     <span>
-                      Done: {task.completed_at ? new Date(task.completed_at).toLocaleDateString() : 'recently'}
+                      Done:{" "}
+                      {task.completed_at
+                        ? new Date(task.completed_at).toLocaleDateString()
+                        : "recently"}
                     </span>
 
                     <button
@@ -105,8 +122,18 @@ export function CompletedDrawer({
                       onClick={() => onRestoreTask(task.id)}
                       className="flex items-center gap-1 font-semibold px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 transition-colors"
                     >
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                        />
                       </svg>
                       Restore to Todo
                     </button>
@@ -120,4 +147,3 @@ export function CompletedDrawer({
     </div>
   );
 }
-

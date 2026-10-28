@@ -1,115 +1,135 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Kaj (কাজ) Bento × Chronos UI Verification', () => {
+test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
   test.beforeEach(async ({ page }) => {
     // Monitor console errors
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') {
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
         console.error(`Browser console error: ${msg.text()}`);
       }
     });
   });
 
   // [verifies: UI-001/AC-UI-001.1]
-  test('renders full-width 6-column Kanban board without sidebar', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.locator('#app-root')).toBeVisible();
+  test("renders full-width 6-column Kanban board without sidebar", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.locator("#app-root")).toBeVisible();
 
     // Verify 6 column tracks in header
     const columns = page.locator('[data-testid="column-header"]');
     await expect(columns).toHaveCount(6);
 
     const columnNames = await columns.allTextContents();
-    const joinedNames = columnNames.join(' ').toLowerCase();
-    expect(joinedNames).toContain('triage');
-    expect(joinedNames).toContain('todo');
-    expect(joinedNames).toContain('today');
-    expect(joinedNames).toContain('this week');
-    expect(joinedNames).toContain('this month');
-    expect(joinedNames).toContain('tracking');
+    const joinedNames = columnNames.join(" ").toLowerCase();
+    expect(joinedNames).toContain("triage");
+    expect(joinedNames).toContain("todo");
+    expect(joinedNames).toContain("today");
+    expect(joinedNames).toContain("this week");
+    expect(joinedNames).toContain("this month");
+    expect(joinedNames).toContain("tracking");
 
     // Confirm no legacy left sidebar exists (100% full-width layout)
-    await expect(page.locator('aside.left-sidebar')).toHaveCount(0);
+    await expect(page.locator("aside.left-sidebar")).toHaveCount(0);
   });
 
   // [verifies: UI-001/AC-UI-001.2]
-  test('renders project swimlane pods with collapsible headers and task counts', async ({ page }) => {
-    await page.goto('/');
+  test("renders project swimlane pods with collapsible headers and task counts", async ({
+    page,
+  }) => {
+    await page.goto("/");
 
     // Check default Unassigned swimlane pod
-    const unassignedPod = page.locator('[data-testid="swimlane-pod-unassigned"]');
+    const unassignedPod = page.locator(
+      '[data-testid="swimlane-pod-unassigned"]',
+    );
     await expect(unassignedPod).toBeVisible();
 
     // Create a new project via API or modal
-    await page.request.post('/api/projects', {
-      data: { name: 'Core Infrastructure', color: '#10B981' },
+    await page.request.post("/api/projects", {
+      data: { name: "Core Infrastructure", color: "#10B981" },
     });
 
     // Create a task inside Core Infrastructure
-    const projRes = await page.request.get('/api/projects');
+    const projRes = await page.request.get("/api/projects");
     const projects = (await projRes.json()) as { id: string; name: string }[];
-    const infraProj = projects.find((p) => p.name === 'Core Infrastructure')!;
+    const infraProj = projects.find((p) => p.name === "Core Infrastructure")!;
 
-    await page.request.post('/api/tasks', {
+    await page.request.post("/api/tasks", {
       data: {
-        title: 'Deploy K8s Cluster',
+        title: "Deploy K8s Cluster",
         project_id: infraProj.id,
-        status: 'todo',
-        priority: 'month',
+        status: "todo",
+        priority: "month",
       },
     });
 
     await page.reload();
 
-    const infraPod = page.locator(`[data-testid="swimlane-pod-${infraProj.id}"]`);
+    const infraPod = page.locator(
+      `[data-testid="swimlane-pod-${infraProj.id}"]`,
+    );
     await expect(infraPod).toBeVisible();
-    await expect(infraPod.locator('[data-testid="swimlane-task-count"]')).toContainText('1');
+    await expect(
+      infraPod.locator('[data-testid="swimlane-task-count"]'),
+    ).toContainText("1");
 
     // Test collapse / expand
-    const collapseBtn = infraPod.locator('[data-testid="swimlane-collapse-toggle"]');
+    const collapseBtn = infraPod.locator(
+      '[data-testid="swimlane-collapse-toggle"]',
+    );
     await collapseBtn.click();
-    await expect(infraPod.locator('[data-testid="swimlane-content"]')).toBeHidden();
+    await expect(
+      infraPod.locator('[data-testid="swimlane-content"]'),
+    ).toBeHidden();
     await collapseBtn.click();
-    await expect(infraPod.locator('[data-testid="swimlane-content"]')).toBeVisible();
+    await expect(
+      infraPod.locator('[data-testid="swimlane-content"]'),
+    ).toBeVisible();
   });
 
   // [verifies: UI-001/AC-UI-001.3]
-  test('renders tracking column cards with dashed borders and dedicated carrier/blocker badge', async ({ page }) => {
-    await page.goto('/');
+  test("renders tracking column cards with dashed borders and dedicated carrier/blocker badge", async ({
+    page,
+  }) => {
+    await page.goto("/");
 
     // Create a tracking task with waiting_on
-    await page.request.post('/api/tasks', {
+    await page.request.post("/api/tasks", {
       data: {
-        title: 'Wait for FedEx delivery of RAM',
-        status: 'tracking',
-        waiting_on: 'FedEx 772918390',
-        priority: 'week',
+        title: "Wait for FedEx delivery of RAM",
+        status: "tracking",
+        waiting_on: "FedEx 772918390",
+        priority: "week",
       },
     });
 
     await page.reload();
 
     const trackingCard = page.locator('[data-testid="task-card"]').filter({
-      hasText: 'Wait for FedEx delivery of RAM',
+      hasText: "Wait for FedEx delivery of RAM",
     });
     await expect(trackingCard).toBeVisible();
 
     // Check dashed border style and blocker badge
     const cardEl = trackingCard.first();
     await expect(cardEl).toHaveClass(/border-dashed/);
-    await expect(cardEl.locator('[data-testid="blocker-badge"]')).toContainText('FedEx 772918390');
+    await expect(cardEl.locator('[data-testid="blocker-badge"]')).toContainText(
+      "FedEx 772918390",
+    );
   });
 
   // [verifies: UI-001/AC-UI-001.4]
-  test('allows moving tasks across columns and swimlanes', async ({ page }) => {
-    await page.goto('/');
+  test("allows moving tasks across columns and swimlanes", async ({ page }) => {
+    await page.goto("/");
 
     // Create a task in Triage
-    const res = await page.request.post('/api/tasks', {
+    const res = await page.request.post("/api/tasks", {
       data: {
-        title: 'Quick Triage Item',
-        status: 'triage',
-        priority: 'today',
+        title: "Quick Triage Item",
+        status: "triage",
+        priority: "today",
       },
     });
     const task = (await res.json()) as { id: string };
@@ -121,35 +141,45 @@ test.describe('Kaj (কাজ) Bento × Chronos UI Verification', () => {
 
     // Use task quick status mover dropdown or drag
     const statusSelect = taskCard.locator('[data-testid="task-status-select"]');
-    await statusSelect.selectOption('in_progress_today');
+    await statusSelect.selectOption("in_progress_today");
 
     // Verify it updated in UI and persisted
-    await expect(page.locator(`[data-col="in_progress_today"] [data-task-id="${task.id}"]`)).toBeVisible();
+    await expect(
+      page.locator(
+        `[data-col="in_progress_today"] [data-task-id="${task.id}"]`,
+      ),
+    ).toBeVisible();
 
     const getRes = await page.request.get(`/api/tasks/${task.id}`);
     const updated = (await getRes.json()) as { status: string };
-    expect(updated.status).toBe('in_progress_today');
+    expect(updated.status).toBe("in_progress_today");
 
     // Drag-and-drop across columns (from in_progress_today to tracking)
-    const targetTrackingCol = page.locator('[data-testid="swimlane-pod-unassigned"] [data-col="tracking"]');
+    const targetTrackingCol = page.locator(
+      '[data-testid="swimlane-pod-unassigned"] [data-col="tracking"]',
+    );
     await taskCard.dragTo(targetTrackingCol);
 
-    await expect(page.locator(`[data-col="tracking"] [data-task-id="${task.id}"]`)).toBeVisible();
+    await expect(
+      page.locator(`[data-col="tracking"] [data-task-id="${task.id}"]`),
+    ).toBeVisible();
     const getRes2 = await page.request.get(`/api/tasks/${task.id}`);
     const updated2 = (await getRes2.json()) as { status: string };
-    expect(updated2.status).toBe('tracking');
+    expect(updated2.status).toBe("tracking");
   });
 
   // [verifies: UI-001/AC-UI-001.5]
-  test('provides controls to reorder project swimlanes immediately', async ({ page }) => {
-    await page.goto('/');
+  test("provides controls to reorder project swimlanes immediately", async ({
+    page,
+  }) => {
+    await page.goto("/");
 
     // Create two test projects
-    const p1Res = await page.request.post('/api/projects', {
-      data: { name: 'Alpha Project', color: '#38BDF8' },
+    const p1Res = await page.request.post("/api/projects", {
+      data: { name: "Alpha Project", color: "#38BDF8" },
     });
-    const p2Res = await page.request.post('/api/projects', {
-      data: { name: 'Beta Project', color: '#F43F5E' },
+    const p2Res = await page.request.post("/api/projects", {
+      data: { name: "Beta Project", color: "#F43F5E" },
     });
     const p1 = (await p1Res.json()) as { id: string };
     const p2 = (await p2Res.json()) as { id: string };
@@ -164,7 +194,9 @@ test.describe('Kaj (কাজ) Bento × Chronos UI Verification', () => {
     await expect(reorderModal).toBeVisible();
 
     // Move Beta project up
-    const moveUpBtn = reorderModal.locator(`[data-project-id="${p2.id}"] [data-testid="move-up-btn"]`);
+    const moveUpBtn = reorderModal.locator(
+      `[data-project-id="${p2.id}"] [data-testid="move-up-btn"]`,
+    );
     await moveUpBtn.click();
 
     // Close modal
@@ -173,7 +205,9 @@ test.describe('Kaj (কাজ) Bento × Chronos UI Verification', () => {
     // Verify board renders Beta before Alpha
     const pods = page.locator('[data-testid^="swimlane-pod-"]');
     const podIds = await pods.evaluateAll((list) =>
-      list.map((el) => el.getAttribute('data-testid')?.replace('swimlane-pod-', ''))
+      list.map((el) =>
+        el.getAttribute("data-testid")?.replace("swimlane-pod-", ""),
+      ),
     );
 
     const betaIdx = podIds.indexOf(p2.id);
@@ -182,73 +216,87 @@ test.describe('Kaj (কাজ) Bento × Chronos UI Verification', () => {
   });
 
   // [verifies: UI-002/AC-UI-002.1]
-  test('enforces Chronos dark-mode surfaces #0E1111 canvas and #1C2224 cards', async ({ page }) => {
-    await page.goto('/');
+  test("enforces Chronos dark-mode surfaces #0E1111 canvas and #1C2224 cards", async ({
+    page,
+  }) => {
+    await page.goto("/");
 
     // Background color of body or root
     const bodyBg = await page.evaluate(() => {
       return window.getComputedStyle(document.body).backgroundColor;
     });
     // #0E1111 in RGB is rgb(14, 17, 17)
-    expect(bodyBg).toBe('rgb(14, 17, 17)');
+    expect(bodyBg).toBe("rgb(14, 17, 17)");
 
     // Check card surface color
     const card = page.locator('[data-testid="task-card"]').first();
     if (await card.isVisible()) {
-      const cardBg = await card.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+      const cardBg = await card.evaluate(
+        (el) => window.getComputedStyle(el).backgroundColor,
+      );
       // #1C2224 is rgb(28, 34, 36)
-      expect(cardBg).toBe('rgb(28, 34, 36)');
+      expect(cardBg).toBe("rgb(28, 34, 36)");
     }
   });
 
   // [verifies: UI-002/AC-UI-002.2]
-  test('uses Emerald/Mint #10B981 for primary actions and Gold #EAB308 for Tracking accents', async ({ page }) => {
-    await page.goto('/');
+  test("uses Emerald/Mint #10B981 for primary actions and Gold #EAB308 for Tracking accents", async ({
+    page,
+  }) => {
+    await page.goto("/");
 
     const addBtn = page.locator('[data-testid="add-task-btn"]');
     await expect(addBtn).toBeVisible();
 
     // Emerald accent #10B981 is rgb(16, 185, 129)
-    const btnBg = await addBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
-    expect(btnBg).toBe('rgb(16, 185, 129)');
+    const btnBg = await addBtn.evaluate(
+      (el) => window.getComputedStyle(el).backgroundColor,
+    );
+    expect(btnBg).toBe("rgb(16, 185, 129)");
   });
 
   // [verifies: UI-002/AC-UI-002.3]
-  test('maintains accessible text and non-text component contrast', async ({ page }) => {
-    await page.goto('/');
+  test("maintains accessible text and non-text component contrast", async ({
+    page,
+  }) => {
+    await page.goto("/");
 
     // Verify main body text color is high-contrast light grey/white
     const textColor = await page.evaluate(() => {
       return window.getComputedStyle(document.body).color;
     });
     // Expected light text e.g. rgb(243, 244, 246) or rgb(255, 255, 255)
-    expect(textColor).toMatch(/rgb\((2[3-5][0-9]),\s*(2[3-5][0-9]),\s*(2[3-5][0-9])\)/);
+    expect(textColor).toMatch(
+      /rgb\((2[3-5][0-9]),\s*(2[3-5][0-9]),\s*(2[3-5][0-9])\)/,
+    );
   });
 
   // [verifies: UI-003/AC-UI-003.1]
   // [verifies: UI-003/AC-UI-003.2]
   // [verifies: UI-003/AC-UI-003.3]
   // [verifies: UI-003/AC-UI-003.4]
-  test('calendar view renders Month and Week grids, dual-date badges, filter toggles, and unscheduled sidebar', async ({ page }) => {
-    await page.goto('/');
+  test("calendar view renders Month and Week grids, dual-date badges, filter toggles, and unscheduled sidebar", async ({
+    page,
+  }) => {
+    await page.goto("/");
 
     // Create an unscheduled task
-    const unschedRes = await page.request.post('/api/tasks', {
+    const unschedRes = await page.request.post("/api/tasks", {
       data: {
-        title: 'Unscheduled Architecture Review',
-        status: 'todo',
-        priority: 'week',
+        title: "Unscheduled Architecture Review",
+        status: "todo",
+        priority: "week",
       },
     });
     const unschedTask = (await unschedRes.json()) as { id: string };
 
     // Create a scheduled task with both action_date and due_date
     const today = new Date().toISOString().slice(0, 10);
-    await page.request.post('/api/tasks', {
+    await page.request.post("/api/tasks", {
       data: {
-        title: 'Scheduled Feature Launch',
-        status: 'in_progress_today',
-        priority: 'today',
+        title: "Scheduled Feature Launch",
+        status: "in_progress_today",
+        priority: "today",
         action_date: today,
         due_date: today,
       },
@@ -271,10 +319,12 @@ test.describe('Kaj (কাজ) Bento × Chronos UI Verification', () => {
     await expect(weekViewBtn).toBeVisible();
 
     // UI-003.1: Verify distinct Action Date (▶) and Due Date (⚑) badges
-    const actionBadge = page.locator('[data-testid="badge-action-date"]').first();
+    const actionBadge = page
+      .locator('[data-testid="badge-action-date"]')
+      .first();
     const dueBadge = page.locator('[data-testid="badge-due-date"]').first();
-    await expect(actionBadge).toContainText('▶');
-    await expect(dueBadge).toContainText('⚑');
+    await expect(actionBadge).toContainText("▶");
+    await expect(dueBadge).toContainText("⚑");
 
     // UI-003.2: Verify filter toggle: All, Action Dates only, Due Dates only
     const filterActionBtn = page.locator('[data-testid="filter-action-btn"]');
@@ -282,49 +332,72 @@ test.describe('Kaj (কাজ) Bento × Chronos UI Verification', () => {
     const filterAllBtn = page.locator('[data-testid="filter-all-btn"]');
 
     await filterActionBtn.click();
-    await expect(page.locator('[data-testid="badge-action-date"]').first()).toBeVisible();
+    await expect(
+      page.locator('[data-testid="badge-action-date"]').first(),
+    ).toBeVisible();
     await expect(page.locator('[data-testid="badge-due-date"]')).toHaveCount(0);
 
     await filterDueBtn.click();
-    await expect(page.locator('[data-testid="badge-due-date"]').first()).toBeVisible();
-    await expect(page.locator('[data-testid="badge-action-date"]')).toHaveCount(0);
+    await expect(
+      page.locator('[data-testid="badge-due-date"]').first(),
+    ).toBeVisible();
+    await expect(page.locator('[data-testid="badge-action-date"]')).toHaveCount(
+      0,
+    );
 
     await filterAllBtn.click();
-    await expect(page.locator('[data-testid="badge-action-date"]').first()).toBeVisible();
-    await expect(page.locator('[data-testid="badge-due-date"]').first()).toBeVisible();
+    await expect(
+      page.locator('[data-testid="badge-action-date"]').first(),
+    ).toBeVisible();
+    await expect(
+      page.locator('[data-testid="badge-due-date"]').first(),
+    ).toBeVisible();
 
     // UI-003.3: Verify Unscheduled sidebar and scheduling onto calendar
-    const unscheduledSidebar = page.locator('[data-testid="unscheduled-sidebar"]');
+    const unscheduledSidebar = page.locator(
+      '[data-testid="unscheduled-sidebar"]',
+    );
     await expect(unscheduledSidebar).toBeVisible();
-    await expect(unscheduledSidebar).toContainText('Unscheduled Architecture Review');
+    await expect(unscheduledSidebar).toContainText(
+      "Unscheduled Architecture Review",
+    );
 
     // Click "Schedule Today" button for this specific task
-    const scheduleBtn = unscheduledSidebar
-      .locator(`[data-task-id="${unschedTask.id}"] [data-testid="schedule-today-btn"]`);
+    const scheduleBtn = unscheduledSidebar.locator(
+      `[data-task-id="${unschedTask.id}"] [data-testid="schedule-today-btn"]`,
+    );
     await scheduleBtn.click();
 
     // Verify task moved from unscheduled list to the active calendar grid
-    await expect(calendarRoot.locator('[data-testid="badge-action-date"]').filter({
-      hasText: 'Unscheduled Architecture Review',
-    })).toBeVisible();
+    await expect(
+      calendarRoot.locator('[data-testid="badge-action-date"]').filter({
+        hasText: "Unscheduled Architecture Review",
+      }),
+    ).toBeVisible();
 
     // UI-003.4: Toggle to Week view
     await weekViewBtn.click();
-    await expect(page.locator('[data-testid="calendar-week-grid"]')).toBeVisible();
-    await expect(page.locator('[data-testid="week-day-column"]')).toHaveCount(7);
+    await expect(
+      page.locator('[data-testid="calendar-week-grid"]'),
+    ).toBeVisible();
+    await expect(page.locator('[data-testid="week-day-column"]')).toHaveCount(
+      7,
+    );
   });
 
   // [verifies: UI-003/AC-UI-003.3]
   // [verifies: UI-003/AC-UI-003.5]
-  test('allows dragging unscheduled tasks and scheduled tasks across calendar days', async ({ page }) => {
-    await page.goto('/');
+  test("allows dragging unscheduled tasks and scheduled tasks across calendar days", async ({
+    page,
+  }) => {
+    await page.goto("/");
 
     // Create an unscheduled task
-    const res1 = await page.request.post('/api/tasks', {
+    const res1 = await page.request.post("/api/tasks", {
       data: {
-        title: 'Drag-to-Schedule Architecture Spike',
-        status: 'todo',
-        priority: 'week',
+        title: "Drag-to-Schedule Architecture Spike",
+        status: "todo",
+        priority: "week",
       },
     });
     const task1 = (await res1.json()) as { id: string };
@@ -337,44 +410,56 @@ test.describe('Kaj (কাজ) Bento × Chronos UI Verification', () => {
     await expect(calendarRoot).toBeVisible();
 
     // Drag unscheduled task to a specific day cell in Month view
-    const unschedCard = page.locator(`[data-testid="unscheduled-sidebar"] [data-task-id="${task1.id}"]`);
+    const unschedCard = page.locator(
+      `[data-testid="unscheduled-sidebar"] [data-task-id="${task1.id}"]`,
+    );
     await expect(unschedCard).toBeVisible();
 
-    const targetDayCell15 = page.locator('[data-testid="calendar-day-cell"][data-date="2026-10-15"]');
+    const targetDayCell15 = page.locator(
+      '[data-testid="calendar-day-cell"][data-date="2026-10-15"]',
+    );
     await unschedCard.dragTo(targetDayCell15);
 
     // Verify task badge is now visible on 2026-10-15
-    const badgeOn15 = targetDayCell15.locator('[data-testid="badge-action-date"]').filter({
-      hasText: 'Drag-to-Schedule Architecture Spike',
-    });
+    const badgeOn15 = targetDayCell15
+      .locator('[data-testid="badge-action-date"]')
+      .filter({
+        hasText: "Drag-to-Schedule Architecture Spike",
+      });
     await expect(badgeOn15).toBeVisible();
 
     // Drag scheduled task from 2026-10-15 to 2026-10-20
-    const targetDayCell20 = page.locator('[data-testid="calendar-day-cell"][data-date="2026-10-20"]');
+    const targetDayCell20 = page.locator(
+      '[data-testid="calendar-day-cell"][data-date="2026-10-20"]',
+    );
     await badgeOn15.dragTo(targetDayCell20);
 
     // Verify task moved to 2026-10-20
-    const badgeOn20 = targetDayCell20.locator('[data-testid="badge-action-date"]').filter({
-      hasText: 'Drag-to-Schedule Architecture Spike',
-    });
+    const badgeOn20 = targetDayCell20
+      .locator('[data-testid="badge-action-date"]')
+      .filter({
+        hasText: "Drag-to-Schedule Architecture Spike",
+      });
     await expect(badgeOn20).toBeVisible();
 
     // Verify persistence in SQLite
     const getRes = await page.request.get(`/api/tasks/${task1.id}`);
     const updated = (await getRes.json()) as { action_date: string };
-    expect(updated.action_date).toBe('2026-10-20');
+    expect(updated.action_date).toBe("2026-10-20");
   });
 
   // [verifies: UI-004/AC-UI-004.1]
   // [verifies: UI-004/AC-UI-004.2]
-  test('native task editor dialog exposes all inputs and supports light-dismiss', async ({ page }) => {
-    await page.goto('/');
+  test("native task editor dialog exposes all inputs and supports light-dismiss", async ({
+    page,
+  }) => {
+    await page.goto("/");
 
     // Open task dialog via Add Task button
     const addBtn = page.locator('[data-testid="add-task-btn"]');
     await addBtn.click();
 
-    const dialog = page.locator('dialog#task-dialog');
+    const dialog = page.locator("dialog#task-dialog");
     await expect(dialog).toBeVisible();
 
     // UI-004.2: Verify all inputs are present
@@ -389,34 +474,40 @@ test.describe('Kaj (কাজ) Bento × Chronos UI Verification', () => {
     await expect(dialog.locator('textarea[name="details"]')).toBeVisible();
 
     // Fill form and create task
-    await dialog.locator('input[name="title"]').fill('Comprehensive Dialog Verification Task');
-    await dialog.locator('select[name="priority"]').selectOption('quarter');
-    await dialog.locator('select[name="repeat_rule"]').selectOption('weekly');
+    await dialog
+      .locator('input[name="title"]')
+      .fill("Comprehensive Dialog Verification Task");
+    await dialog.locator('select[name="priority"]').selectOption("quarter");
+    await dialog.locator('select[name="repeat_rule"]').selectOption("weekly");
     await dialog.locator('button[type="submit"]').click();
 
     // Verify dialog closed and task rendered on board
     await expect(dialog).toBeHidden();
-    await expect(page.locator('[data-testid="task-card"]').filter({
-      hasText: 'Comprehensive Dialog Verification Task',
-    })).toBeVisible();
+    await expect(
+      page.locator('[data-testid="task-card"]').filter({
+        hasText: "Comprehensive Dialog Verification Task",
+      }),
+    ).toBeVisible();
 
     // UI-004.1: Test Light-dismiss via Escape key
     await addBtn.click();
     await expect(dialog).toBeVisible();
-    await page.keyboard.press('Escape');
+    await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
   });
 
   // [verifies: UI-004/AC-UI-004.3]
-  test('completed archive drawer lists done tasks and provides 1-click restoration', async ({ page }) => {
-    await page.goto('/');
+  test("completed archive drawer lists done tasks and provides 1-click restoration", async ({
+    page,
+  }) => {
+    await page.goto("/");
 
     // Create a task and mark as completed
-    const createRes = await page.request.post('/api/tasks', {
+    const createRes = await page.request.post("/api/tasks", {
       data: {
-        title: 'Task to be Archived and Restored',
-        status: 'todo',
-        priority: 'week',
+        title: "Task to be Archived and Restored",
+        status: "todo",
+        priority: "week",
       },
     });
     const task = (await createRes.json()) as { id: string };
@@ -430,15 +521,19 @@ test.describe('Kaj (কাজ) Bento × Chronos UI Verification', () => {
 
     const drawer = page.locator('[data-testid="completed-archive-drawer"]');
     await expect(drawer).toBeVisible();
-    await expect(drawer).toContainText('Task to be Archived and Restored');
+    await expect(drawer).toContainText("Task to be Archived and Restored");
 
     // 1-Click Restore
-    const restoreBtn = drawer.locator(`[data-task-id="${task.id}"] [data-testid="restore-task-btn"]`);
+    const restoreBtn = drawer.locator(
+      `[data-task-id="${task.id}"] [data-testid="restore-task-btn"]`,
+    );
     await restoreBtn.click();
 
     // Verify drawer updates and task reappears on active board in todo
     await page.locator('[data-testid="close-archive-btn"]').click();
     await expect(drawer).toBeHidden();
-    await expect(page.locator(`[data-col="todo"] [data-task-id="${task.id}"]`)).toBeVisible();
+    await expect(
+      page.locator(`[data-col="todo"] [data-task-id="${task.id}"]`),
+    ).toBeVisible();
   });
 });

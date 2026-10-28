@@ -1,10 +1,10 @@
 // [spec: UI-001]
 // [spec: UI-002]
-import { h } from 'preact';
+import { h } from "preact";
 
 interface TopBarProps {
-  currentView: 'board' | 'calendar';
-  onViewChange: (view: 'board' | 'calendar') => void;
+  currentView: "board" | "calendar";
+  onViewChange: (view: "board" | "calendar") => void;
   onAddTask: () => void;
   onOpenArchive: () => void;
   onOpenReorder: () => void;
@@ -31,7 +31,9 @@ export function TopBar({
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-base tracking-tight text-white">Kaj</span>
+              <span className="font-semibold text-base tracking-tight text-white">
+                Kaj
+              </span>
               <span className="text-xs px-1.5 py-0.5 rounded bg-[#1C2224] text-emerald-400 font-medium border border-[#2A3235]">
                 কাজ
               </span>
@@ -45,34 +47,57 @@ export function TopBar({
         </div>
 
         {/* View Switcher: Board vs Calendar */}
-        <nav aria-label="Main Navigation" className="flex items-center bg-[#0E1111] p-1 rounded-xl border border-[#2A3235]">
+        <nav
+          aria-label="Main Navigation"
+          className="flex items-center bg-[#0E1111] p-1 rounded-xl border border-[#2A3235]"
+        >
           <button
             type="button"
             data-testid="nav-board-btn"
-            onClick={() => onViewChange('board')}
+            onClick={() => onViewChange("board")}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              currentView === 'board'
-                ? 'bg-[#1C2224] text-emerald-400 shadow-sm border border-[#2A3235]'
-                : 'text-gray-400 hover:text-gray-200'
+              currentView === "board"
+                ? "bg-[#1C2224] text-emerald-400 shadow-sm border border-[#2A3235]"
+                : "text-gray-400 hover:text-gray-200"
             }`}
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+              />
             </svg>
             Kanban Board
           </button>
           <button
             type="button"
             data-testid="nav-calendar-btn"
-            onClick={() => onViewChange('calendar')}
+            onClick={() => onViewChange("calendar")}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              currentView === 'calendar'
-                ? 'bg-[#1C2224] text-emerald-400 shadow-sm border border-[#2A3235]'
-                : 'text-gray-400 hover:text-gray-200'
+              currentView === "calendar"
+                ? "bg-[#1C2224] text-emerald-400 shadow-sm border border-[#2A3235]"
+                : "text-gray-400 hover:text-gray-200"
             }`}
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
             </svg>
             Calendar
           </button>
@@ -87,8 +112,18 @@ export function TopBar({
             title="Manage Projects & Swimlanes"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#1C2224] text-gray-300 hover:text-white border border-[#2A3235] hover:border-gray-600 transition-colors"
           >
-            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" />
+            <svg
+              className="w-3.5 h-3.5 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 6h16M4 12h16M4 18h7"
+              />
             </svg>
             Projects
           </button>
@@ -99,8 +134,18 @@ export function TopBar({
             onClick={onOpenArchive}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#1C2224] text-gray-300 hover:text-white border border-[#2A3235] hover:border-gray-600 transition-colors"
           >
-            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+            <svg
+              className="w-3.5 h-3.5 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+              />
             </svg>
             Archive
             {completedCount > 0 && (
@@ -116,8 +161,18 @@ export function TopBar({
             onClick={onAddTask}
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#10B981] hover:bg-[#34D399] text-[#0E1111] shadow-md shadow-emerald-950 transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2.5"
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             Add Task
           </button>
@@ -126,4 +181,3 @@ export function TopBar({
     </header>
   );
 }
-

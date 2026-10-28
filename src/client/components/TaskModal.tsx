@@ -1,7 +1,13 @@
 // [spec: UI-004]
-import { h } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
-import type { Task, Project, TaskStatus, PriorityHorizon, RecurrenceRule } from '../../shared/types.js';
+import { h } from "preact";
+import { useEffect, useRef, useState } from "preact/hooks";
+import type {
+  Task,
+  Project,
+  TaskStatus,
+  PriorityHorizon,
+  RecurrenceRule,
+} from "../../shared/types.js";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -23,15 +29,15 @@ export function TaskModal({
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   const [formData, setFormData] = useState<Partial<Task>>({
-    title: '',
-    status: 'triage',
+    title: "",
+    status: "triage",
     project_id: null,
-    priority: 'week',
+    priority: "week",
     action_date: null,
     due_date: null,
-    repeat_rule: 'none',
-    waiting_on: '',
-    details: '',
+    repeat_rule: "none",
+    waiting_on: "",
+    details: "",
   });
 
   // Sync state when task prop changes
@@ -45,20 +51,20 @@ export function TaskModal({
         action_date: task.action_date || null,
         due_date: task.due_date || null,
         repeat_rule: task.repeat_rule,
-        waiting_on: task.waiting_on || '',
-        details: task.details || '',
+        waiting_on: task.waiting_on || "",
+        details: task.details || "",
       });
     } else {
       setFormData({
-        title: '',
-        status: 'todo',
+        title: "",
+        status: "todo",
         project_id: null,
-        priority: 'week',
+        priority: "week",
         action_date: null,
         due_date: null,
-        repeat_rule: 'none',
-        waiting_on: '',
-        details: '',
+        repeat_rule: "none",
+        waiting_on: "",
+        details: "",
       });
     }
   }, [task, isOpen]);
@@ -89,8 +95,8 @@ export function TaskModal({
       project_id: formData.project_id || null,
       action_date: formData.action_date || null,
       due_date: formData.due_date || null,
-      waiting_on: formData.waiting_on || '',
-      details: formData.details || '',
+      waiting_on: formData.waiting_on || "",
+      details: formData.details || "",
     });
   };
 
@@ -117,7 +123,7 @@ export function TaskModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#2A3235] bg-[#121718]">
           <h3 className="text-base font-bold text-white">
-            {task ? 'Edit Task' : 'New Task'}
+            {task ? "Edit Task" : "New Task"}
           </h3>
           <button
             type="button"
@@ -125,8 +131,18 @@ export function TaskModal({
             onClick={onClose}
             className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-[#1C2224] transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -145,7 +161,10 @@ export function TaskModal({
               placeholder="e.g. Design system tokens & schema migration"
               value={formData.title}
               onInput={(e) =>
-                setFormData({ ...formData, title: (e.target as HTMLInputElement).value })
+                setFormData({
+                  ...formData,
+                  title: (e.target as HTMLInputElement).value,
+                })
               }
               className="w-full px-3 py-2 rounded-xl bg-[#1C2224] border border-[#2A3235] text-sm text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none"
             />
@@ -172,7 +191,9 @@ export function TaskModal({
                 <option value="todo">Todo</option>
                 <option value="in_progress_today">In Progress: Today</option>
                 <option value="in_progress_week">In Progress: This Week</option>
-                <option value="in_progress_month">In Progress: This Month</option>
+                <option value="in_progress_month">
+                  In Progress: This Month
+                </option>
                 <option value="tracking">Tracking (Blocked / Delivery)</option>
                 <option value="done">Done</option>
               </select>
@@ -184,10 +205,13 @@ export function TaskModal({
               </label>
               <select
                 name="project_id"
-                value={formData.project_id || ''}
+                value={formData.project_id || ""}
                 onChange={(e) => {
                   const val = (e.target as HTMLSelectElement).value;
-                  setFormData({ ...formData, project_id: val === '' ? null : val });
+                  setFormData({
+                    ...formData,
+                    project_id: val === "" ? null : val,
+                  });
                 }}
                 className="w-full px-3 py-2 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white focus:border-emerald-500 focus:outline-none"
               >
@@ -213,7 +237,8 @@ export function TaskModal({
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    priority: (e.target as HTMLSelectElement).value as PriorityHorizon,
+                    priority: (e.target as HTMLSelectElement)
+                      .value as PriorityHorizon,
                   })
                 }
                 className="w-full px-3 py-2 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white focus:border-emerald-500 focus:outline-none"
@@ -236,7 +261,8 @@ export function TaskModal({
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    repeat_rule: (e.target as HTMLSelectElement).value as RecurrenceRule,
+                    repeat_rule: (e.target as HTMLSelectElement)
+                      .value as RecurrenceRule,
                   })
                 }
                 className="w-full px-3 py-2 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white focus:border-emerald-500 focus:outline-none"
@@ -259,10 +285,13 @@ export function TaskModal({
               <input
                 type="date"
                 name="action_date"
-                value={formData.action_date || ''}
+                value={formData.action_date || ""}
                 onChange={(e) => {
                   const val = (e.target as HTMLInputElement).value;
-                  setFormData({ ...formData, action_date: val === '' ? null : val });
+                  setFormData({
+                    ...formData,
+                    action_date: val === "" ? null : val,
+                  });
                 }}
                 className="w-full px-3 py-2 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white focus:border-emerald-500 focus:outline-none"
               />
@@ -275,10 +304,13 @@ export function TaskModal({
               <input
                 type="date"
                 name="due_date"
-                value={formData.due_date || ''}
+                value={formData.due_date || ""}
                 onChange={(e) => {
                   const val = (e.target as HTMLInputElement).value;
-                  setFormData({ ...formData, due_date: val === '' ? null : val });
+                  setFormData({
+                    ...formData,
+                    due_date: val === "" ? null : val,
+                  });
                 }}
                 className="w-full px-3 py-2 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white focus:border-emerald-500 focus:outline-none"
               />
@@ -296,7 +328,10 @@ export function TaskModal({
               placeholder="e.g. FedEx 772918390 or Waiting on API token from DevOps"
               value={formData.waiting_on}
               onInput={(e) =>
-                setFormData({ ...formData, waiting_on: (e.target as HTMLInputElement).value })
+                setFormData({
+                  ...formData,
+                  waiting_on: (e.target as HTMLInputElement).value,
+                })
               }
               className="w-full px-3 py-2 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none"
             />
@@ -313,7 +348,10 @@ export function TaskModal({
               placeholder="Full markdown notes, links, acceptance criteria..."
               value={formData.details}
               onInput={(e) =>
-                setFormData({ ...formData, details: (e.target as HTMLTextAreaElement).value })
+                setFormData({
+                  ...formData,
+                  details: (e.target as HTMLTextAreaElement).value,
+                })
               }
               className="w-full px-3 py-2 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none"
             />
@@ -346,7 +384,7 @@ export function TaskModal({
               type="submit"
               className="px-4 py-1.5 rounded-lg text-xs font-semibold text-[#0E1111] bg-[#10B981] hover:bg-[#34D399] shadow-md shadow-emerald-950 transition-colors"
             >
-              {task ? 'Update Task' : 'Create Task'}
+              {task ? "Update Task" : "Create Task"}
             </button>
           </div>
         </div>
@@ -354,4 +392,3 @@ export function TaskModal({
     </dialog>
   );
 }
-

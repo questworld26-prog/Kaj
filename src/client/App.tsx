@@ -2,26 +2,32 @@
 // [spec: UI-002]
 // [spec: UI-003]
 // [spec: UI-004]
-import { h } from 'preact';
-import { useState, useEffect, useCallback } from 'preact/hooks';
-import type { Task, Project, SwimlaneGroup, CalendarEvent, TaskStatus } from '../shared/types.js';
-import * as api from './api.js';
-import { TopBar } from './components/TopBar.js';
-import { SwimlaneBoard } from './components/SwimlaneBoard.js';
-import { CalendarView } from './components/CalendarView.js';
-import { TaskModal } from './components/TaskModal.js';
-import { CompletedDrawer } from './components/CompletedDrawer.js';
-import { ProjectReorderModal } from './components/ProjectReorderModal.js';
+import { h } from "preact";
+import { useState, useEffect, useCallback } from "preact/hooks";
+import type {
+  Task,
+  Project,
+  SwimlaneGroup,
+  CalendarEvent,
+  TaskStatus,
+} from "../shared/types.js";
+import * as api from "./api.js";
+import { TopBar } from "./components/TopBar.js";
+import { SwimlaneBoard } from "./components/SwimlaneBoard.js";
+import { CalendarView } from "./components/CalendarView.js";
+import { TaskModal } from "./components/TaskModal.js";
+import { CompletedDrawer } from "./components/CompletedDrawer.js";
+import { ProjectReorderModal } from "./components/ProjectReorderModal.js";
 
 function formatDateToYMD(d: Date): string {
   const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
 export function App() {
-  const [currentView, setCurrentView] = useState<'board' | 'calendar'>('board');
+  const [currentView, setCurrentView] = useState<"board" | "calendar">("board");
   const [projects, setProjects] = useState<Project[]>([]);
   const [swimlanes, setSwimlanes] = useState<SwimlaneGroup[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -39,13 +45,14 @@ export function App() {
   // Reload all state
   const loadData = useCallback(async () => {
     try {
-      const [projs, board, allTasks, completed, unscheduled] = await Promise.all([
-        api.getProjects(),
-        api.getBoard(),
-        api.getTasks(),
-        api.getCompleted(),
-        api.getUnscheduled(),
-      ]);
+      const [projs, board, allTasks, completed, unscheduled] =
+        await Promise.all([
+          api.getProjects(),
+          api.getBoard(),
+          api.getTasks(),
+          api.getCompleted(),
+          api.getUnscheduled(),
+        ]);
 
       setProjects(projs);
       setSwimlanes(board);
@@ -55,8 +62,12 @@ export function App() {
 
       // Load calendar events for current window (e.g. +/- 2 months)
       const now = new Date();
-      const start = formatDateToYMD(new Date(now.getFullYear(), now.getMonth() - 1, 1));
-      const end = formatDateToYMD(new Date(now.getFullYear(), now.getMonth() + 2, 0));
+      const start = formatDateToYMD(
+        new Date(now.getFullYear(), now.getMonth() - 1, 1),
+      );
+      const end = formatDateToYMD(
+        new Date(now.getFullYear(), now.getMonth() + 2, 0),
+      );
       const events = await api.getCalendar(start, end);
       setCalendarEvents(events);
 
@@ -64,7 +75,7 @@ export function App() {
       const health = await api.getHealth();
       setMemoryMb(health.memory_rss_mb);
     } catch (err) {
-      console.error('Failed to load Kaj app state:', err);
+      console.error("Failed to load Kaj app state:", err);
     }
   }, []);
 
@@ -78,22 +89,22 @@ export function App() {
 
     // Keyboard shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "n") {
         e.preventDefault();
         setSelectedTask(null);
         setIsTaskModalOpen(true);
       }
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'd') {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "d") {
         e.preventDefault();
         setIsArchiveOpen((prev) => !prev);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
       unsubscribe();
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [loadData]);
 
@@ -134,9 +145,12 @@ export function App() {
     }
   };
 
-  const handleUpdateTaskStatus = async (taskId: string, newStatus: TaskStatus) => {
+  const handleUpdateTaskStatus = async (
+    taskId: string,
+    newStatus: TaskStatus,
+  ) => {
     try {
-      if (newStatus === 'done') {
+      if (newStatus === "done") {
         await api.completeTask(taskId);
       } else {
         await api.updateTask(taskId, { status: newStatus });
@@ -150,11 +164,14 @@ export function App() {
   const handleMoveTask = async (
     taskId: string,
     newStatus: TaskStatus,
-    newProjectId: string | null = null
+    newProjectId: string | null = null,
   ) => {
     try {
-      const updateData: Partial<Task> = { status: newStatus, project_id: newProjectId };
-      if (newStatus === 'done') {
+      const updateData: Partial<Task> = {
+        status: newStatus,
+        project_id: newProjectId,
+      };
+      if (newStatus === "done") {
         await api.completeTask(taskId);
       } else {
         await api.updateTask(taskId, updateData);
@@ -186,10 +203,10 @@ export function App() {
   const handleScheduleTask = async (
     taskId: string,
     dateStr: string,
-    dateType: 'action' | 'due' = 'action'
+    dateType: "action" | "due" = "action",
   ) => {
     try {
-      if (dateType === 'due') {
+      if (dateType === "due") {
         await api.updateTask(taskId, { due_date: dateStr });
       } else {
         await api.updateTask(taskId, { action_date: dateStr });
@@ -233,7 +250,7 @@ export function App() {
 
       {/* Main View Area */}
       <main className="flex-1 flex flex-col w-full">
-        {currentView === 'board' ? (
+        {currentView === "board" ? (
           <SwimlaneBoard
             swimlanes={swimlanes}
             onSelectTask={handleSelectTask}

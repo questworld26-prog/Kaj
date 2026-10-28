@@ -1,20 +1,20 @@
-import { DatabaseSync } from 'node:sqlite';
-import path from 'node:path';
-import fs from 'node:fs';
-import { Hono } from 'hono';
-import { cors } from 'hono/cors';
-import { streamSSE } from 'hono/streaming';
-import { serveStatic } from '@hono/node-server/serve-static';
-import { TaskRepository, ProjectRepository } from './repository.js';
-import { EventBus } from './events.js';
-import { createMcpServer } from '../mcp/server.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { DatabaseSync } from "node:sqlite";
+import path from "node:path";
+import fs from "node:fs";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { streamSSE } from "hono/streaming";
+import { serveStatic } from "@hono/node-server/serve-static";
+import { TaskRepository, ProjectRepository } from "./repository.js";
+import { EventBus } from "./events.js";
+import { createMcpServer } from "../mcp/server.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
   CreateTaskInputSchema,
   UpdateTaskInputSchema,
   CreateProjectInputSchema,
   UpdateProjectInputSchema,
-} from '../shared/types.js';
+} from "../shared/types.js";
 
 export interface AppOptions {
   db: DatabaseSync;
@@ -31,14 +31,14 @@ export function createApp(options: AppOptions): Hono {
   const app = new Hono();
 
   // Enable CORS
-  app.use('*', cors());
+  app.use("*", cors());
 
   // Health check
-  app.get('/api/health', (c) => {
+  app.get("/api/health", (c) => {
     return c.json({
-      status: 'ok',
-      service: 'kaj',
-      version: '0.1.0',
+      status: "ok",
+      service: "kaj",
+      version: "0.1.0",
       uptime: process.uptime(),
       memory_rss_mb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
       timestamp: new Date().toISOString(),
@@ -46,46 +46,56 @@ export function createApp(options: AppOptions): Hono {
   });
 
   // REST: Projects
-  app.get('/api/projects', (c) => {
-    const includeArchived = c.req.query('include_archived') === 'true';
+  app.get("/api/projects", (c) => {
+    const includeArchived = c.req.query("include_archived") === "true";
     const projects = projectRepo.listProjects(includeArchived);
     return c.json(projects);
   });
 
-  app.post('/api/projects', async (c) => {
+  app.post("/api/projects", async (c) => {
     try {
       const body = await c.req.json();
       const validated = CreateProjectInputSchema.parse(body);
       const project = projectRepo.createProject(validated);
-      eventBus.broadcast({ type: 'project', action: 'created', id: project.id, data: project });
+      eventBus.broadcast({
+        type: "project",
+        action: "created",
+        id: project.id,
+        data: project,
+      });
       return c.json(project, 201);
     } catch (err) {
       return c.json({ error: (err as Error).message }, 400);
     }
   });
 
-  app.patch('/api/projects/:id', async (c) => {
+  app.patch("/api/projects/:id", async (c) => {
     try {
-      const id = c.req.param('id');
+      const id = c.req.param("id");
       const body = await c.req.json();
       const validated = UpdateProjectInputSchema.parse(body);
       const updated = projectRepo.updateProject(id, validated);
-      eventBus.broadcast({ type: 'project', action: 'updated', id: updated.id, data: updated });
+      eventBus.broadcast({
+        type: "project",
+        action: "updated",
+        id: updated.id,
+        data: updated,
+      });
       return c.json(updated);
     } catch (err) {
       return c.json({ error: (err as Error).message }, 400);
     }
   });
 
-  app.post('/api/projects/reorder', async (c) => {
+  app.post("/api/projects/reorder", async (c) => {
     try {
       const body = await c.req.json();
       const { project_ids } = body as { project_ids: string[] };
       if (!Array.isArray(project_ids)) {
-        return c.json({ error: 'project_ids must be an array' }, 400);
+        return c.json({ error: "project_ids must be an array" }, 400);
       }
       projectRepo.reorderProjects(project_ids);
-      eventBus.broadcast({ type: 'project', action: 'reordered', id: 'all' });
+      eventBus.broadcast({ type: "project", action: "reordered", id: "all" });
       return c.json({ success: true });
     } catch (err) {
       return c.json({ error: (err as Error).message }, 400);
@@ -93,158 +103,176 @@ export function createApp(options: AppOptions): Hono {
   });
 
   // REST: Tasks
-  app.get('/api/tasks', (c) => {
-    const includeCompleted = c.req.query('include_completed') === 'true';
-    const status = c.req.query('status');
-    const projectId = c.req.query('project_id');
-    const search = c.req.query('search');
+  app.get("/api/tasks", (c) => {
+    const includeCompleted = c.req.query("include_completed") === "true";
+    const status = c.req.query("status");
+    const projectId = c.req.query("project_id");
+    const search = c.req.query("search");
 
     type SQLBinding = string | number | bigint | null | Uint8Array;
-    let sql = 'SELECT * FROM tasks WHERE deleted_at IS NULL';
+    let sql = "SELECT * FROM tasks WHERE deleted_at IS NULL";
     const params: SQLBinding[] = [];
 
     if (!includeCompleted) {
-      sql += ' AND status != ?';
-      params.push('done');
+      sql += " AND status != ?";
+      params.push("done");
     }
     if (status) {
-      sql += ' AND status = ?';
+      sql += " AND status = ?";
       params.push(status);
     }
     if (projectId !== undefined) {
-      if (projectId === 'null' || projectId === '') {
-        sql += ' AND project_id IS NULL';
+      if (projectId === "null" || projectId === "") {
+        sql += " AND project_id IS NULL";
       } else {
-        sql += ' AND project_id = ?';
+        sql += " AND project_id = ?";
         params.push(projectId);
       }
     }
     if (search) {
-      sql += ' AND (title LIKE ? OR details LIKE ? OR waiting_on LIKE ?)';
+      sql += " AND (title LIKE ? OR details LIKE ? OR waiting_on LIKE ?)";
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
 
-    sql += ' ORDER BY sort_order ASC, created_at DESC';
+    sql += " ORDER BY sort_order ASC, created_at DESC";
     const tasks = db.prepare(sql).all(...params);
     return c.json(tasks);
   });
 
-  app.post('/api/tasks', async (c) => {
+  app.post("/api/tasks", async (c) => {
     try {
       const body = await c.req.json();
       const validated = CreateTaskInputSchema.parse(body);
       const task = taskRepo.createTask(validated);
-      eventBus.broadcast({ type: 'task', action: 'created', id: task.id, data: task });
+      eventBus.broadcast({
+        type: "task",
+        action: "created",
+        id: task.id,
+        data: task,
+      });
       return c.json(task, 201);
     } catch (err) {
       return c.json({ error: (err as Error).message }, 400);
     }
   });
 
-  app.get('/api/tasks/:id', (c) => {
-    const id = c.req.param('id');
+  app.get("/api/tasks/:id", (c) => {
+    const id = c.req.param("id");
     const task = taskRepo.getTask(id);
     if (!task) {
-      return c.json({ error: 'Task not found' }, 404);
+      return c.json({ error: "Task not found" }, 404);
     }
     return c.json(task);
   });
 
-  app.patch('/api/tasks/:id', async (c) => {
+  app.patch("/api/tasks/:id", async (c) => {
     try {
-      const id = c.req.param('id');
+      const id = c.req.param("id");
       const body = await c.req.json();
       const validated = UpdateTaskInputSchema.parse(body);
       const updated = taskRepo.updateTask(id, validated);
       if (!updated) {
-        return c.json({ error: 'Task not found' }, 404);
+        return c.json({ error: "Task not found" }, 404);
       }
-      eventBus.broadcast({ type: 'task', action: 'updated', id: updated.id, data: updated });
+      eventBus.broadcast({
+        type: "task",
+        action: "updated",
+        id: updated.id,
+        data: updated,
+      });
       return c.json(updated);
     } catch (err) {
       return c.json({ error: (err as Error).message }, 400);
     }
   });
 
-  app.post('/api/tasks/:id/complete', (c) => {
+  app.post("/api/tasks/:id/complete", (c) => {
     try {
-      const id = c.req.param('id');
+      const id = c.req.param("id");
       const res = taskRepo.completeTask(id);
-      eventBus.broadcast({ type: 'task', action: 'completed', id, data: res });
+      eventBus.broadcast({ type: "task", action: "completed", id, data: res });
       return c.json(res);
     } catch (err) {
       return c.json({ error: (err as Error).message }, 400);
     }
   });
 
-  app.post('/api/tasks/:id/reopen', (c) => {
+  app.post("/api/tasks/:id/reopen", (c) => {
     try {
-      const id = c.req.param('id');
+      const id = c.req.param("id");
       const task = taskRepo.reopenTask(id);
-      eventBus.broadcast({ type: 'task', action: 'reopened', id, data: task });
+      eventBus.broadcast({ type: "task", action: "reopened", id, data: task });
       return c.json(task);
     } catch (err) {
       return c.json({ error: (err as Error).message }, 400);
     }
   });
 
-  app.delete('/api/tasks/:id', (c) => {
-    const id = c.req.param('id');
-    const soft = c.req.query('soft') !== 'false';
+  app.delete("/api/tasks/:id", (c) => {
+    const id = c.req.param("id");
+    const soft = c.req.query("soft") !== "false";
     const ok = taskRepo.deleteTask(id, soft);
     if (!ok) {
-      return c.json({ error: 'Task not found' }, 404);
+      return c.json({ error: "Task not found" }, 404);
     }
-    eventBus.broadcast({ type: 'task', action: 'deleted', id });
+    eventBus.broadcast({ type: "task", action: "deleted", id });
     return c.json({ success: true });
   });
 
-  app.post('/api/tasks/:id/restore', (c) => {
-    const id = c.req.param('id');
+  app.post("/api/tasks/:id/restore", (c) => {
+    const id = c.req.param("id");
     const restored = taskRepo.restoreTask(id);
     if (!restored) {
-      return c.json({ error: 'Task not found' }, 404);
+      return c.json({ error: "Task not found" }, 404);
     }
-    eventBus.broadcast({ type: 'task', action: 'restored', id: restored.id, data: restored });
+    eventBus.broadcast({
+      type: "task",
+      action: "restored",
+      id: restored.id,
+      data: restored,
+    });
     return c.json(restored);
   });
 
   // REST: Board swimlanes
-  app.get('/api/board', (c) => {
+  app.get("/api/board", (c) => {
     const swimlanes = taskRepo.getBoardSwimlanes(projectRepo);
     return c.json(swimlanes);
   });
 
   // REST: Calendar events
-  app.get('/api/calendar', (c) => {
-    const start = c.req.query('start');
-    const end = c.req.query('end');
+  app.get("/api/calendar", (c) => {
+    const start = c.req.query("start");
+    const end = c.req.query("end");
     if (!start || !end) {
-      return c.json({ error: 'start and end query parameters (YYYY-MM-DD) are required' }, 400);
+      return c.json(
+        { error: "start and end query parameters (YYYY-MM-DD) are required" },
+        400,
+      );
     }
     const events = taskRepo.queryCalendarEvents(start, end);
     return c.json(events);
   });
 
   // REST: Completed archive
-  app.get('/api/completed', (c) => {
+  app.get("/api/completed", (c) => {
     const completed = taskRepo.listCompletedTasks();
     return c.json(completed);
   });
 
   // REST: Unscheduled tasks
-  app.get('/api/unscheduled', (c) => {
+  app.get("/api/unscheduled", (c) => {
     const unscheduled = taskRepo.listUnscheduledTasks();
     return c.json(unscheduled);
   });
 
   // SSE: Live event broadcast for UI clients
-  app.get('/events', (c) => {
+  app.get("/events", (c) => {
     return streamSSE(c, async (stream) => {
       const unsubscribe = eventBus.subscribe(async (evt) => {
         try {
           await stream.writeSSE({
-            event: 'mutation',
+            event: "mutation",
             data: JSON.stringify(evt),
           });
         } catch {
@@ -254,7 +282,7 @@ export function createApp(options: AppOptions): Hono {
 
       // Send initial ping
       await stream.writeSSE({
-        event: 'connected',
+        event: "connected",
         data: JSON.stringify({ time: new Date().toISOString() }),
       });
 
@@ -266,7 +294,9 @@ export function createApp(options: AppOptions): Hono {
       // Keep alive loop
       while (!stream.aborted) {
         await stream.sleep(15000);
-        await stream.writeSSE({ event: 'ping', data: 'keepalive' }).catch(() => {});
+        await stream
+          .writeSSE({ event: "ping", data: "keepalive" })
+          .catch(() => {});
       }
     });
   });
@@ -274,18 +304,21 @@ export function createApp(options: AppOptions): Hono {
   // MCP Streamable HTTP endpoint (POST, GET, DELETE /mcp)
   const mcpServer = createMcpServer({ db, eventBus });
 
-  app.all('/mcp', async (c) => {
+  app.all("/mcp", async (c) => {
     // DNS rebinding guard (AC-MCP-003.4)
-    const origin = c.req.header('origin');
+    const origin = c.req.header("origin");
     if (origin) {
       const isLoopback =
-        origin.startsWith('http://127.0.0.1') ||
-        origin.startsWith('http://localhost') ||
-        origin.startsWith('https://127.0.0.1') ||
-        origin.startsWith('https://localhost');
+        origin.startsWith("http://127.0.0.1") ||
+        origin.startsWith("http://localhost") ||
+        origin.startsWith("https://127.0.0.1") ||
+        origin.startsWith("https://localhost");
 
       if (!isLoopback) {
-        return c.text('Forbidden: Unauthorized cross-origin request to local MCP server', 403);
+        return c.text(
+          "Forbidden: Unauthorized cross-origin request to local MCP server",
+          403,
+        );
       }
     }
 
@@ -297,8 +330,11 @@ export function createApp(options: AppOptions): Hono {
 
     // Normalize accept header so any MCP client works seamlessly
     const headers = new Headers(c.req.raw.headers);
-    if (!headers.has('accept') || headers.get('accept') === '*/*') {
-      headers.set('accept', 'application/json, text/event-stream; charset=utf-8');
+    if (!headers.has("accept") || headers.get("accept") === "*/*") {
+      headers.set(
+        "accept",
+        "application/json, text/event-stream; charset=utf-8",
+      );
     }
 
     const normalizedReq = new Request(c.req.raw.url, {
@@ -306,21 +342,27 @@ export function createApp(options: AppOptions): Hono {
       headers,
       body: c.req.raw.body,
       // @ts-expect-error duplex required in Node fetch for streaming
-      duplex: 'half',
+      duplex: "half",
     });
 
-    // @ts-expect-error accessing internal webStandardTransport
-    const response = await transport._webStandardTransport.handleRequest(normalizedReq);
+    // Access internal webStandardTransport for Streamable HTTP
+    const response = await (
+      transport as unknown as {
+        _webStandardTransport: {
+          handleRequest: (req: Request) => Promise<Response>;
+        };
+      }
+    )._webStandardTransport.handleRequest(normalizedReq);
     return response;
   });
 
   // [spec: UI-001]
   // [spec: UI-002]
   // Serve static UI assets if built
-  const clientDist = path.resolve('./dist/client');
+  const clientDist = path.resolve("./dist/client");
   if (fs.existsSync(clientDist)) {
-    app.use('/*', serveStatic({ root: './dist/client' }));
-    app.get('*', serveStatic({ path: './dist/client/index.html' }));
+    app.use("/*", serveStatic({ root: "./dist/client" }));
+    app.get("*", serveStatic({ path: "./dist/client/index.html" }));
   }
 
   return app;

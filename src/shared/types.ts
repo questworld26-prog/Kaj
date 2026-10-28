@@ -1,61 +1,60 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const TASK_STATUSES = [
-  'triage',
-  'todo',
-  'in_progress_today',
-  'in_progress_week',
-  'in_progress_month',
-  'tracking',
-  'done',
+  "triage",
+  "todo",
+  "in_progress_today",
+  "in_progress_week",
+  "in_progress_month",
+  "tracking",
+  "done",
 ] as const;
 
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
 export const TASK_PRIORITIES = [
-  'today',
-  'week',
-  'month',
-  'quarter',
-  'year',
+  "today",
+  "week",
+  "month",
+  "quarter",
+  "year",
 ] as const;
 
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 
-export const REPEAT_RULES = [
-  'none',
-  'weekly',
-  'monthly',
-  'yearly',
-] as const;
+export const REPEAT_RULES = ["none", "weekly", "monthly", "yearly"] as const;
 
 export type RepeatRule = (typeof REPEAT_RULES)[number];
 
 export const DateStringSchema = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be in YYYY-MM-DD format')
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be in YYYY-MM-DD format")
   .nullable();
 
 export const CreateTaskInputSchema = z.object({
   title: z
     .string()
     .trim()
-    .min(1, 'Task title cannot be empty or only whitespace'),
-  status: z.enum(TASK_STATUSES).default('triage'),
-  details: z.string().default(''),
+    .min(1, "Task title cannot be empty or only whitespace"),
+  status: z.enum(TASK_STATUSES).default("triage"),
+  details: z.string().default(""),
   project_id: z.string().nullable().default(null),
-  priority: z.enum(TASK_PRIORITIES).default('week'),
+  priority: z.enum(TASK_PRIORITIES).default("week"),
   action_date: DateStringSchema.default(null),
   due_date: DateStringSchema.default(null),
-  repeat_rule: z.enum(REPEAT_RULES).default('none'),
-  waiting_on: z.string().default(''),
+  repeat_rule: z.enum(REPEAT_RULES).default("none"),
+  waiting_on: z.string().default(""),
   sort_order: z.number().optional(),
 });
 
 export type CreateTaskInput = z.infer<typeof CreateTaskInputSchema>;
 
 export const UpdateTaskInputSchema = z.object({
-  title: z.string().trim().min(1, 'Task title cannot be empty or only whitespace').optional(),
+  title: z
+    .string()
+    .trim()
+    .min(1, "Task title cannot be empty or only whitespace")
+    .optional(),
   status: z.enum(TASK_STATUSES).optional(),
   details: z.string().optional(),
   project_id: z.string().nullable().optional(),
@@ -89,8 +88,14 @@ export interface Task {
 }
 
 export const CreateProjectInputSchema = z.object({
-  name: z.string().trim().min(1, 'Project name cannot be empty or only whitespace'),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Must be a valid hex color code, e.g. #10B981').default('#10B981'),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Project name cannot be empty or only whitespace"),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color code, e.g. #10B981")
+    .default("#10B981"),
   sort_order: z.number().int().optional(),
 });
 
@@ -98,7 +103,10 @@ export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>;
 
 export const UpdateProjectInputSchema = z.object({
   name: z.string().trim().min(1).optional(),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional(),
   sort_order: z.number().int().optional(),
   archived: z.boolean().optional(),
 });
@@ -122,7 +130,6 @@ export interface CalendarEvent {
   project_id: string | null;
   priority: TaskPriority;
   date: string;
-  date_type: 'action' | 'due';
+  date_type: "action" | "due";
   is_virtual?: boolean;
 }
-

@@ -1,14 +1,14 @@
-import { DatabaseSync } from 'node:sqlite';
-import path from 'node:path';
-import fs from 'node:fs';
+import { DatabaseSync } from "node:sqlite";
+import path from "node:path";
+import fs from "node:fs";
 
 export function createDatabase(dbPath?: string): DatabaseSync {
   let targetPath = dbPath;
   if (!targetPath) {
-    const homeDir = process.env.HOME || process.env.USERPROFILE || '.';
-    const dataDir = path.join(homeDir, '.local', 'share', 'kaj');
+    const homeDir = process.env.HOME || process.env.USERPROFILE || ".";
+    const dataDir = path.join(homeDir, ".local", "share", "kaj");
     fs.mkdirSync(dataDir, { recursive: true });
-    targetPath = path.join(dataDir, 'tasks.db');
+    targetPath = path.join(dataDir, "tasks.db");
   }
 
   const db = new DatabaseSync(targetPath);
@@ -63,4 +63,3 @@ export function initSchema(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_projects_sort_order ON projects(sort_order);
   `);
 }
-

@@ -1,6 +1,6 @@
 # Kaj (কাজ)
 
-> **Kaj** (pronounced */kadʒ/*, Bengali for **task** or **work** — **কাজ**) is a high-performance, low-footprint task management system and Model Context Protocol (MCP) daemon for macOS and local development environments.
+> **Kaj** (pronounced _/kadʒ/_, Bengali for **task** or **work** — **কাজ**) is a high-performance, low-footprint task management system and Model Context Protocol (MCP) daemon for macOS and local development environments.
 
 Kaj combines a **6-column Kanban board with project swimlanes**, **dual-date scheduling** (Action Dates vs. Deadlines), an **interactive Month & Week calendar**, and a **first-class Model Context Protocol (MCP) server** that lets autonomous AI agents manage your tasks in real time over Streamable HTTP and stdio.
 
@@ -82,17 +82,21 @@ flowchart LR
 ## Getting Started
 
 ### Prerequisites
+
 - **Node.js**: v26+ (recommended for built-in `node:sqlite`)
 - **npm**: v11+
 - **macOS** (or any modern Unix environment)
 
 ### Installation
+
 Clone or navigate to the repository directory and install dependencies:
+
 ```bash
 npm install
 ```
 
 ### Verification & Testing
+
 Kaj strictly adheres to **Test-Driven Development (TDD)** and **Spec-Driven Development (SDD)**:
 
 ```bash
@@ -110,6 +114,7 @@ npm run test:ui
 ```
 
 ### Development & Build
+
 ```bash
 # Start Vite development server
 npm run dev
@@ -128,7 +133,9 @@ npm start
 Kaj exposes its MCP server over both **Streamable HTTP** (`http://127.0.0.1:4820/mcp`) and **stdio** (`dist/mcp/stdio.js`).
 
 ### 1. Streamable HTTP (Recommended for Running Daemon)
+
 Add to your agent or client configuration (e.g. Claude Code, Antigravity, or custom agent):
+
 ```json
 {
   "mcpServers": {
@@ -140,34 +147,35 @@ Add to your agent or client configuration (e.g. Claude Code, Antigravity, or cus
 ```
 
 ### 2. Stdio Transport (For Desktop Tools)
+
 Add to `claude_desktop_config.json` or Cursor MCP settings:
+
 ```json
 {
   "mcpServers": {
     "kaj": {
       "command": "node",
-      "args": [
-        "<path-to-repo>/dist/mcp/stdio.js"
-      ]
+      "args": ["<path-to-repo>/dist/mcp/stdio.js"]
     }
   }
 }
 ```
 
 ### MCP Tools Catalog
-| Tool | Access | Description |
-| :--- | :--- | :--- |
-| `query_tasks` | `readOnly` | Query tasks with filters (`status[]`, `project_id`, `priority[]`, `action_date` range, `due_date` range, text search). |
-| `get_task` | `readOnly` | Retrieve full details of a task by ID. |
-| `get_board_summary` | `readOnly` | Compact snapshot of task counts per column and swimlane + active Tracking items. |
-| `create_task` | Write | Create a task with title, status, project, priority, action/due dates, repeat rule, waiting note, and details. |
-| `update_task` | Write | Partially update any attribute of an existing task. |
-| `move_task` | Write | Move a task across columns or project swimlanes with optional waiting notes. |
-| `complete_task` | Write | Mark a task as completed (triggers spawn-on-complete rollover if repeating). |
-| `delete_task` | `destructive` | Soft-delete a task (sets `deleted_at`). |
-| `restore_task` | Write | Recover a soft-deleted task. |
-| `list_projects` | `readOnly` | List all projects with task counts and sort order. |
-| `save_project` | Write | Create or update a project (name, color, sort order, archive status). |
+
+| Tool                | Access        | Description                                                                                                            |
+| :------------------ | :------------ | :--------------------------------------------------------------------------------------------------------------------- |
+| `query_tasks`       | `readOnly`    | Query tasks with filters (`status[]`, `project_id`, `priority[]`, `action_date` range, `due_date` range, text search). |
+| `get_task`          | `readOnly`    | Retrieve full details of a task by ID.                                                                                 |
+| `get_board_summary` | `readOnly`    | Compact snapshot of task counts per column and swimlane + active Tracking items.                                       |
+| `create_task`       | Write         | Create a task with title, status, project, priority, action/due dates, repeat rule, waiting note, and details.         |
+| `update_task`       | Write         | Partially update any attribute of an existing task.                                                                    |
+| `move_task`         | Write         | Move a task across columns or project swimlanes with optional waiting notes.                                           |
+| `complete_task`     | Write         | Mark a task as completed (triggers spawn-on-complete rollover if repeating).                                           |
+| `delete_task`       | `destructive` | Soft-delete a task (sets `deleted_at`).                                                                                |
+| `restore_task`      | Write         | Recover a soft-deleted task.                                                                                           |
+| `list_projects`     | `readOnly`    | List all projects with task counts and sort order.                                                                     |
+| `save_project`      | Write         | Create or update a project (name, color, sort order, archive status).                                                  |
 
 ---
 
@@ -216,4 +224,3 @@ Add to `claude_desktop_config.json` or Cursor MCP settings:
 ## License
 
 MIT
-

@@ -1,33 +1,52 @@
 // [spec: UI-001]
 // [spec: UI-002]
-import { h } from 'preact';
-import { useState } from 'preact/hooks';
-import type { Task, SwimlaneGroup, TaskStatus } from '../../shared/types.js';
+import { h } from "preact";
+import { useState } from "preact/hooks";
+import type { Task, SwimlaneGroup, TaskStatus } from "../../shared/types.js";
 
 interface SwimlaneBoardProps {
   swimlanes: SwimlaneGroup[];
   onSelectTask: (task: Task) => void;
   onUpdateTaskStatus: (taskId: string, newStatus: TaskStatus) => void;
-  onMoveTask?: (taskId: string, newStatus: TaskStatus, newProjectId: string | null) => void;
+  onMoveTask?: (
+    taskId: string,
+    newStatus: TaskStatus,
+    newProjectId: string | null,
+  ) => void;
   onCompleteTask: (taskId: string) => void;
-  onReorderProject?: (projectId: string, direction: 'up' | 'down') => void;
+  onReorderProject?: (projectId: string, direction: "up" | "down") => void;
 }
 
 const COLUMNS: { key: TaskStatus; label: string; group?: string }[] = [
-  { key: 'triage', label: 'Triage' },
-  { key: 'todo', label: 'Todo' },
-  { key: 'in_progress_today', label: 'Today', group: 'In Progress' },
-  { key: 'in_progress_week', label: 'This Week', group: 'In Progress' },
-  { key: 'in_progress_month', label: 'This Month', group: 'In Progress' },
-  { key: 'tracking', label: 'Tracking' },
+  { key: "triage", label: "Triage" },
+  { key: "todo", label: "Todo" },
+  { key: "in_progress_today", label: "Today", group: "In Progress" },
+  { key: "in_progress_week", label: "This Week", group: "In Progress" },
+  { key: "in_progress_month", label: "This Month", group: "In Progress" },
+  { key: "tracking", label: "Tracking" },
 ];
 
 const PRIORITY_STYLES: Record<string, { label: string; badge: string }> = {
-  today: { label: 'Today', badge: 'bg-rose-500/10 text-rose-400 border-rose-500/30' },
-  week: { label: 'Week', badge: 'bg-amber-500/10 text-amber-400 border-amber-500/30' },
-  month: { label: 'Month', badge: 'bg-sky-500/10 text-sky-400 border-sky-500/30' },
-  quarter: { label: 'Quarter', badge: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30' },
-  year: { label: 'Year', badge: 'bg-stone-500/10 text-stone-400 border-stone-500/30' },
+  today: {
+    label: "Today",
+    badge: "bg-rose-500/10 text-rose-400 border-rose-500/30",
+  },
+  week: {
+    label: "Week",
+    badge: "bg-amber-500/10 text-amber-400 border-amber-500/30",
+  },
+  month: {
+    label: "Month",
+    badge: "bg-sky-500/10 text-sky-400 border-sky-500/30",
+  },
+  quarter: {
+    label: "Quarter",
+    badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
+  },
+  year: {
+    label: "Year",
+    badge: "bg-stone-500/10 text-stone-400 border-stone-500/30",
+  },
 };
 
 export function SwimlaneBoard({
@@ -60,9 +79,11 @@ export function SwimlaneBoard({
                   {col.group}:
                 </span>
               )}
-              <span className="text-xs font-semibold text-gray-200">{col.label}</span>
+              <span className="text-xs font-semibold text-gray-200">
+                {col.label}
+              </span>
             </div>
-            {col.key === 'tracking' && (
+            {col.key === "tracking" && (
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
             )}
           </div>
@@ -72,11 +93,11 @@ export function SwimlaneBoard({
       {/* Swimlane Pods */}
       <div className="w-full space-y-5">
         {swimlanes.map((lane) => {
-          const podId = lane.project?.id || 'unassigned';
+          const podId = lane.project?.id || "unassigned";
           const isCollapsed = !!collapsed[podId];
           const taskCount = lane.tasks.length;
-          const projectName = lane.project?.name || 'Unassigned Inbox';
-          const projectColor = lane.project?.color || '#9CA3AF';
+          const projectName = lane.project?.name || "Unassigned Inbox";
+          const projectColor = lane.project?.color || "#9CA3AF";
 
           return (
             <section
@@ -98,7 +119,7 @@ export function SwimlaneBoard({
                     data-testid="swimlane-task-count"
                     className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#1C2224] text-gray-300 border border-[#2A3235]"
                   >
-                    {taskCount} {taskCount === 1 ? 'task' : 'tasks'}
+                    {taskCount} {taskCount === 1 ? "task" : "tasks"}
                   </span>
                 </div>
 
@@ -108,15 +129,22 @@ export function SwimlaneBoard({
                     data-testid="swimlane-collapse-toggle"
                     onClick={() => toggleCollapse(podId)}
                     className="p-1 rounded-md text-gray-400 hover:text-gray-200 hover:bg-[#1C2224] transition-colors"
-                    aria-label={isCollapsed ? 'Expand swimlane' : 'Collapse swimlane'}
+                    aria-label={
+                      isCollapsed ? "Expand swimlane" : "Collapse swimlane"
+                    }
                   >
                     <svg
-                      className={`w-4 h-4 transform transition-transform ${isCollapsed ? '-rotate-90' : 'rotate-0'}`}
+                      className={`w-4 h-4 transform transition-transform ${isCollapsed ? "-rotate-90" : "rotate-0"}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -129,7 +157,9 @@ export function SwimlaneBoard({
                   className="w-full grid grid-cols-6 gap-3.5 p-4 min-h-[140px] bg-[#0E1111]/40"
                 >
                   {COLUMNS.map((col) => {
-                    const colTasks = lane.tasks.filter((t) => t.status === col.key);
+                    const colTasks = lane.tasks.filter(
+                      (t) => t.status === col.key,
+                    );
                     const cellKey = `${podId}-${col.key}`;
                     const isDragOver = dragOverKey === cellKey;
 
@@ -140,7 +170,8 @@ export function SwimlaneBoard({
                         data-swimlane={podId}
                         onDragOver={(e) => {
                           e.preventDefault();
-                          if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+                          if (e.dataTransfer)
+                            e.dataTransfer.dropEffect = "move";
                           if (dragOverKey !== cellKey) setDragOverKey(cellKey);
                         }}
                         onDragLeave={() => {
@@ -150,32 +181,38 @@ export function SwimlaneBoard({
                           e.preventDefault();
                           setDragOverKey(null);
                           const raw =
-                            e.dataTransfer?.getData('application/kaj-task') ||
-                            e.dataTransfer?.getData('text/plain');
+                            e.dataTransfer?.getData("application/kaj-task") ||
+                            e.dataTransfer?.getData("text/plain");
                           if (!raw) return;
                           try {
                             const data = JSON.parse(raw);
                             if (data.taskId) {
                               const targetProjectId = lane.project?.id || null;
                               if (onMoveTask) {
-                                onMoveTask(data.taskId, col.key, targetProjectId);
+                                onMoveTask(
+                                  data.taskId,
+                                  col.key,
+                                  targetProjectId,
+                                );
                               } else {
                                 onUpdateTaskStatus(data.taskId, col.key);
                               }
                             }
                           } catch (err) {
-                            console.error('Error handling drop on board:', err);
+                            console.error("Error handling drop on board:", err);
                           }
                         }}
                         className={`flex flex-col space-y-2.5 rounded-xl p-2 min-h-[110px] transition-all ${
                           isDragOver
-                            ? 'bg-emerald-500/10 ring-2 ring-emerald-500/50 border border-emerald-500/40 shadow-inner'
-                            : 'bg-[#121718]/40 border border-[#2A3235]/40'
+                            ? "bg-emerald-500/10 ring-2 ring-emerald-500/50 border border-emerald-500/40 shadow-inner"
+                            : "bg-[#121718]/40 border border-[#2A3235]/40"
                         }`}
                       >
                         {colTasks.map((task) => {
-                          const isTracking = task.status === 'tracking';
-                          const priStyle = PRIORITY_STYLES[task.priority] || PRIORITY_STYLES.week;
+                          const isTracking = task.status === "tracking";
+                          const priStyle =
+                            PRIORITY_STYLES[task.priority] ||
+                            PRIORITY_STYLES.week;
 
                           return (
                             <article
@@ -189,23 +226,28 @@ export function SwimlaneBoard({
                                   sourceStatus: task.status,
                                   sourceProjectId: task.project_id,
                                 });
-                                e.dataTransfer?.setData('application/kaj-task', payload);
-                                e.dataTransfer?.setData('text/plain', payload);
+                                e.dataTransfer?.setData(
+                                  "application/kaj-task",
+                                  payload,
+                                );
+                                e.dataTransfer?.setData("text/plain", payload);
                                 if (e.dataTransfer) {
-                                  e.dataTransfer.effectAllowed = 'move';
+                                  e.dataTransfer.effectAllowed = "move";
                                 }
                               }}
                               className={`group relative rounded-xl p-3 bg-[#1C2224] transition-all hover:border-gray-500 hover:shadow-md cursor-grab active:cursor-grabbing ${
                                 isTracking
-                                  ? 'border-2 border-dashed border-amber-500/60 shadow-amber-950/20'
-                                  : 'border border-[#2A3235]'
+                                  ? "border-2 border-dashed border-amber-500/60 shadow-amber-950/20"
+                                  : "border border-[#2A3235]"
                               }`}
                               onClick={(e) => {
                                 // Ignore if select or button was clicked
                                 if (
-                                  (e.target as HTMLElement).tagName === 'SELECT' ||
-                                  (e.target as HTMLElement).tagName === 'BUTTON' ||
-                                  (e.target as HTMLElement).closest('button')
+                                  (e.target as HTMLElement).tagName ===
+                                    "SELECT" ||
+                                  (e.target as HTMLElement).tagName ===
+                                    "BUTTON" ||
+                                  (e.target as HTMLElement).closest("button")
                                 ) {
                                   return;
                                 }
@@ -221,7 +263,7 @@ export function SwimlaneBoard({
                                 </span>
 
                                 <div className="flex items-center gap-1">
-                                  {task.repeat_rule !== 'none' && (
+                                  {task.repeat_rule !== "none" && (
                                     <span
                                       title={`Recurring: ${task.repeat_rule}`}
                                       className="text-[11px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
@@ -235,8 +277,18 @@ export function SwimlaneBoard({
                                     title="Mark complete"
                                     className="p-1 rounded text-gray-400 hover:text-emerald-400 hover:bg-[#121718] transition-colors"
                                   >
-                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                    <svg
+                                      className="w-3.5 h-3.5"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2.5"
+                                        d="M5 13l4 4L19 7"
+                                      />
                                     </svg>
                                   </button>
                                 </div>
@@ -253,10 +305,22 @@ export function SwimlaneBoard({
                                   data-testid="blocker-badge"
                                   className="mb-2 flex items-center gap-1.5 text-[11px] px-2 py-1 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 font-medium"
                                 >
-                                  <svg className="w-3 h-3 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                  <svg
+                                    className="w-3 h-3 text-amber-400 shrink-0"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                    />
                                   </svg>
-                                  <span className="truncate">{task.waiting_on || 'Waiting on blocker'}</span>
+                                  <span className="truncate">
+                                    {task.waiting_on || "Waiting on blocker"}
+                                  </span>
                                 </div>
                               )}
 
@@ -276,21 +340,30 @@ export function SwimlaneBoard({
 
                               {/* Quick Status Select */}
                               <div className="pt-2 border-t border-[#2A3235]/60 flex items-center justify-between">
-                                <label className="text-[10px] text-gray-500 font-medium">Move:</label>
+                                <label className="text-[10px] text-gray-500 font-medium">
+                                  Move:
+                                </label>
                                 <select
                                   data-testid="task-status-select"
                                   value={task.status}
                                   onChange={(e) => {
-                                    const val = (e.target as HTMLSelectElement).value as TaskStatus;
+                                    const val = (e.target as HTMLSelectElement)
+                                      .value as TaskStatus;
                                     onUpdateTaskStatus(task.id, val);
                                   }}
                                   className="text-[10px] bg-[#121718] text-gray-300 rounded px-1.5 py-0.5 border border-[#2A3235] focus:border-emerald-500 focus:outline-none"
                                 >
                                   <option value="triage">Triage</option>
                                   <option value="todo">Todo</option>
-                                  <option value="in_progress_today">In Progress: Today</option>
-                                  <option value="in_progress_week">In Progress: This Week</option>
-                                  <option value="in_progress_month">In Progress: This Month</option>
+                                  <option value="in_progress_today">
+                                    In Progress: Today
+                                  </option>
+                                  <option value="in_progress_week">
+                                    In Progress: This Week
+                                  </option>
+                                  <option value="in_progress_month">
+                                    In Progress: This Month
+                                  </option>
                                   <option value="tracking">Tracking</option>
                                   <option value="done">Done</option>
                                 </select>
@@ -310,4 +383,3 @@ export function SwimlaneBoard({
     </div>
   );
 }
-

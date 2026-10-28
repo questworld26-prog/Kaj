@@ -1,7 +1,7 @@
 // [spec: UI-001]
-import { h } from 'preact';
-import { useState } from 'preact/hooks';
-import type { Project } from '../../shared/types.js';
+import { h } from "preact";
+import { useState } from "preact/hooks";
+import type { Project } from "../../shared/types.js";
 
 interface ProjectReorderModalProps {
   isOpen: boolean;
@@ -11,7 +11,15 @@ interface ProjectReorderModalProps {
   onCreateProject: (name: string, color: string) => void;
 }
 
-const PALETTE = ['#10B981', '#38BDF8', '#818CF8', '#F43F5E', '#F59E0B', '#A855F7', '#EC4899'];
+const PALETTE = [
+  "#10B981",
+  "#38BDF8",
+  "#818CF8",
+  "#F43F5E",
+  "#F59E0B",
+  "#A855F7",
+  "#EC4899",
+];
 
 export function ProjectReorderModal({
   isOpen,
@@ -20,13 +28,13 @@ export function ProjectReorderModal({
   onReorder,
   onCreateProject,
 }: ProjectReorderModalProps) {
-  const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectName, setNewProjectName] = useState("");
   const [selectedColor, setSelectedColor] = useState(PALETTE[0]);
 
   if (!isOpen) return null;
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+  const handleMove = (index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= projects.length) return;
 
     const reordered = [...projects];
@@ -41,7 +49,7 @@ export function ProjectReorderModal({
     e.preventDefault();
     if (!newProjectName.trim()) return;
     onCreateProject(newProjectName.trim(), selectedColor);
-    setNewProjectName('');
+    setNewProjectName("");
   };
 
   return (
@@ -52,15 +60,27 @@ export function ProjectReorderModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[#2A3235]">
-          <h3 className="text-base font-bold text-white">Manage Projects & Swimlanes</h3>
+          <h3 className="text-base font-bold text-white">
+            Manage Projects & Swimlanes
+          </h3>
           <button
             type="button"
             data-testid="close-modal-btn"
             onClick={onClose}
             className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-[#1C2224] transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -83,7 +103,9 @@ export function ProjectReorderModal({
                     className="w-3.5 h-3.5 rounded-full"
                     style={{ backgroundColor: proj.color }}
                   />
-                  <span className="text-xs font-semibold text-gray-200">{proj.name}</span>
+                  <span className="text-xs font-semibold text-gray-200">
+                    {proj.name}
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-1.5">
@@ -91,24 +113,44 @@ export function ProjectReorderModal({
                     type="button"
                     data-testid="move-up-btn"
                     disabled={idx === 0}
-                    onClick={() => handleMove(idx, 'up')}
+                    onClick={() => handleMove(idx, "up")}
                     className="p-1.5 rounded-lg text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 hover:bg-[#121718] transition-colors"
                     title="Move Up"
                   >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 15l7-7 7 7"
+                      />
                     </svg>
                   </button>
                   <button
                     type="button"
                     data-testid="move-down-btn"
                     disabled={idx === projects.length - 1}
-                    onClick={() => handleMove(idx, 'down')}
+                    onClick={() => handleMove(idx, "down")}
                     className="p-1.5 rounded-lg text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 hover:bg-[#121718] transition-colors"
                     title="Move Down"
                   >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -118,7 +160,10 @@ export function ProjectReorderModal({
         </div>
 
         {/* Add Project Form */}
-        <form onSubmit={handleAddProject} className="pt-4 border-t border-[#2A3235] space-y-3">
+        <form
+          onSubmit={handleAddProject}
+          className="pt-4 border-t border-[#2A3235] space-y-3"
+        >
           <label className="block text-xs font-semibold text-gray-300">
             Create New Project Swimlane
           </label>
@@ -127,7 +172,9 @@ export function ProjectReorderModal({
               type="text"
               placeholder="e.g. Mobile Client, Marketing"
               value={newProjectName}
-              onInput={(e) => setNewProjectName((e.target as HTMLInputElement).value)}
+              onInput={(e) =>
+                setNewProjectName((e.target as HTMLInputElement).value)
+              }
               className="flex-1 px-3 py-1.5 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none"
             />
             <button
@@ -147,7 +194,9 @@ export function ProjectReorderModal({
                   key={c}
                   onClick={() => setSelectedColor(c)}
                   className={`w-5 h-5 rounded-full transition-transform ${
-                    selectedColor === c ? 'scale-125 ring-2 ring-white' : 'opacity-80 hover:opacity-100'
+                    selectedColor === c
+                      ? "scale-125 ring-2 ring-white"
+                      : "opacity-80 hover:opacity-100"
                   }`}
                   style={{ backgroundColor: c }}
                 />
@@ -159,4 +208,3 @@ export function ProjectReorderModal({
     </div>
   );
 }
-

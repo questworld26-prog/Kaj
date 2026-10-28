@@ -1,6 +1,14 @@
 export interface MutationEvent {
-  type: 'task' | 'project';
-  action: 'created' | 'updated' | 'moved' | 'completed' | 'reopened' | 'deleted' | 'restored' | 'reordered';
+  type: "task" | "project";
+  action:
+    | "created"
+    | "updated"
+    | "moved"
+    | "completed"
+    | "reopened"
+    | "deleted"
+    | "restored"
+    | "reordered";
   id: string;
   data?: unknown;
 }
@@ -22,9 +30,8 @@ export class EventBus {
       try {
         listener(event);
       } catch (err) {
-        console.error('Error in event listener:', err);
+        console.error("Error in event listener:", err);
       }
     }
   }
 }
-

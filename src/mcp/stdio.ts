@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { createDatabase, initSchema } from '../server/db.js';
-import { EventBus } from '../server/events.js';
-import { createMcpServer } from './server.js';
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { createDatabase, initSchema } from "../server/db.js";
+import { EventBus } from "../server/events.js";
+import { createMcpServer } from "./server.js";
 
 // [spec: MCP-002]
 async function main() {
@@ -14,11 +14,10 @@ async function main() {
   const transport = new StdioServerTransport();
 
   await server.connect(transport);
-  console.error('Kaj (কাজ) MCP stdio server started.');
+  console.error("Kaj (কাজ) MCP stdio server started.");
 }
 
 main().catch((err) => {
-  console.error('Fatal error in Kaj MCP stdio server:', err);
+  console.error("Fatal error in Kaj MCP stdio server:", err);
   process.exit(1);
 });
-

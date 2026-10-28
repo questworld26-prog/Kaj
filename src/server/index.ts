@@ -1,7 +1,7 @@
-import { serve } from '@hono/node-server';
-import { createDatabase, initSchema } from './db.js';
-import { EventBus } from './events.js';
-import { createApp } from './app.js';
+import { serve } from "@hono/node-server";
+import { createDatabase, initSchema } from "./db.js";
+import { EventBus } from "./events.js";
+import { createApp } from "./app.js";
 
 // [spec: MCP-002]
 async function startDaemon() {
@@ -12,7 +12,7 @@ async function startDaemon() {
   const app = createApp({ db, eventBus });
 
   const port = Number(process.env.PORT || 4820);
-  const hostname = process.env.HOST || '127.0.0.1';
+  const hostname = process.env.HOST || "127.0.0.1";
 
   serve(
     {
@@ -32,12 +32,11 @@ async function startDaemon() {
 - SSE Live Push: http://${info.address}:${info.port}/events
 - Memory RSS:    ~${memoryMb} MB (Low footprint daemon)
 `);
-    }
+    },
   );
 }
 
 startDaemon().catch((err) => {
-  console.error('Failed to start Kaj daemon:', err);
+  console.error("Failed to start Kaj daemon:", err);
   process.exit(1);
 });
-
