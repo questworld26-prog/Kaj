@@ -155,6 +155,56 @@ npm run daemon:install
 ```
 Once installed, macOS manages Kaj automatically—rebooting or logging in will start the server and MCP endpoints with zero user interaction.
 
+### Telegram Bot Integration (Zero-LLM, Ultra-Low Footprint)
+
+Kaj includes a built-in, deterministic Telegram bot service (`src/server/telegram.ts`) that runs inside the existing daemon with **~0 MB extra memory overhead** and **no local LLM required**. It lets you capture tasks, search tasks, and trigger inline actions from your phone anywhere in the world.
+
+#### 1. Configuration File (`telegram.config.json`)
+
+Credentials and feature settings are stored in `telegram.config.json` in the project root (git-ignored so your token is never committed; see `telegram.config.example.json` for the template):
+
+```json
+{
+  "enabled": false,
+  "bot_token": "YOUR_TELEGRAM_BOT_TOKEN",
+  "allowed_user_ids": [123456789],
+  "default_status": "triage",
+  "poll_interval_ms": 2000
+}
+```
+
+- **How to get a `bot_token`**: Message `@BotFather` on Telegram → `/newbot` → copy the HTTP API token into `telegram.config.json`.
+- **How to lock to your account (`allowed_user_ids`)**: Leave `allowed_user_ids` as `[]` initially, turn on the bot, and send `/start` to your bot. It will reply with `Your Telegram User ID: <number>`. Add that number to `allowed_user_ids` so only you can access or mutate your tasks.
+
+#### 2. Switching the Feature Flag On & Off
+
+You can toggle the Telegram bot on or off at any time without restarting your laptop:
+
+| Action | NPM Script | CLI Equivalent | Description |
+| :--- | :--- | :--- | :--- |
+| **Enable Telegram Bot** | `npm run telegram:on` | `./scripts/daemon-ctl.sh telegram-on` | Sets `"enabled": true` in `telegram.config.json` and activates live polling |
+| **Disable Telegram Bot** | `npm run telegram:off` | `./scripts/daemon-ctl.sh telegram-off` | Sets `"enabled": false` and stops all Telegram network polling immediately |
+| **Check Bot Status** | `npm run telegram:status` | `./scripts/daemon-ctl.sh telegram-status` | Shows config state, token presence, and live daemon polling status |
+
+*(You can also override the flag via environment variable `KAJ_TELEGRAM_ENABLED=true|false` or `POST /api/telegram/toggle` with `{"enabled": true}`).*
+
+#### 3. Bot Commands & Shorthand Syntax
+
+- **Add a Task** (just send any plain text message or `/add <text>`):
+  - `Buy coffee beans` → creates task in `triage`
+  - `Fix auth bug #Backend !today @tomorrow due:2026-11-05 wait:Alice`
+    - `#ProjectName` — matches your project by name (case-insensitive)
+    - `!today`, `!week`, `!month`, `!todo`, `!triage`, `!track` — sets target column & priority
+    - `@today`, `@tomorrow`, `@YYYY-MM-DD` — sets Action Date
+    - `due:today`, `due:tomorrow`, `due:YYYY-MM-DD` — sets Due Date
+    - `wait:<note>` — sets Waiting On note
+- **Search Tasks** (`/search <query>`, `/s <query>`, or `? <query>`):
+  - Searches task titles, descriptions, and waiting notes, returning matching tasks with interactive **inline buttons** (`✓ Done`, `⚡ Today`, `📅 Week`, `Todo`).
+- **Today's Tasks** (`/today`):
+  - Lists all active tasks in `Today` with one-tap `✓ Done` and status move buttons.
+
+---
+
 ### Multi-Device & WiFi Access (`jarvis.local`)
 
 Kaj binds by default to `0.0.0.0:4820`, making it immediately accessible across your local WiFi/LAN network without reverse proxies or port configuration:

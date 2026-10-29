@@ -1,8 +1,8 @@
 {
-  "last_audited_at": "2026-10-29T04:31:00.022136+00:00",
-  "total_requirements": 18,
-  "total_criteria": 77,
-  "verified_criteria_count": 77,
+  "last_audited_at": "2026-10-29T08:36:33.820594+00:00",
+  "total_requirements": 20,
+  "total_criteria": 86,
+  "verified_criteria_count": 86,
   "status": "PASS",
   "requirements": [
     {
@@ -269,6 +269,35 @@
       "status": "VERIFIED"
     },
     {
+      "requirement_id": "TG-001",
+      "title": "Configurable Deterministic Telegram Bot for Task Creation, Search, and Quick Actions",
+      "spec_file": "specs/telegram.md",
+      "sha256": "353ef77cde58c66573705d7ab6ae57f609ff8b258570cbc728db8d755ef15f79",
+      "verified_sha256": "353ef77cde58c66573705d7ab6ae57f609ff8b258570cbc728db8d755ef15f79",
+      "acceptance_criteria": [
+        "AC-TG-001.1",
+        "AC-TG-001.2",
+        "AC-TG-001.3",
+        "AC-TG-001.4",
+        "AC-TG-001.5",
+        "AC-TG-001.6"
+      ],
+      "verified_criteria": [
+        "AC-TG-001.1",
+        "AC-TG-001.2",
+        "AC-TG-001.3",
+        "AC-TG-001.4",
+        "AC-TG-001.5",
+        "AC-TG-001.6"
+      ],
+      "implementation_files": [
+        "src/server/app.ts",
+        "src/server/index.ts",
+        "src/server/telegram.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
       "requirement_id": "UI-001",
       "title": "Bento Full-Width Layout, Swimlane Pods, and Consolidated In-Progress Chamber",
       "spec_file": "specs/ui.md",
@@ -449,6 +478,28 @@
       "implementation_files": [
         "src/client/App.tsx",
         "src/client/components/TopBar.tsx"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "UI-008",
+      "title": "Multi-Modal Task Completion Interactions",
+      "spec_file": "specs/ui.md",
+      "sha256": "f52d4591040c2913039ae7bd40019f0c10980aa04aef9bffb1f118d6abee5588",
+      "verified_sha256": "f52d4591040c2913039ae7bd40019f0c10980aa04aef9bffb1f118d6abee5588",
+      "acceptance_criteria": [
+        "AC-UI-008.1",
+        "AC-UI-008.2",
+        "AC-UI-008.3"
+      ],
+      "verified_criteria": [
+        "AC-UI-008.1",
+        "AC-UI-008.2",
+        "AC-UI-008.3"
+      ],
+      "implementation_files": [
+        "src/client/components/MobileViews.tsx",
+        "src/client/components/TaskModal.tsx"
       ],
       "status": "VERIFIED"
     }

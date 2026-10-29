@@ -429,6 +429,7 @@ export function App() {
         }}
         onSave={handleSaveTask}
         onDelete={handleDeleteTask}
+        onComplete={handleCompleteTask}
       />
 
       {/* Completed Archive Drawer */}

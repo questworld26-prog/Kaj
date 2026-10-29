@@ -568,7 +568,19 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
       .locator('input[name="title"]')
       .fill("Comprehensive Dialog Verification Task");
     await dialog.locator('select[name="priority"]').selectOption("quarter");
+    // UI-004.2 & TASK-002.3: Verify recurrence options display dynamically
     await dialog.locator('select[name="repeat_rule"]').selectOption("weekly");
+    await expect(dialog.locator('[data-testid="repeat-dow-1"]')).toBeVisible();
+
+    await dialog.locator('select[name="repeat_rule"]').selectOption("monthly");
+    await expect(dialog.locator('[data-testid="repeat-dom-input"]')).toBeVisible();
+
+    await dialog.locator('select[name="repeat_rule"]').selectOption("yearly");
+    await expect(dialog.locator('[data-testid="repeat-doy-picker"]')).toBeVisible();
+
+    await dialog.locator('select[name="repeat_rule"]').selectOption("weekly");
+    await dialog.locator('[data-testid="repeat-dow-3"]').click(); // Select Wednesday
+
     await dialog.locator('button[type="submit"]').click();
 
     // Verify dialog closed and task rendered on board

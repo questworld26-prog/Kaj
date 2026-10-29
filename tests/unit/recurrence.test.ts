@@ -19,15 +19,15 @@ describe("Spawn-on-Complete Recurrence Rollover (TASK-004)", () => {
   });
 
   // [verifies: TASK-004/AC-TASK-004.1]
-  it("weekly recurring task spawns next instance in todo with dates shifted forward by 7 days", () => {
+  it("weekly recurring task spawns next instance in todo with dates shifted forward by 7 days or to target day of week", () => {
     const p = projectRepo.createProject({ name: "Weekly Routines" });
     const weeklyTask = taskRepo.createTask({
       title: "Weekly Standup Notes",
       project_id: p.id,
       priority: "week",
       repeat_rule: "weekly",
-      action_date: "2026-10-28",
-      due_date: "2026-10-30",
+      action_date: "2026-10-28", // Wednesday (day 3)
+      due_date: "2026-10-30", // Friday (day 5)
       status: "in_progress_today",
     });
 
@@ -41,10 +41,23 @@ describe("Spawn-on-Complete Recurrence Rollover (TASK-004)", () => {
     expect(next.due_date).toBe("2026-11-06"); // +7 days
     expect(next.repeat_rule).toBe("weekly");
     expect(next.parent_recurring_id).toBe(weeklyTask.id);
+
+    // Weekly with custom repeat_day_of_week (e.g. 1 = Monday)
+    const mondayTask = taskRepo.createTask({
+      title: "Weekly Team Planning",
+      repeat_rule: "weekly",
+      repeat_day_of_week: 1, // Monday
+      action_date: "2026-10-28", // Wednesday
+      status: "todo",
+    });
+    const mondayRes = taskRepo.completeTask(mondayTask.id);
+    // Next Monday from Wed Oct 28 2026 is Nov 2 2026
+    expect(mondayRes.spawned_task?.action_date).toBe("2026-11-02");
+    expect(mondayRes.spawned_task?.repeat_day_of_week).toBe(1);
   });
 
   // [verifies: TASK-004/AC-TASK-004.2]
-  it("monthly recurring task spawns next instance with 1 month advance and end-of-month clamping", () => {
+  it("monthly recurring task spawns next instance with 1 month advance, custom repeat_day_of_month, and end-of-month clamping", () => {
     // Standard month advance: 2026-10-15 -> 2026-11-15
     const monthlyStandard = taskRepo.createTask({
       title: "Monthly Review",
@@ -57,6 +70,18 @@ describe("Spawn-on-Complete Recurrence Rollover (TASK-004)", () => {
     const resStandard = taskRepo.completeTask(monthlyStandard.id);
     expect(resStandard.spawned_task?.action_date).toBe("2026-11-15");
     expect(resStandard.spawned_task?.due_date).toBe("2026-11-20");
+
+    // Monthly with explicit repeat_day_of_month (e.g. 5th of each month)
+    const monthly5th = taskRepo.createTask({
+      title: "Pay Rent",
+      repeat_rule: "monthly",
+      repeat_day_of_month: 5,
+      action_date: "2026-10-05",
+      status: "todo",
+    });
+    const res5th = taskRepo.completeTask(monthly5th.id);
+    expect(res5th.spawned_task?.action_date).toBe("2026-11-05");
+    expect(res5th.spawned_task?.repeat_day_of_month).toBe(5);
 
     // End-of-month clamping: e.g. Jan 31 -> Feb 28 (or 29)
     const monthlyEOM = taskRepo.createTask({
@@ -73,7 +98,7 @@ describe("Spawn-on-Complete Recurrence Rollover (TASK-004)", () => {
   });
 
   // [verifies: TASK-004/AC-TASK-004.3]
-  it("yearly recurring task spawns next instance with dates shifted forward by exactly 1 year", () => {
+  it("yearly recurring task spawns next instance with dates shifted forward by 1 year or to custom repeat_day_of_year", () => {
     const yearlyTask = taskRepo.createTask({
       title: "Annual Property Insurance Review",
       repeat_rule: "yearly",
@@ -85,6 +110,18 @@ describe("Spawn-on-Complete Recurrence Rollover (TASK-004)", () => {
     const res = taskRepo.completeTask(yearlyTask.id);
     expect(res.spawned_task?.action_date).toBe("2027-10-28");
     expect(res.spawned_task?.due_date).toBe("2027-11-15");
+
+    // Yearly with custom repeat_day_of_year (e.g. "04-15" for tax day)
+    const taxTask = taskRepo.createTask({
+      title: "File Taxes",
+      repeat_rule: "yearly",
+      repeat_day_of_year: "04-15",
+      action_date: "2026-04-15",
+      status: "todo",
+    });
+    const taxRes = taskRepo.completeTask(taxTask.id);
+    expect(taxRes.spawned_task?.action_date).toBe("2027-04-15");
+    expect(taxRes.spawned_task?.repeat_day_of_year).toBe("04-15");
   });
 
   // [verifies: TASK-004/AC-TASK-004.4]

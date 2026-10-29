@@ -46,6 +46,9 @@ export function initSchema(db: DatabaseSync): void {
       action_date TEXT,
       due_date TEXT,
       repeat_rule TEXT NOT NULL DEFAULT 'none',
+      repeat_day_of_week INTEGER,
+      repeat_day_of_month INTEGER,
+      repeat_day_of_year TEXT,
       waiting_on TEXT NOT NULL DEFAULT '',
       sort_order REAL NOT NULL DEFAULT 0,
       completed_at TEXT,
@@ -62,4 +65,21 @@ export function initSchema(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_tasks_deleted_at ON tasks(deleted_at);
     CREATE INDEX IF NOT EXISTS idx_projects_sort_order ON projects(sort_order);
   `);
+
+  // Migrate existing databases: add repeat customization columns if missing
+  try {
+    const cols = db
+      .prepare("PRAGMA table_info(tasks)")
+      .all() as { name: string }[];
+    const colNames = new Set(cols.map((c) => c.name));
+    if (!colNames.has("repeat_day_of_week")) {
+      db.exec("ALTER TABLE tasks ADD COLUMN repeat_day_of_week INTEGER;");
+    }
+    if (!colNames.has("repeat_day_of_month")) {
+      db.exec("ALTER TABLE tasks ADD COLUMN repeat_day_of_month INTEGER;");
+    }
+    if (!colNames.has("repeat_day_of_year")) {
+      db.exec("ALTER TABLE tasks ADD COLUMN repeat_day_of_year TEXT;");
+    }
+  } catch {}
 }

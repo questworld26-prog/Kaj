@@ -1,6 +1,7 @@
 // [spec: UI-006]
+// [spec: UI-008]
 import { h } from "preact";
-import { useState, useMemo } from "preact/hooks";
+import { useState, useMemo, useRef } from "preact/hooks";
 import type {
   Task,
   Project,
@@ -129,6 +130,58 @@ export function MobileViews({
     "queue",
   );
 
+  // Swipe-to-complete state (UI-008)
+  const [swipedTaskId, setSwipedTaskId] = useState<string | null>(null);
+  const [swipeOffset, setSwipeOffset] = useState<number>(0);
+  const touchStartXRef = useRef<number>(0);
+  const touchStartYRef = useRef<number>(0);
+  const isHorizontalSwipeRef = useRef<boolean | null>(null);
+
+  const handleTouchStart = (taskId: string, e: TouchEvent | MouseEvent) => {
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    touchStartXRef.current = clientX;
+    touchStartYRef.current = clientY;
+    isHorizontalSwipeRef.current = null;
+    setSwipedTaskId(taskId);
+    setSwipeOffset(0);
+  };
+
+  const handleTouchMove = (taskId: string, e: TouchEvent | MouseEvent) => {
+    if (swipedTaskId !== taskId) return;
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    const deltaX = clientX - touchStartXRef.current;
+    const deltaY = clientY - touchStartYRef.current;
+
+    if (isHorizontalSwipeRef.current === null) {
+      if (Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8) {
+        isHorizontalSwipeRef.current = Math.abs(deltaX) > Math.abs(deltaY);
+      }
+    }
+
+    if (isHorizontalSwipeRef.current) {
+      // Only permit swipe to the right for complete
+      if (deltaX > 0) {
+        setSwipeOffset(Math.min(deltaX, 140));
+      } else {
+        setSwipeOffset(0);
+      }
+    }
+  };
+
+  const handleTouchEnd = (taskId: string) => {
+    if (swipedTaskId === taskId) {
+      if (swipeOffset >= 75) {
+        // Complete threshold reached
+        onCompleteTask(taskId);
+      }
+      setSwipedTaskId(null);
+      setSwipeOffset(0);
+      isHorizontalSwipeRef.current = null;
+    }
+  };
+
   const projectMap = useMemo(
     () => new Map(projects.map((p) => [p.id, p])),
     [projects],
@@ -191,68 +244,73 @@ export function MobileViews({
     onReorderProjects(reordered.map((p) => p.id));
   };
 
-  // Render a mobile task card
+  // Render a mobile task card with Swipe-to-Complete (UI-008)
   const renderMobileCard = (task: Task) => {
     const proj = task.project_id ? projectMap.get(task.project_id) : null;
     const prio = PRIORITY_STYLES[task.priority] || PRIORITY_STYLES.week;
     const isMinimal = density === "minimal";
+    const isSwipingThis = swipedTaskId === task.id;
+    const currentOffset = isSwipingThis ? swipeOffset : 0;
+    const isReadyToComplete = currentOffset >= 75;
 
-    if (isMinimal) {
-      return (
-        <div
-          key={task.id}
-          data-testid={`mobile-task-card-${task.id}`}
-          className="rounded-lg bg-[#1C2224] border border-[#2A3235] px-2.5 py-1.5 flex items-center justify-between gap-2 transition-colors hover:border-gray-500"
-        >
-          <div className="flex items-center gap-2 min-w-0">
-            <button
-              type="button"
-              aria-label="Complete task"
-              onClick={(e) => {
-                e.stopPropagation();
-                onCompleteTask(task.id);
-              }}
-              className="w-4 h-4 rounded-full border border-emerald-500/50 hover:bg-emerald-500/20 shrink-0"
-            />
-            <button
-              type="button"
-              onClick={() => onSelectTask(task)}
-              className="text-left text-xs font-medium text-gray-100 truncate hover:text-emerald-400"
-            >
-              {task.title}
-            </button>
-            {task.status === "tracking" && task.waiting_on && (
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 truncate shrink-0">
-                ⏳ {task.waiting_on}
-              </span>
-            )}
-          </div>
+    const cardContent = isMinimal ? (
+      <div
+        className="rounded-lg bg-[#1C2224] border border-[#2A3235] px-2.5 py-1.5 flex items-center justify-between gap-2 transition-colors hover:border-gray-500 w-full"
+        style={{
+          transform: currentOffset > 0 ? `translateX(${currentOffset}px)` : "none",
+          transition: isSwipingThis ? "none" : "transform 0.2s ease-out",
+        }}
+      >
+        <div className="flex items-center gap-2 min-w-0">
           <button
             type="button"
-            data-testid="mobile-task-status-trigger"
+            aria-label="Complete task"
+            data-testid="complete-task-btn"
             onClick={(e) => {
               e.stopPropagation();
-              setActionSheetTask(task);
+              onCompleteTask(task.id);
             }}
-            className="text-xs px-1.5 py-0.5 rounded bg-[#121718] text-emerald-400 border border-[#2A3235] shrink-0 font-medium hover:border-emerald-500/40"
+            className="w-4 h-4 rounded-full border border-emerald-500/50 hover:bg-emerald-500/20 shrink-0"
+          />
+          <button
+            type="button"
+            onClick={() => onSelectTask(task)}
+            className="text-left text-xs font-medium text-gray-100 truncate hover:text-emerald-400"
           >
-            {STATUS_LABELS[task.status]} ▾
+            {task.title}
           </button>
+          {task.status === "tracking" && task.waiting_on && (
+            <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 truncate shrink-0">
+              ⏳ {task.waiting_on}
+            </span>
+          )}
         </div>
-      );
-    }
-
-    return (
+        <button
+          type="button"
+          data-testid="mobile-task-status-trigger"
+          onClick={(e) => {
+            e.stopPropagation();
+            setActionSheetTask(task);
+          }}
+          className="text-xs px-1.5 py-0.5 rounded bg-[#121718] text-emerald-400 border border-[#2A3235] shrink-0 font-medium hover:border-emerald-500/40"
+        >
+          {STATUS_LABELS[task.status]} ▾
+        </button>
+      </div>
+    ) : (
       <div
-        key={task.id}
-        data-testid={`mobile-task-card-${task.id}`}
-        className="rounded-xl bg-[#1C2224] border border-[#2A3235] p-3 flex flex-col gap-2 transition-colors hover:border-gray-500"
+        className="rounded-xl bg-[#1C2224] border border-[#2A3235] p-3 flex flex-col gap-2 transition-colors hover:border-gray-500 w-full"
+        style={{
+          transform: currentOffset > 0 ? `translateX(${currentOffset}px)` : "none",
+          transition: isSwipingThis ? "none" : "transform 0.2s ease-out",
+        }}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-2.5">
             <button
               type="button"
               aria-label="Complete task"
+              data-testid="complete-task-btn"
               onClick={(e) => {
                 e.stopPropagation();
                 onCompleteTask(task.id);
@@ -309,6 +367,35 @@ export function MobileViews({
             </span>
           )}
         </div>
+      </div>
+    );
+
+    return (
+      <div
+        key={task.id}
+        data-testid={`mobile-task-card-${task.id}`}
+        className="relative overflow-hidden rounded-xl select-none"
+        onTouchStart={(e) => handleTouchStart(task.id, e)}
+        onTouchMove={(e) => handleTouchMove(task.id, e)}
+        onTouchEnd={() => handleTouchEnd(task.id)}
+        onMouseDown={(e) => handleTouchStart(task.id, e)}
+        onMouseMove={(e) => handleTouchMove(task.id, e)}
+        onMouseUp={() => handleTouchEnd(task.id)}
+      >
+        {/* Swipe Reveal Background */}
+        <div
+          className={`absolute inset-0 flex items-center px-4 rounded-xl font-bold text-xs pointer-events-none transition-colors ${
+            isReadyToComplete
+              ? "bg-emerald-500 text-black"
+              : "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
+          }`}
+        >
+          <span className="flex items-center gap-1.5">
+            <span className="text-sm">✓</span> Done
+          </span>
+        </div>
+
+        <div className="relative z-10 w-full">{cardContent}</div>
       </div>
     );
   };

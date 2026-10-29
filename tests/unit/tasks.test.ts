@@ -123,7 +123,7 @@ describe("Tasks Core Workflow & Attributes (TASK-001, TASK-002, TASK-003)", () =
   });
 
   // [verifies: TASK-002/AC-TASK-002.3]
-  it("strictly validates repeat rule values", () => {
+  it("strictly validates repeat rule values and recurrence options (day of week, day of month, day of year)", () => {
     const validRules = ["none", "weekly", "monthly", "yearly"] as const;
     for (const rule of validRules) {
       const t = taskRepo.createTask({
@@ -136,6 +136,43 @@ describe("Tasks Core Workflow & Attributes (TASK-001, TASK-002, TASK-003)", () =
     // @ts-expect-error invalid rule testing
     expect(() =>
       taskRepo.createTask({ title: "Bad repeat", repeat_rule: "biweekly" }),
+    ).toThrow();
+
+    // Valid recurrence options
+    const weeklyTask = taskRepo.createTask({
+      title: "Weekly on Wednesday",
+      repeat_rule: "weekly",
+      repeat_day_of_week: 3,
+    });
+    expect(weeklyTask.repeat_day_of_week).toBe(3);
+
+    const monthlyTask = taskRepo.createTask({
+      title: "Monthly on 15th",
+      repeat_rule: "monthly",
+      repeat_day_of_month: 15,
+    });
+    expect(monthlyTask.repeat_day_of_month).toBe(15);
+
+    const yearlyTask = taskRepo.createTask({
+      title: "Yearly on Nov 25",
+      repeat_rule: "yearly",
+      repeat_day_of_year: "11-25",
+    });
+    expect(yearlyTask.repeat_day_of_year).toBe("11-25");
+
+    // Invalid recurrence options
+    expect(() =>
+      // @ts-expect-error invalid day of week (> 6)
+      taskRepo.createTask({ title: "Bad Dow", repeat_day_of_week: 7 }),
+    ).toThrow();
+
+    expect(() =>
+      // @ts-expect-error invalid day of month (> 31)
+      taskRepo.createTask({ title: "Bad Dom", repeat_day_of_month: 32 }),
+    ).toThrow();
+
+    expect(() =>
+      taskRepo.createTask({ title: "Bad Doy", repeat_day_of_year: "invalid" }),
     ).toThrow();
   });
 

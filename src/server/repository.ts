@@ -19,17 +19,40 @@ function generateId(prefix: "prj" | "tsk"): string {
   return `${prefix}_${Date.now().toString(36)}_${crypto.randomBytes(4).toString("hex")}`;
 }
 
+export interface RecurrenceOptions {
+  targetDay?: number;
+  repeatDayOfWeek?: number | null;
+  repeatDayOfMonth?: number | null;
+  repeatDayOfYear?: string | null;
+}
+
 export function shiftDate(
   dateStr: string,
   rule: RepeatRule,
-  targetDay?: number,
+  options?: number | RecurrenceOptions,
 ): string {
   const [y, m, d] = dateStr.split("-").map(Number);
-  const preferredDay = targetDay ?? d;
+  const opts: RecurrenceOptions =
+    typeof options === "number" ? { targetDay: options } : options || {};
+
   if (rule === "weekly") {
+    if (
+      opts.repeatDayOfWeek !== undefined &&
+      opts.repeatDayOfWeek !== null &&
+      opts.repeatDayOfWeek >= 0 &&
+      opts.repeatDayOfWeek <= 6
+    ) {
+      const dt = new Date(Date.UTC(y, m - 1, d));
+      const currentDay = dt.getUTCDay();
+      let diff = (opts.repeatDayOfWeek - currentDay + 7) % 7;
+      if (diff === 0) diff = 7;
+      dt.setUTCDate(dt.getUTCDate() + diff);
+      return dt.toISOString().slice(0, 10);
+    }
     const dt = new Date(Date.UTC(y, m - 1, d + 7));
     return dt.toISOString().slice(0, 10);
   }
+
   if (rule === "monthly") {
     let nextYear = y;
     let nextMonth = m + 1;
@@ -37,6 +60,11 @@ export function shiftDate(
       nextMonth = 1;
       nextYear += 1;
     }
+    const preferredDay =
+      opts.repeatDayOfMonth !== undefined && opts.repeatDayOfMonth !== null
+        ? opts.repeatDayOfMonth
+        : opts.targetDay ?? d;
+
     const daysInNextMonth = new Date(
       Date.UTC(nextYear, nextMonth, 0),
     ).getUTCDate();
@@ -45,14 +73,33 @@ export function shiftDate(
     const dd = String(clampedDay).padStart(2, "0");
     return `${nextYear}-${mm}-${dd}`;
   }
+
   if (rule === "yearly") {
     const nextYear = y + 1;
-    const daysInMonth = new Date(Date.UTC(nextYear, m, 0)).getUTCDate();
-    const clampedDay = Math.min(preferredDay, daysInMonth);
-    const mm = String(m).padStart(2, "0");
+    let targetMonth = m;
+    let targetDay =
+      opts.targetDay ?? d;
+
+    if (
+      opts.repeatDayOfYear &&
+      /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(opts.repeatDayOfYear)
+    ) {
+      const [customMonth, customDay] = opts.repeatDayOfYear
+        .split("-")
+        .map(Number);
+      targetMonth = customMonth;
+      targetDay = customDay;
+    }
+
+    const daysInMonth = new Date(
+      Date.UTC(nextYear, targetMonth, 0),
+    ).getUTCDate();
+    const clampedDay = Math.min(targetDay, daysInMonth);
+    const mm = String(targetMonth).padStart(2, "0");
     const dd = String(clampedDay).padStart(2, "0");
     return `${nextYear}-${mm}-${dd}`;
   }
+
   return dateStr;
 }
 
@@ -191,9 +238,10 @@ export class TaskRepository {
       .prepare(
         `INSERT INTO tasks (
           id, title, status, details, project_id, priority, action_date, due_date,
-          repeat_rule, waiting_on, sort_order, completed_at, deleted_at,
+          repeat_rule, repeat_day_of_week, repeat_day_of_month, repeat_day_of_year,
+          waiting_on, sort_order, completed_at, deleted_at,
           parent_recurring_id, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL, ?, ?)`,
       )
       .run(
         id,
@@ -205,6 +253,9 @@ export class TaskRepository {
         validated.action_date,
         validated.due_date,
         validated.repeat_rule,
+        validated.repeat_day_of_week ?? null,
+        validated.repeat_day_of_month ?? null,
+        validated.repeat_day_of_year ?? null,
         validated.waiting_on,
         sortOrder,
         now,
@@ -219,6 +270,21 @@ export class TaskRepository {
       .prepare("SELECT * FROM tasks WHERE id = ? AND deleted_at IS NULL")
       .get(id) as Task | undefined;
     return row || null;
+  }
+
+  getTaskById(id: string): Task | null {
+    return this.getTask(id);
+  }
+
+  listTasks(includeCompleted = false): Task[] {
+    const sql = includeCompleted
+      ? "SELECT * FROM tasks WHERE deleted_at IS NULL ORDER BY sort_order ASC, created_at DESC"
+      : "SELECT * FROM tasks WHERE status != ? AND deleted_at IS NULL ORDER BY sort_order ASC, created_at DESC";
+    return (
+      includeCompleted
+        ? this.db.prepare(sql).all()
+        : this.db.prepare(sql).all("done")
+    ) as unknown as Task[];
   }
 
   updateTask(id: string, input: UpdateTaskInput): Task | null {
@@ -250,6 +316,18 @@ export class TaskRepository {
       validated.repeat_rule !== undefined
         ? validated.repeat_rule
         : existing.repeat_rule;
+    const repeatDayOfWeek =
+      validated.repeat_day_of_week !== undefined
+        ? validated.repeat_day_of_week
+        : existing.repeat_day_of_week;
+    const repeatDayOfMonth =
+      validated.repeat_day_of_month !== undefined
+        ? validated.repeat_day_of_month
+        : existing.repeat_day_of_month;
+    const repeatDayOfYear =
+      validated.repeat_day_of_year !== undefined
+        ? validated.repeat_day_of_year
+        : existing.repeat_day_of_year;
     const waitingOn =
       validated.waiting_on !== undefined
         ? validated.waiting_on
@@ -265,8 +343,9 @@ export class TaskRepository {
         .prepare(
           `UPDATE tasks
            SET title = ?, details = ?, project_id = ?, priority = ?,
-               action_date = ?, due_date = ?, repeat_rule = ?, waiting_on = ?,
-               sort_order = ?, updated_at = ?
+               action_date = ?, due_date = ?, repeat_rule = ?,
+               repeat_day_of_week = ?, repeat_day_of_month = ?, repeat_day_of_year = ?,
+               waiting_on = ?, sort_order = ?, updated_at = ?
            WHERE id = ?`,
         )
         .run(
@@ -277,6 +356,9 @@ export class TaskRepository {
           actionDate,
           dueDate,
           repeatRule,
+          repeatDayOfWeek ?? null,
+          repeatDayOfMonth ?? null,
+          repeatDayOfYear ?? null,
           waitingOn,
           sortOrder,
           now,
@@ -299,8 +381,9 @@ export class TaskRepository {
       .prepare(
         `UPDATE tasks
          SET title = ?, status = ?, details = ?, project_id = ?, priority = ?,
-             action_date = ?, due_date = ?, repeat_rule = ?, waiting_on = ?,
-             sort_order = ?, completed_at = ?, updated_at = ?
+             action_date = ?, due_date = ?, repeat_rule = ?,
+             repeat_day_of_week = ?, repeat_day_of_month = ?, repeat_day_of_year = ?,
+             waiting_on = ?, sort_order = ?, completed_at = ?, updated_at = ?
          WHERE id = ?`,
       )
       .run(
@@ -312,6 +395,9 @@ export class TaskRepository {
         actionDate,
         dueDate,
         repeatRule,
+        repeatDayOfWeek ?? null,
+        repeatDayOfMonth ?? null,
+        repeatDayOfYear ?? null,
         waitingOn,
         sortOrder,
         completedAt,
@@ -383,11 +469,23 @@ export class TaskRepository {
         }
       }
 
+      const recurrenceOpts: RecurrenceOptions = {
+        repeatDayOfWeek: task.repeat_day_of_week,
+        repeatDayOfMonth: task.repeat_day_of_month,
+        repeatDayOfYear: task.repeat_day_of_year,
+      };
+
       const nextAction = task.action_date
-        ? shiftDate(task.action_date, task.repeat_rule, anchorActionDay)
+        ? shiftDate(task.action_date, task.repeat_rule, {
+            ...recurrenceOpts,
+            targetDay: anchorActionDay,
+          })
         : null;
       const nextDue = task.due_date
-        ? shiftDate(task.due_date, task.repeat_rule, anchorDueDay)
+        ? shiftDate(task.due_date, task.repeat_rule, {
+            ...recurrenceOpts,
+            targetDay: anchorDueDay,
+          })
         : null;
       const newId = generateId("tsk");
 
@@ -401,9 +499,10 @@ export class TaskRepository {
         .prepare(
           `INSERT INTO tasks (
             id, title, status, details, project_id, priority, action_date, due_date,
-            repeat_rule, waiting_on, sort_order, completed_at, deleted_at,
+            repeat_rule, repeat_day_of_week, repeat_day_of_month, repeat_day_of_year,
+            waiting_on, sort_order, completed_at, deleted_at,
             parent_recurring_id, created_at, updated_at
-          ) VALUES (?, ?, 'todo', ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?)`,
+          ) VALUES (?, ?, 'todo', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?)`,
         )
         .run(
           newId,
@@ -414,6 +513,9 @@ export class TaskRepository {
           nextAction,
           nextDue,
           task.repeat_rule,
+          task.repeat_day_of_week,
+          task.repeat_day_of_month,
+          task.repeat_day_of_year,
           task.waiting_on,
           row.next_order,
           task.id,
@@ -571,7 +673,13 @@ export class TaskRepository {
         // Virtual recurrence projections for action date
         if (task.repeat_rule !== "none") {
           const anchorDay = Number(task.action_date.split("-")[2]);
-          let curr = shiftDate(task.action_date, task.repeat_rule, anchorDay);
+          const opts: RecurrenceOptions = {
+            targetDay: anchorDay,
+            repeatDayOfWeek: task.repeat_day_of_week,
+            repeatDayOfMonth: task.repeat_day_of_month,
+            repeatDayOfYear: task.repeat_day_of_year,
+          };
+          let curr = shiftDate(task.action_date, task.repeat_rule, opts);
           while (curr <= endDate) {
             if (curr >= startDate) {
               events.push({
@@ -585,7 +693,7 @@ export class TaskRepository {
                 is_virtual: true,
               });
             }
-            curr = shiftDate(curr, task.repeat_rule, anchorDay);
+            curr = shiftDate(curr, task.repeat_rule, opts);
           }
         }
       }
@@ -608,7 +716,13 @@ export class TaskRepository {
         // Virtual recurrence projections for due date
         if (task.repeat_rule !== "none") {
           const anchorDay = Number(task.due_date.split("-")[2]);
-          let curr = shiftDate(task.due_date, task.repeat_rule, anchorDay);
+          const opts: RecurrenceOptions = {
+            targetDay: anchorDay,
+            repeatDayOfWeek: task.repeat_day_of_week,
+            repeatDayOfMonth: task.repeat_day_of_month,
+            repeatDayOfYear: task.repeat_day_of_year,
+          };
+          let curr = shiftDate(task.due_date, task.repeat_rule, opts);
           while (curr <= endDate) {
             if (curr >= startDate) {
               events.push({
@@ -622,7 +736,7 @@ export class TaskRepository {
                 is_virtual: true,
               });
             }
-            curr = shiftDate(curr, task.repeat_rule, anchorDay);
+            curr = shiftDate(curr, task.repeat_rule, opts);
           }
         }
       }

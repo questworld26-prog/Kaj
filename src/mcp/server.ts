@@ -8,6 +8,9 @@ import {
   TASK_PRIORITIES,
   REPEAT_RULES,
   DateStringSchema,
+  RepeatDayOfWeekSchema,
+  RepeatDayOfMonthSchema,
+  RepeatDayOfYearSchema,
 } from "../shared/types.js";
 
 export interface McpServerOptions {
@@ -239,6 +242,15 @@ export function createMcpServer(options: McpServerOptions): McpServer {
           .enum(REPEAT_RULES)
           .default("none")
           .describe("Recurrence rule (none, weekly, monthly, yearly)"),
+        repeat_day_of_week: RepeatDayOfWeekSchema.default(null).describe(
+          "Day of week (0=Sunday..6=Saturday) for weekly recurrence",
+        ),
+        repeat_day_of_month: RepeatDayOfMonthSchema.default(null).describe(
+          "Day of month (1..31) for monthly recurrence",
+        ),
+        repeat_day_of_year: RepeatDayOfYearSchema.default(null).describe(
+          "Month-day (MM-DD) for yearly recurrence",
+        ),
         waiting_on: z
           .string()
           .default("")
@@ -278,6 +290,9 @@ export function createMcpServer(options: McpServerOptions): McpServer {
         action_date: DateStringSchema.optional(),
         due_date: DateStringSchema.optional(),
         repeat_rule: z.enum(REPEAT_RULES).optional(),
+        repeat_day_of_week: RepeatDayOfWeekSchema.optional(),
+        repeat_day_of_month: RepeatDayOfMonthSchema.optional(),
+        repeat_day_of_year: RepeatDayOfYearSchema.optional(),
         waiting_on: z.string().optional(),
         sort_order: z.number().optional(),
       },

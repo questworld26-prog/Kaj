@@ -263,15 +263,16 @@ export function SwimlaneBoard({
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <button
                       type="button"
+                      data-testid="complete-task-btn"
                       onClick={(e) => {
                         e.stopPropagation();
                         onCompleteTask(task.id);
                       }}
                       title="Mark complete"
-                      className="p-0.5 rounded text-gray-400 hover:text-emerald-400 transition-colors shrink-0"
+                      className="w-4 h-4 rounded-full border border-gray-500 hover:border-emerald-400 hover:bg-emerald-500/20 flex items-center justify-center text-transparent hover:text-emerald-400 transition-all shrink-0"
                     >
                       <svg
-                        className="w-3.5 h-3.5"
+                        className="w-2.5 h-2.5"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -279,7 +280,7 @@ export function SwimlaneBoard({
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          strokeWidth="2.5"
+                          strokeWidth="3"
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
@@ -361,11 +362,37 @@ export function SwimlaneBoard({
                 }}
               >
                 <div className="flex items-center justify-between gap-1 mb-1.5">
-                  <span
-                    className={`text-[9px] font-bold px-1.5 py-0.2 rounded border uppercase tracking-wider ${priStyle.badge}`}
-                  >
-                    {priStyle.label}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      data-testid="complete-task-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCompleteTask(task.id);
+                      }}
+                      title="Mark complete"
+                      className="w-4 h-4 rounded-full border border-gray-500 hover:border-emerald-400 hover:bg-emerald-500/20 flex items-center justify-center text-transparent hover:text-emerald-400 transition-all shrink-0"
+                    >
+                      <svg
+                        className="w-2.5 h-2.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="3"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </button>
+                    <span
+                      className={`text-[9px] font-bold px-1.5 py-0.2 rounded border uppercase tracking-wider ${priStyle.badge}`}
+                    >
+                      {priStyle.label}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-1">
                     {task.repeat_rule !== "none" && (
                       <span
@@ -375,29 +402,6 @@ export function SwimlaneBoard({
                         ↻
                       </span>
                     )}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onCompleteTask(task.id);
-                      }}
-                      title="Mark complete"
-                      className="p-0.5 rounded text-gray-400 hover:text-emerald-400 hover:bg-[#121718] transition-colors"
-                    >
-                      <svg
-                        className="w-3.5 h-3.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2.5"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    </button>
                   </div>
                 </div>
 

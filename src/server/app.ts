@@ -7,6 +7,11 @@ import { streamSSE } from "hono/streaming";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { TaskRepository, ProjectRepository } from "./repository.js";
 import { EventBus } from "./events.js";
+import {
+  TelegramBotService,
+  loadTelegramConfig,
+  saveTelegramConfig,
+} from "./telegram.js";
 import { createMcpServer } from "../mcp/server.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
@@ -19,6 +24,7 @@ import {
 export interface AppOptions {
   db: DatabaseSync;
   eventBus: EventBus;
+  telegramBot?: TelegramBotService;
 }
 
 export function parseHostname(rawHost: string): string {
@@ -126,8 +132,9 @@ export function isAllowedOrigin(origin: string, reqHost?: string): boolean {
 
 // [spec: MCP-002]
 // [spec: MCP-003]
+// [spec: TG-001]
 export function createApp(options: AppOptions): Hono {
-  const { db, eventBus } = options;
+  const { db, eventBus, telegramBot } = options;
   const taskRepo = new TaskRepository(db);
   const projectRepo = new ProjectRepository(db);
 
@@ -196,14 +203,57 @@ export function createApp(options: AppOptions): Hono {
       }
     } catch {}
 
+    const tgCfg = telegramBot
+      ? telegramBot.getConfig()
+      : loadTelegramConfig();
+
     return c.json({
       status: "ok",
       service: "kaj",
       version: appVersion,
       uptime: process.uptime(),
       memory_rss_mb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
+      telegram_enabled: tgCfg.enabled,
+      telegram_running: telegramBot ? telegramBot.isRunning() : false,
       timestamp: new Date().toISOString(),
     });
+  });
+
+  // REST: Telegram integration status & feature toggle (TG-001)
+  app.get("/api/telegram/status", (c) => {
+    const cfg = telegramBot ? telegramBot.getConfig() : loadTelegramConfig();
+    return c.json({
+      enabled: cfg.enabled,
+      running: telegramBot ? telegramBot.isRunning() : false,
+      configured: Boolean(
+        cfg.bot_token && cfg.bot_token !== "YOUR_TELEGRAM_BOT_TOKEN",
+      ),
+      allowed_user_ids: cfg.allowed_user_ids,
+      default_status: cfg.default_status,
+      poll_interval_ms: cfg.poll_interval_ms,
+    });
+  });
+
+  app.post("/api/telegram/toggle", async (c) => {
+    try {
+      const body = (await c.req.json()) as { enabled?: boolean };
+      if (typeof body.enabled !== "boolean") {
+        return c.json({ error: "enabled (boolean) is required" }, 400);
+      }
+      const updated = saveTelegramConfig({ enabled: body.enabled });
+      if (telegramBot) {
+        telegramBot.updateConfig(updated);
+      }
+      return c.json({
+        enabled: updated.enabled,
+        running: telegramBot ? telegramBot.isRunning() : false,
+        configured: Boolean(
+          updated.bot_token && updated.bot_token !== "YOUR_TELEGRAM_BOT_TOKEN",
+        ),
+      });
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 400);
+    }
   });
 
   // REST: Projects

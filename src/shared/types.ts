@@ -26,6 +26,13 @@ export const REPEAT_RULES = ["none", "weekly", "monthly", "yearly"] as const;
 
 export type RepeatRule = (typeof REPEAT_RULES)[number];
 
+export const RepeatDayOfWeekSchema = z.number().int().min(0).max(6).nullable();
+export const RepeatDayOfMonthSchema = z.number().int().min(1).max(31).nullable();
+export const RepeatDayOfYearSchema = z
+  .string()
+  .regex(/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, "Must be in MM-DD format")
+  .nullable();
+
 export const DateStringSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be in YYYY-MM-DD format")
@@ -52,11 +59,14 @@ export const CreateTaskInputSchema = z.object({
   action_date: DateStringSchema.default(null),
   due_date: DateStringSchema.default(null),
   repeat_rule: z.enum(REPEAT_RULES).default("none"),
+  repeat_day_of_week: RepeatDayOfWeekSchema.optional().default(null),
+  repeat_day_of_month: RepeatDayOfMonthSchema.optional().default(null),
+  repeat_day_of_year: RepeatDayOfYearSchema.optional().default(null),
   waiting_on: z.string().default(""),
   sort_order: z.number().optional(),
 });
 
-export type CreateTaskInput = z.infer<typeof CreateTaskInputSchema>;
+export type CreateTaskInput = z.input<typeof CreateTaskInputSchema>;
 
 export const UpdateTaskInputSchema = z.object({
   title: z
@@ -71,6 +81,9 @@ export const UpdateTaskInputSchema = z.object({
   action_date: DateStringSchema.optional(),
   due_date: DateStringSchema.optional(),
   repeat_rule: z.enum(REPEAT_RULES).optional(),
+  repeat_day_of_week: RepeatDayOfWeekSchema.optional(),
+  repeat_day_of_month: RepeatDayOfMonthSchema.optional(),
+  repeat_day_of_year: RepeatDayOfYearSchema.optional(),
   waiting_on: z.string().optional(),
   sort_order: z.number().optional(),
 });
@@ -87,6 +100,9 @@ export interface Task {
   action_date: string | null;
   due_date: string | null;
   repeat_rule: RepeatRule;
+  repeat_day_of_week: number | null;
+  repeat_day_of_month: number | null;
+  repeat_day_of_year: string | null;
   waiting_on: string;
   sort_order: number;
   completed_at: string | null;

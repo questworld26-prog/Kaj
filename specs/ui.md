@@ -86,6 +86,15 @@ Acceptance Criteria:
 - AC-UI-007.4: The search input shall provide a clear button (`✕`) when text is present, immediately restoring the unfiltered view upon selection.
 - AC-UI-007.5: On mobile viewports below 768px without a stored density preference, the card density shall default to Minimal mode.
 
+## UI-008: Multi-Modal Task Completion Interactions
+
+The system shall provide distinct, high-affordance completion interactions across desktop and mobile interfaces, including card circular checkboxes, a direct modal completion action, and mobile swipe-to-complete gestures.
+
+Acceptance Criteria:
+- AC-UI-008.1: In both Compact and Minimal desktop board views, each task card shall render a prominent circular completion checkbox on its left boundary with emerald hover styling, allowing 1-click completion.
+- AC-UI-008.2: In the task modal dialog, an explicit "✓ Mark Complete" button shall be provided for existing active tasks, marking the task complete and closing the dialog upon click.
+- AC-UI-008.3: On mobile viewports, swiping a task card to the right past the completion threshold shall trigger task completion and archiving.
+
 
 
 

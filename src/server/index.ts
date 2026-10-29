@@ -4,6 +4,8 @@ import { serve } from "@hono/node-server";
 import { createDatabase, initSchema } from "./db.js";
 import { EventBus } from "./events.js";
 import { createApp } from "./app.js";
+import { TaskRepository, ProjectRepository } from "./repository.js";
+import { loadTelegramConfig, TelegramBotService } from "./telegram.js";
 
 function getLocalNetworkHost(): string {
   if (process.env.KAJ_HOST_NAME) return process.env.KAJ_HOST_NAME;
@@ -38,12 +40,22 @@ function getLanIp(): string | null {
 }
 
 // [spec: MCP-002]
+// [spec: TG-001]
 async function startDaemon() {
   const db = createDatabase(process.env.KAJ_DB_PATH);
   initSchema(db);
   const eventBus = new EventBus();
 
-  const app = createApp({ db, eventBus });
+  const telegramConfig = loadTelegramConfig();
+  const telegramBot = new TelegramBotService({
+    config: telegramConfig,
+    taskRepo: new TaskRepository(db),
+    projectRepo: new ProjectRepository(db),
+    eventBus,
+  });
+  telegramBot.start();
+
+  const app = createApp({ db, eventBus, telegramBot });
 
   const port = Number(process.env.PORT || 4820);
   const hostname = process.env.HOST || "0.0.0.0";
@@ -61,6 +73,11 @@ async function startDaemon() {
       const networkStr = lanIp
         ? `http://${networkHost}:${info.port} (or http://${lanIp}:${info.port})`
         : `http://${networkHost}:${info.port}`;
+      const tgStatus = telegramBot.isRunning()
+        ? "ACTIVE (polling)"
+        : telegramConfig.enabled
+          ? "ENABLED (missing bot_token in telegram.config.json)"
+          : "DISABLED (flag off)";
       console.log(`
 ╔═════════════════════════════════════════════════════════════════╗
 ║  Kaj (কাজ) Background Task Management & MCP Server             ║
@@ -70,6 +87,7 @@ async function startDaemon() {
 - Health Check:      http://localhost:${info.port}/api/health
 - MCP Endpoint:      http://localhost:${info.port}/mcp (Streamable HTTP)
 - SSE Live Push:     http://localhost:${info.port}/events
+- Telegram Bot:      ${tgStatus}
 - Memory RSS:        ~${memoryMb} MB (Low footprint daemon)
 `);
     },

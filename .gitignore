@@ -12,4 +12,5 @@ playwright-report/
 *.sqlite3
 *.sqlite-wal
 *.sqlite-shm
+telegram.config.json
 .DS_Store

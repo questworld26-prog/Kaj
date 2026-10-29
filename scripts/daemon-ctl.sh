@@ -124,6 +124,76 @@ show_logs() {
   tail -n 30 -f "${LOG_FILE}"
 }
 
+ensure_telegram_config() {
+  local cfg="${PROJECT_DIR}/telegram.config.json"
+  local ex="${PROJECT_DIR}/telegram.config.example.json"
+  if [ ! -f "$cfg" ] && [ -f "$ex" ]; then
+    cp "$ex" "$cfg"
+  fi
+}
+
+toggle_telegram() {
+  local state="$1"
+  ensure_telegram_config
+  local cfg="${PROJECT_DIR}/telegram.config.json"
+  "${NODE_BIN}" -e '
+    const fs = require("fs");
+    const file = process.argv[1];
+    const enabled = process.argv[2] === "true";
+    let data = {
+      enabled: false,
+      bot_token: "YOUR_TELEGRAM_BOT_TOKEN",
+      allowed_user_ids: [],
+      default_status: "triage",
+      poll_interval_ms: 2000
+    };
+    if (fs.existsSync(file)) {
+      try { data = { ...data, ...JSON.parse(fs.readFileSync(file, "utf8")) }; } catch {}
+    }
+    data.enabled = enabled;
+    fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8");
+  ' "$cfg" "$state"
+
+  if [ "$state" = "true" ]; then
+    echo "✅ Telegram bot feature flag set to ENABLED in telegram.config.json"
+  else
+    echo "🛑 Telegram bot feature flag set to DISABLED in telegram.config.json"
+  fi
+
+  # If daemon is running, notify runtime toggle endpoint or restart
+  if curl -s http://127.0.0.1:4820/api/health > /dev/null 2>&1; then
+    curl -s -X POST http://127.0.0.1:4820/api/telegram/toggle \
+      -H "Content-Type: application/json" \
+      -d "{\"enabled\": ${state}}" > /dev/null 2>&1 || restart_daemon
+  fi
+  telegram_status
+}
+
+telegram_status() {
+  ensure_telegram_config
+  local cfg="${PROJECT_DIR}/telegram.config.json"
+  echo "🤖 Telegram Bot Integration Status:"
+  "${NODE_BIN}" -e '
+    const fs = require("fs");
+    const file = process.argv[1];
+    if (!fs.existsSync(file)) {
+      console.log("   Config File: Not found");
+      process.exit(0);
+    }
+    const data = JSON.parse(fs.readFileSync(file, "utf8"));
+    const hasToken = Boolean(data.bot_token && data.bot_token !== "YOUR_TELEGRAM_BOT_TOKEN");
+    console.log("   Config File:      " + file);
+    console.log("   Feature Flag:     " + (data.enabled ? "ON (enabled: true)" : "OFF (enabled: false)"));
+    console.log("   Bot Token Set:    " + (hasToken ? "Yes (configured)" : "No (edit telegram.config.json)"));
+    console.log("   Allowed User IDs: " + (Array.isArray(data.allowed_user_ids) && data.allowed_user_ids.length ? data.allowed_user_ids.join(", ") : "Any (recommend adding your ID)"));
+    console.log("   Default Status:   " + (data.default_status || "triage"));
+  ' "$cfg"
+  if curl -s http://127.0.0.1:4820/api/telegram/status > /dev/null 2>&1; then
+    LIVE=$(curl -s http://127.0.0.1:4820/api/telegram/status)
+    echo "   Live Daemon:      ${LIVE}"
+  fi
+}
+
 case "$1" in
   start)
     start_daemon
@@ -146,17 +216,29 @@ case "$1" in
   uninstall)
     uninstall_agent
     ;;
+  telegram-on)
+    toggle_telegram true
+    ;;
+  telegram-off)
+    toggle_telegram false
+    ;;
+  telegram-status)
+    telegram_status
+    ;;
   *)
-    echo "Usage: $0 {start|stop|restart|status|logs|install|uninstall}"
+    echo "Usage: $0 {start|stop|restart|status|logs|install|uninstall|telegram-on|telegram-off|telegram-status}"
     echo ""
     echo "Commands:"
-    echo "  install    Register LaunchAgent to auto-start on laptop boot"
-    echo "  uninstall  Remove LaunchAgent"
-    echo "  start      Start the daemon"
-    echo "  stop       Stop the daemon"
-    echo "  restart    Restart the daemon"
-    echo "  status     Check daemon health & PID"
-    echo "  logs       Live tail daemon logs"
+    echo "  install          Register LaunchAgent to auto-start on laptop boot"
+    echo "  uninstall        Remove LaunchAgent"
+    echo "  start            Start the daemon"
+    echo "  stop             Stop the daemon"
+    echo "  restart          Restart the daemon"
+    echo "  status           Check daemon health & PID"
+    echo "  logs             Live tail daemon logs"
+    echo "  telegram-on      Enable Telegram bot integration flag"
+    echo "  telegram-off     Disable Telegram bot integration flag"
+    echo "  telegram-status  Show Telegram config & live bot status"
     exit 1
     ;;
 esac

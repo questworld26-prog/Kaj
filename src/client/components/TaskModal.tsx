@@ -1,4 +1,5 @@
 // [spec: UI-004]
+// [spec: UI-008]
 import { h } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type {
@@ -16,6 +17,7 @@ interface TaskModalProps {
   onClose: () => void;
   onSave: (data: Partial<Task>) => void;
   onDelete?: (id: string) => void;
+  onComplete?: (id: string) => void;
 }
 
 export function TaskModal({
@@ -25,6 +27,7 @@ export function TaskModal({
   onClose,
   onSave,
   onDelete,
+  onComplete,
 }: TaskModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -36,6 +39,9 @@ export function TaskModal({
     action_date: null,
     due_date: null,
     repeat_rule: "none",
+    repeat_day_of_week: null,
+    repeat_day_of_month: null,
+    repeat_day_of_year: null,
     waiting_on: "",
     details: "",
   });
@@ -51,6 +57,9 @@ export function TaskModal({
         action_date: task.action_date || null,
         due_date: task.due_date || null,
         repeat_rule: task.repeat_rule,
+        repeat_day_of_week: task.repeat_day_of_week ?? null,
+        repeat_day_of_month: task.repeat_day_of_month ?? null,
+        repeat_day_of_year: task.repeat_day_of_year ?? null,
         waiting_on: task.waiting_on || "",
         details: task.details || "",
       });
@@ -63,6 +72,9 @@ export function TaskModal({
         action_date: null,
         due_date: null,
         repeat_rule: "none",
+        repeat_day_of_week: null,
+        repeat_day_of_month: null,
+        repeat_day_of_year: null,
         waiting_on: "",
         details: "",
       });
@@ -258,13 +270,35 @@ export function TaskModal({
               <select
                 name="repeat_rule"
                 value={formData.repeat_rule}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const val = (e.target as HTMLSelectElement)
+                    .value as RecurrenceRule;
                   setFormData({
                     ...formData,
-                    repeat_rule: (e.target as HTMLSelectElement)
-                      .value as RecurrenceRule,
-                  })
-                }
+                    repeat_rule: val,
+                    repeat_day_of_week:
+                      val === "weekly"
+                        ? formData.repeat_day_of_week ??
+                          (formData.action_date
+                            ? new Date(formData.action_date).getUTCDay()
+                            : 1)
+                        : null,
+                    repeat_day_of_month:
+                      val === "monthly"
+                        ? formData.repeat_day_of_month ??
+                          (formData.action_date
+                            ? Number(formData.action_date.split("-")[2])
+                            : 1)
+                        : null,
+                    repeat_day_of_year:
+                      val === "yearly"
+                        ? formData.repeat_day_of_year ??
+                          (formData.action_date
+                            ? formData.action_date.slice(5)
+                            : "01-01")
+                        : null,
+                  });
+                }}
                 className="w-full px-3 py-2 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white focus:border-emerald-500 focus:outline-none"
               >
                 <option value="none">No Repeat</option>
@@ -274,6 +308,128 @@ export function TaskModal({
               </select>
             </div>
           </div>
+
+          {/* Conditional Recurrence Day Option (AC-TASK-002.3) */}
+          {formData.repeat_rule === "weekly" && (
+            <div className="p-3 rounded-xl bg-[#181E20] border border-[#2A3235]">
+              <label className="block text-xs font-semibold text-emerald-400 mb-1.5">
+                Repeat on Day of the Week
+              </label>
+              <div className="grid grid-cols-7 gap-1">
+                {[
+                  { label: "Sun", day: 0 },
+                  { label: "Mon", day: 1 },
+                  { label: "Tue", day: 2 },
+                  { label: "Wed", day: 3 },
+                  { label: "Thu", day: 4 },
+                  { label: "Fri", day: 5 },
+                  { label: "Sat", day: 6 },
+                ].map(({ label, day }) => {
+                  const isSelected =
+                    formData.repeat_day_of_week === day ||
+                    (formData.repeat_day_of_week === null &&
+                      formData.action_date &&
+                      new Date(formData.action_date).getUTCDay() === day);
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      data-testid={`repeat-dow-${day}`}
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          repeat_day_of_week: day,
+                        })
+                      }
+                      className={`py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                        isSelected
+                          ? "bg-emerald-500 text-black font-bold"
+                          : "bg-[#1C2224] text-gray-300 hover:text-white hover:bg-[#252D30]"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {formData.repeat_rule === "monthly" && (
+            <div className="p-3 rounded-xl bg-[#181E20] border border-[#2A3235]">
+              <label className="block text-xs font-semibold text-emerald-400 mb-1.5">
+                Repeat on Day of the Month (1 – 31)
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  max="31"
+                  name="repeat_day_of_month"
+                  data-testid="repeat-dom-input"
+                  value={formData.repeat_day_of_month ?? ""}
+                  placeholder={
+                    formData.action_date
+                      ? formData.action_date.split("-")[2]
+                      : "1"
+                  }
+                  onChange={(e) => {
+                    const val = parseInt(
+                      (e.target as HTMLInputElement).value,
+                      10,
+                    );
+                    setFormData({
+                      ...formData,
+                      repeat_day_of_month:
+                        isNaN(val) || val < 1 || val > 31 ? null : val,
+                    });
+                  }}
+                  className="w-24 px-3 py-1.5 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white focus:border-emerald-500 focus:outline-none"
+                />
+                <span className="text-xs text-gray-400">
+                  Day of every month (e.g. 1st, 15th, 31st with month-end clamping)
+                </span>
+              </div>
+            </div>
+          )}
+
+          {formData.repeat_rule === "yearly" && (
+            <div className="p-3 rounded-xl bg-[#181E20] border border-[#2A3235]">
+              <label className="block text-xs font-semibold text-emerald-400 mb-1.5">
+                Repeat on Day of the Year
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  name="repeat_day_of_year_picker"
+                  data-testid="repeat-doy-picker"
+                  value={
+                    formData.repeat_day_of_year
+                      ? `2026-${formData.repeat_day_of_year}`
+                      : formData.action_date || "2026-01-01"
+                  }
+                  onChange={(e) => {
+                    const val = (e.target as HTMLInputElement).value;
+                    if (val && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
+                      setFormData({
+                        ...formData,
+                        repeat_day_of_year: val.slice(5),
+                      });
+                    }
+                  }}
+                  className="w-40 px-3 py-1.5 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white focus:border-emerald-500 focus:outline-none"
+                />
+                <span className="text-xs text-gray-400">
+                  Recurs annually on this month and day (
+                  {formData.repeat_day_of_year ||
+                    (formData.action_date
+                      ? formData.action_date.slice(5)
+                      : "MM-DD")}
+                  )
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Dual Date Scheduling */}
           <div className="grid grid-cols-2 gap-4">
@@ -359,17 +515,30 @@ export function TaskModal({
 
         {/* Modal Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-[#2A3235] bg-[#121718]">
-          {task && onDelete ? (
-            <button
-              type="button"
-              onClick={() => onDelete(task.id)}
-              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-colors"
-            >
-              Delete Task
-            </button>
-          ) : (
-            <div />
-          )}
+          <div className="flex items-center gap-2">
+            {task && onDelete && (
+              <button
+                type="button"
+                onClick={() => onDelete(task.id)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-colors"
+              >
+                Delete Task
+              </button>
+            )}
+            {task && task.status !== "done" && onComplete && (
+              <button
+                type="button"
+                data-testid="modal-mark-complete-btn"
+                onClick={() => {
+                  onComplete(task.id);
+                  onClose();
+                }}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-colors flex items-center gap-1.5"
+              >
+                <span>✓</span> Mark Complete
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center gap-2">
             <button
