@@ -127,9 +127,33 @@ npm run dev
 # Compile frontend assets and TypeScript server
 npm run build
 
-# Start production background server (binds to 0.0.0.0:4820, accessible locally and across WiFi)
+# Run in foreground (binds to 0.0.0.0:4820)
 npm start
 ```
+
+### Daemon Management & Auto-Start on Laptop Boot
+
+Kaj includes a built-in background daemon manager (`scripts/daemon-ctl.sh`) that integrates directly with macOS `launchd` LaunchAgents, allowing the daemon to run silently in the background and automatically start whenever your laptop boots or logs in:
+
+| Action | NPM Script | CLI Equivalent | Description |
+| :--- | :--- | :--- | :--- |
+| **Start Daemon** | `npm run daemon:start` | `./scripts/daemon-ctl.sh start` | Starts Kaj in background (~75–95 MB RSS) |
+| **Stop Daemon** | `npm run daemon:stop` | `./scripts/daemon-ctl.sh stop` | Gracefully stops the running daemon |
+| **Restart Daemon** | `npm run daemon:restart` | `./scripts/daemon-ctl.sh restart` | Restarts daemon and reloads compiled code |
+| **Check Status** | `npm run daemon:status` | `./scripts/daemon-ctl.sh status` | Displays PID, memory usage, and endpoints |
+| **View Live Logs** | `npm run daemon:logs` | `./scripts/daemon-ctl.sh logs` | Tails live daemon logs (`~/.local/share/kaj/daemon.log`) |
+| **Enable Auto-Start** | `npm run daemon:install` | `./scripts/daemon-ctl.sh install` | Registers macOS LaunchAgent (`~/Library/LaunchAgents/com.kaj.daemon.plist`) |
+| **Disable Auto-Start** | `npm run daemon:uninstall` | `./scripts/daemon-ctl.sh uninstall` | Unloads and removes the LaunchAgent |
+
+#### Setup Auto-Start on Boot (One-Time Setup)
+```bash
+# 1. Build latest code
+npm run build
+
+# 2. Register LaunchAgent with macOS
+npm run daemon:install
+```
+Once installed, macOS manages Kaj automatically—rebooting or logging in will start the server and MCP endpoints with zero user interaction.
 
 ### Multi-Device & WiFi Access (`jarvis.local`)
 
