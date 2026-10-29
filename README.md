@@ -127,9 +127,22 @@ npm run dev
 # Compile frontend assets and TypeScript server
 npm run build
 
-# Start production background server (binds to 127.0.0.1:4820)
+# Start production background server (binds to 0.0.0.0:4820, accessible locally and across WiFi)
 npm start
 ```
+
+### Multi-Device & WiFi Access (`jarvis.local`)
+
+Kaj binds by default to `0.0.0.0:4820`, making it immediately accessible across your local WiFi/LAN network without reverse proxies or port configuration:
+
+- **Local Machine**: `http://localhost:4820`
+- **Other Devices on WiFi (Phones, Tablets, Laptops)**: `http://jarvis.local:4820` (or your machine's LAN IP, e.g. `http://192.168.1.146:4820`)
+
+**Security & Origin Isolation**:
+Kaj implements a dual **Host Header** and **Origin** guard against DNS rebinding and cross-site request forgery (CSRF):
+
+- Requests from loopback (`localhost`, `127.0.0.1`), mDNS domains (`*.local`), and RFC 1918 private LAN IP blocks are authenticated and permitted.
+- Cross-origin requests from arbitrary external websites (e.g. `evil.com`) attempting to probe or mutate tasks across your intranet are strictly rejected with `403 Forbidden`.
 
 ---
 

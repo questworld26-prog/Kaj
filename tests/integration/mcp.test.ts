@@ -366,6 +366,29 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
 
     const goodRes = await app.request(goodReq);
     expect(goodRes.status).toBe(200);
+
+    // Allowed mDNS origin (jarvis.local)
+    const jarvisReq = new Request("http://jarvis.local:4820/mcp", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        host: "jarvis.local:4820",
+        origin: "http://jarvis.local:4820",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 3,
+        method: "initialize",
+        params: {
+          protocolVersion: "2024-11-05",
+          capabilities: {},
+          clientInfo: { name: "jarvis-local-agent", version: "1.0" },
+        },
+      }),
+    });
+
+    const jarvisRes = await app.request(jarvisReq);
+    expect(jarvisRes.status).toBe(200);
   });
 
   // [verifies: MCP-002/AC-MCP-002.1]

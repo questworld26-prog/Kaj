@@ -26,6 +26,7 @@ Acceptance Criteria:
 - AC-MCP-002.1: The background daemon shall expose a Streamable HTTP endpoint on `POST /mcp` handling standard MCP JSON-RPC protocol requests.
 - AC-MCP-002.2: The system shall provide a standalone stdio entrypoint (`dist/mcp/stdio.js`) capable of executing MCP commands over standard input/output.
 - AC-MCP-002.3: Task or project mutations executed via MCP shall immediately broadcast an SSE notification to connected browser clients to update the UI in real-time.
+- AC-MCP-002.4: The background daemon shall bind by default to all network interfaces (`0.0.0.0`) permitting local network access (e.g. via `jarvis.local` or LAN IP) from other devices on WiFi or LAN, while supporting configurable `HOST` and `PORT`.
 
 ---
 
@@ -37,5 +38,5 @@ Acceptance Criteria:
 - AC-MCP-003.1: Read tools (`query_tasks`, `get_task`, `get_board_summary`, `list_projects`) shall declare `readOnlyHint: true`.
 - AC-MCP-003.2: The `delete_task` tool shall declare `destructiveHint: true` and perform a soft-delete by recording `deleted_at`.
 - AC-MCP-003.3: The system shall provide a `restore_task` tool to recover soft-deleted tasks back to active state.
-- AC-MCP-003.4: The HTTP endpoint on `POST /mcp` shall guard against DNS rebinding by validating the `Origin` header when present against loopback origins.
+- AC-MCP-003.4: The HTTP endpoint on `POST /mcp` and REST API endpoints shall guard against DNS rebinding and cross-origin attacks by validating the `Origin` and `Host` headers against trusted local origins (loopback, local mDNS `.local` domains, and private RFC 1918 LAN IPs).
 

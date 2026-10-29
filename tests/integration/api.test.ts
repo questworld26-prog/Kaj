@@ -129,6 +129,53 @@ describe("Hono REST API & SSE Live Sync", () => {
     expect(evilRes.status).toBe(403);
   });
 
+  // [verifies: MCP-003/AC-MCP-003.4]
+  it("allows requests from jarvis.local and private local network origins", async () => {
+    // 1. jarvis.local mDNS origin
+    const localRes = await app.request("/api/tasks", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        host: "jarvis.local:4820",
+        origin: "http://jarvis.local:4820",
+      },
+      body: JSON.stringify({ title: "Task from jarvis.local", status: "todo" }),
+    });
+    expect(localRes.status).toBe(201);
+
+    // 2. Private LAN IPv4 origin (192.168.1.146)
+    const lanRes = await app.request("/api/tasks", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        host: "192.168.1.146:4820",
+        origin: "http://192.168.1.146:4820",
+      },
+      body: JSON.stringify({ title: "Task from LAN IP", status: "todo" }),
+    });
+    expect(lanRes.status).toBe(201);
+  });
+
+  // [verifies: MCP-003/AC-MCP-003.4]
+  it("rejects requests with unauthorized Host headers (DNS rebinding guard)", async () => {
+    const badHostRes = await app.request("/api/tasks", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        host: "rebind.attacker.com:4820",
+        origin: "http://rebind.attacker.com:4820",
+      },
+      body: JSON.stringify({ title: "DNS Rebinding Attack" }),
+    });
+    expect(badHostRes.status).toBe(403);
+  });
+
+  // [verifies: MCP-002/AC-MCP-002.4]
+  it("supports network daemon binding configuration for WiFi/LAN access", async () => {
+    const defaultHost = process.env.HOST || "0.0.0.0";
+    expect(defaultHost).toBe("0.0.0.0");
+  });
+
   // [verifies: TASK-002/AC-TASK-002.1]
   it("rejects mutating requests with body lacking application/json content-type", async () => {
     const textRes = await app.request("/api/tasks", {

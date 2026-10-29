@@ -23,6 +23,7 @@ This document records the foundational architectural decisions, technical trade-
 7. [ADR-007: Streamlined Card Density Architecture (Compact & Minimum Modes)](#adr-007-streamlined-card-density-architecture-compact--minimum-modes)
 8. [ADR-008: Real-Time Event Synchronization via Server-Sent Events (SSE)](#adr-008-real-time-event-synchronization-via-server-sent-events-sse)
 9. [ADR-009: Spec-Driven Development (SDD) & Automated Guardian Audit Gatekeeping](#adr-009-spec-driven-development-sdd--automated-guardian-audit-gatekeeping)
+10. [ADR-010: Local Network Access & DNS Rebinding / CSRF Origin Guard](#adr-010-local-network-access--dns-rebinding--csrf-origin-guard)
 
 ---
 
@@ -284,3 +285,35 @@ Chosen **Option 1**: Mandate SDD for all features. Releases and commits require 
 - **Positive**: 100% traceable requirement-to-code-to-test pipeline.
 - **Positive**: Immediate detection when code changes outpace formal specifications.
 - **Positive**: Zero ambiguity during autonomous agent implementation turns.
+
+---
+
+## ADR-010: Local Network Access & DNS Rebinding / CSRF Origin Guard
+
+- **Status**: ACCEPTED
+- **Date**: 2026-10-29
+- **Deciders**: Systems Architect, Security Engineering, Lead Maintainer
+
+### Context & Problem Statement
+
+Users need to access the Kaj web dashboard and MCP daemon not only from localhost, but also from other devices on their local WiFi/LAN network (e.g. smartphones, tablets, secondary laptops) via mDNS hostnames like `http://jarvis.local:4820` or private LAN IPs (`192.168.x.x`, `10.x.x.x`). However, binding to all network interfaces (`0.0.0.0`) exposes web servers to cross-site request forgery (CSRF) and DNS rebinding attacks if malicious websites on the public internet attempt to send unauthorized cross-origin requests to local intranet services.
+
+### Considered Options
+
+1. **Permissive Wildcard (`*`) CORS & No Host Check**: Easy LAN access, but critically vulnerable to cross-site script execution and intranet port scanning from external websites.
+2. **Strict Loopback-Only Binding (`127.0.0.1`)**: Maximum isolation, but completely blocks legitimate access from phones, tablets, or other devices on the user's WiFi network.
+3. **Dual Host/Origin Defense with Dual Interface Binding (`0.0.0.0`)**: Bind daemon to all network interfaces (`0.0.0.0`), while enforcing:
+   - **Host Header Validation**: Strictly accept only loopback (`localhost`, `127.0.0.1`), mDNS domains (`*.local`), and RFC 1918 private IPv4/IPv6 address blocks. Reject arbitrary external domain names to prevent DNS rebinding.
+   - **Origin Header Validation**: Allow same-origin requests and requests from trusted local network origins (`localhost`, `*.local`, private LAN IPs). Reject unauthorized cross-origin requests from public internet origins (e.g. `evil.com`).
+   - **CORS Policy**: Restrict CORS headers to authorized local origins rather than wildcards.
+
+### Decision Outcome
+
+Chosen **Option 3**: Configure the daemon to bind by default to `0.0.0.0:4820`, enabling access across WiFi via `http://jarvis.local:4820` (and local LAN IPs), protected by the dual Host and Origin security guards in `src/server/app.ts`.
+
+### Consequences
+
+- **Positive**: Seamless multi-device access from smartphones, iPads, and secondary computers on local WiFi without port-forwarding or reverse proxies.
+- **Positive**: Robust security barrier against DNS rebinding, CSRF, and drive-by web browser attacks from external internet origins.
+- **Positive**: Low memory footprint remains unchanged (~75–88 MB RSS under load).
+- **Negative**: Client devices must be on the same local network subnet or have mDNS resolution enabled.

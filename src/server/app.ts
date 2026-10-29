@@ -21,16 +21,104 @@ export interface AppOptions {
   eventBus: EventBus;
 }
 
-function isLoopbackOrigin(origin: string): boolean {
+export function parseHostname(rawHost: string): string {
   try {
-    const url = new URL(origin);
-    const host = url.hostname;
-    return (
-      host === "localhost" ||
-      host === "127.0.0.1" ||
-      host === "[::1]" ||
-      host.endsWith(".localhost")
+    const url = new URL(
+      rawHost.includes("://") ? rawHost : `http://${rawHost}`,
     );
+    return url.hostname.toLowerCase();
+  } catch {
+    return rawHost.split(":")[0].toLowerCase();
+  }
+}
+
+// [spec: MCP-003]
+export function isAllowedHost(hostHeader?: string): boolean {
+  if (!hostHeader) return true;
+  const host = parseHostname(hostHeader);
+
+  // 1. Loopback
+  if (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "::1" ||
+    host === "[::1]" ||
+    host.endsWith(".localhost")
+  ) {
+    return true;
+  }
+
+  // 2. Local mDNS / Bonjour (.local)
+  if (host === "local" || host.endsWith(".local")) {
+    return true;
+  }
+
+  // 3. Private LAN IPv4 ranges (RFC 1918 & Link-Local)
+  if (/^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+  if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+  if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+  if (/^169\.254\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+  const match172 = /^172\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/.exec(host);
+  if (match172) {
+    const secondOctet = parseInt(match172[1], 10);
+    if (secondOctet >= 16 && secondOctet <= 31) return true;
+  }
+
+  // 4. Private LAN IPv6 ranges (Link-Local fe80:: & ULA fc00::/fd00::)
+  if (
+    host.startsWith("fe80:") ||
+    host.startsWith("fc") ||
+    host.startsWith("fd") ||
+    host.startsWith("[fe80:") ||
+    host.startsWith("[fc") ||
+    host.startsWith("[fd")
+  ) {
+    return true;
+  }
+
+  // 5. Configurable ALLOWED_HOSTS
+  if (process.env.ALLOWED_HOSTS) {
+    const allowed = process.env.ALLOWED_HOSTS.split(",").map((s) =>
+      s.trim().toLowerCase(),
+    );
+    if (allowed.includes(host)) return true;
+  }
+
+  return false;
+}
+
+// [spec: MCP-003]
+export function isAllowedOrigin(origin: string, reqHost?: string): boolean {
+  try {
+    const originHost = parseHostname(origin);
+
+    // 1. Same-Origin check: matches incoming Host header
+    if (reqHost) {
+      const serverHost = parseHostname(reqHost);
+      if (originHost === serverHost) {
+        return true;
+      }
+    }
+
+    // 2. Allowed Host check (Loopback, .local mDNS, LAN IP)
+    if (isAllowedHost(originHost)) {
+      return true;
+    }
+
+    // 3. Configurable ALLOWED_ORIGINS
+    if (process.env.ALLOWED_ORIGINS) {
+      const allowedOrigins = process.env.ALLOWED_ORIGINS.split(",").map((s) =>
+        s.trim().toLowerCase(),
+      );
+      if (
+        allowedOrigins.includes(origin.toLowerCase()) ||
+        allowedOrigins.includes(originHost)
+      ) {
+        return true;
+      }
+    }
+
+    return false;
   } catch {
     return false;
   }
@@ -45,20 +133,30 @@ export function createApp(options: AppOptions): Hono {
 
   const app = new Hono();
 
-  // Loopback Origin Guard (AC-MCP-003.4)
+  // Host Header Guard against DNS Rebinding (AC-MCP-003.4)
+  app.use("*", async (c, next) => {
+    const host = c.req.header("host");
+    if (host && !isAllowedHost(host)) {
+      return c.text("Forbidden: Unauthorized Host header", 403);
+    }
+    await next();
+  });
+
+  // Origin Guard against Cross-Origin / CSRF Attacks (AC-MCP-003.4)
   app.use("*", async (c, next) => {
     const origin = c.req.header("origin");
-    if (origin && !isLoopbackOrigin(origin)) {
+    if (origin && !isAllowedOrigin(origin, c.req.header("host"))) {
       return c.text("Forbidden: Unauthorized cross-origin request", 403);
     }
     await next();
   });
 
-  // Enable CORS strictly for loopback origins
+  // Enable CORS for authorized origins (AC-MCP-003.4)
   app.use(
     "*",
     cors({
-      origin: (origin) => (origin && isLoopbackOrigin(origin) ? origin : null),
+      origin: (origin, c) =>
+        origin && isAllowedOrigin(origin, c.req.header("host")) ? origin : null,
       allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization", "Accept"],
     }),
@@ -378,7 +476,7 @@ export function createApp(options: AppOptions): Hono {
   app.all("/mcp", async (c) => {
     // DNS rebinding guard (AC-MCP-003.4)
     const origin = c.req.header("origin");
-    if (origin && !isLoopbackOrigin(origin)) {
+    if (origin && !isAllowedOrigin(origin, c.req.header("host"))) {
       return c.text(
         "Forbidden: Unauthorized cross-origin request to local MCP server",
         403,
