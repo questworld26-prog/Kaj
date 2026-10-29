@@ -1,7 +1,13 @@
 // [spec: UI-006]
 import { h } from "preact";
 import { useState, useMemo } from "preact/hooks";
-import type { Task, Project, SwimlaneGroup, CalendarEvent, TaskStatus } from "../../shared/types.js";
+import type {
+  Task,
+  Project,
+  SwimlaneGroup,
+  CalendarEvent,
+  TaskStatus,
+} from "../../shared/types.js";
 import type { CardDensity } from "./TopBar.js";
 
 export type MobileTab = "cockpit" | "pods" | "calendar" | "triage";
@@ -18,10 +24,18 @@ interface MobileViewsProps {
   density: CardDensity;
   onSelectTask: (task: Task) => void;
   onUpdateTaskStatus: (taskId: string, newStatus: TaskStatus) => void;
-  onMoveTask?: (taskId: string, newStatus: TaskStatus, newProjectId: string | null) => void;
+  onMoveTask?: (
+    taskId: string,
+    newStatus: TaskStatus,
+    newProjectId: string | null,
+  ) => void;
   onCompleteTask: (taskId: string) => void;
   onRestoreTask: (taskId: string) => void;
-  onScheduleTask: (taskId: string, dateStr: string, dateType?: "action" | "due") => void;
+  onScheduleTask: (
+    taskId: string,
+    dateStr: string,
+    dateType?: "action" | "due",
+  ) => void;
   onReorderProjects: (projectIds: string[]) => void;
   onOpenReorderModal: () => void;
 }
@@ -34,11 +48,26 @@ function formatDateToYMD(d: Date): string {
 }
 
 const PRIORITY_STYLES: Record<string, { label: string; badge: string }> = {
-  today: { label: "Today", badge: "bg-rose-500/10 text-rose-400 border-rose-500/30" },
-  week: { label: "Week", badge: "bg-amber-500/10 text-amber-400 border-amber-500/30" },
-  month: { label: "Month", badge: "bg-sky-500/10 text-sky-400 border-sky-500/30" },
-  quarter: { label: "Quarter", badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30" },
-  year: { label: "Year", badge: "bg-stone-500/10 text-stone-400 border-stone-500/30" },
+  today: {
+    label: "Today",
+    badge: "bg-rose-500/10 text-rose-400 border-rose-500/30",
+  },
+  week: {
+    label: "Week",
+    badge: "bg-amber-500/10 text-amber-400 border-amber-500/30",
+  },
+  month: {
+    label: "Month",
+    badge: "bg-sky-500/10 text-sky-400 border-sky-500/30",
+  },
+  quarter: {
+    label: "Quarter",
+    badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
+  },
+  year: {
+    label: "Year",
+    badge: "bg-stone-500/10 text-stone-400 border-stone-500/30",
+  },
 };
 
 const STATUS_LABELS: Record<TaskStatus, string> = {
@@ -78,21 +107,37 @@ export function MobileViews({
   const [monthOpen, setMonthOpen] = useState(false);
 
   // Pods state
-  const [selectedProjectId, setSelectedProjectId] = useState<string | "all">("all");
-  const [collapsedPods, setCollapsedPods] = useState<Record<string, boolean>>({});
-  const [podStatusFilter, setPodStatusFilter] = useState<Record<string, TaskStatus | "all">>({});
+  const [selectedProjectId, setSelectedProjectId] = useState<string | "all">(
+    "all",
+  );
+  const [collapsedPods, setCollapsedPods] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [podStatusFilter, setPodStatusFilter] = useState<
+    Record<string, TaskStatus | "all">
+  >({});
 
   // Calendar state
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [calendarFilter, setCalendarFilter] = useState<"all" | "action" | "due">("all");
+  const [calendarFilter, setCalendarFilter] = useState<
+    "all" | "action" | "due"
+  >("all");
   const [unscheduledDrawerOpen, setUnscheduledDrawerOpen] = useState(true);
 
   // Triage state
-  const [triageSubTab, setTriageSubTab] = useState<"queue" | "archive">("queue");
+  const [triageSubTab, setTriageSubTab] = useState<"queue" | "archive">(
+    "queue",
+  );
 
-  const projectMap = useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects]);
+  const projectMap = useMemo(
+    () => new Map(projects.map((p) => [p.id, p])),
+    [projects],
+  );
 
-  const selectedDateStr = useMemo(() => formatDateToYMD(selectedDate), [selectedDate]);
+  const selectedDateStr = useMemo(
+    () => formatDateToYMD(selectedDate),
+    [selectedDate],
+  );
 
   // Compute 7 days for the date strip (centered around current week or selected date)
   const weekStrip = useMemo(() => {
@@ -101,7 +146,12 @@ export function MobileViews({
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     const monday = new Date(d.setDate(diff));
 
-    const days: { date: Date; dateStr: string; dayLabel: string; dayNum: number }[] = [];
+    const days: {
+      date: Date;
+      dateStr: string;
+      dayLabel: string;
+      dayNum: number;
+    }[] = [];
     const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     for (let i = 0; i < 7; i++) {
       const cur = new Date(monday);
@@ -171,6 +221,11 @@ export function MobileViews({
             >
               {task.title}
             </button>
+            {task.status === "tracking" && task.waiting_on && (
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 truncate shrink-0">
+                ⏳ {task.waiting_on}
+              </span>
+            )}
           </div>
           <button
             type="button"
@@ -228,15 +283,22 @@ export function MobileViews({
         <div className="flex flex-wrap items-center gap-1.5 pt-0.5 text-xs text-gray-400">
           {proj && (
             <span className="flex items-center gap-1 font-medium text-gray-300">
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: proj.color }} />
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: proj.color }}
+              />
               {proj.name}
             </span>
           )}
-          <span className={`px-1.5 py-0.2 rounded border text-xs ${prio.badge}`}>
+          <span
+            className={`px-1.5 py-0.2 rounded border text-xs ${prio.badge}`}
+          >
             {prio.label}
           </span>
           {task.action_date && (
-            <span className="text-emerald-400 font-medium">▶ {task.action_date}</span>
+            <span className="text-emerald-400 font-medium">
+              ▶ {task.action_date}
+            </span>
           )}
           {task.due_date && (
             <span className="text-rose-400 font-medium">⚑ {task.due_date}</span>
@@ -255,7 +317,10 @@ export function MobileViews({
     <div className="flex flex-col flex-1 pb-16 md:hidden">
       {/* 1. COCKPIT TAB (Default Execution Screen) */}
       {currentTab === "cockpit" && (
-        <div data-testid="mobile-cockpit-view" className="flex-1 p-3 space-y-3 overflow-y-auto">
+        <div
+          data-testid="mobile-cockpit-view"
+          className="flex-1 p-3 space-y-3 overflow-y-auto"
+        >
           {/* Pinned Today Focus Plate */}
           <section
             data-testid="mobile-today-focus-plate"
@@ -272,9 +337,11 @@ export function MobileViews({
               </div>
             </div>
             <div className="space-y-2">
-              {tasks.filter((t) => t.status === "in_progress_today").length === 0 ? (
+              {tasks.filter((t) => t.status === "in_progress_today").length ===
+              0 ? (
                 <div className="text-xs text-gray-400 italic py-3 text-center">
-                  No active tasks in Today focus plate. Tap ▾ on any task to move here.
+                  No active tasks in Today focus plate. Tap ▾ on any task to
+                  move here.
                 </div>
               ) : (
                 tasks
@@ -302,7 +369,8 @@ export function MobileViews({
             <div className="space-y-2">
               {tasks.filter((t) => t.status === "tracking").length === 0 ? (
                 <div className="text-xs text-gray-400 italic py-2 text-center">
-                  No tasks currently blocked or waiting on external dependencies.
+                  No tasks currently blocked or waiting on external
+                  dependencies.
                 </div>
               ) : (
                 tasks
@@ -330,11 +398,14 @@ export function MobileViews({
                   {tasks.filter((t) => t.status === "in_progress_week").length}
                 </span>
               </div>
-              <span className="text-xs text-gray-400">{weekOpen ? "▴" : "▾"}</span>
+              <span className="text-xs text-gray-400">
+                {weekOpen ? "▴" : "▾"}
+              </span>
             </button>
             {weekOpen && (
               <div className="mt-2.5 space-y-2">
-                {tasks.filter((t) => t.status === "in_progress_week").length === 0 ? (
+                {tasks.filter((t) => t.status === "in_progress_week").length ===
+                0 ? (
                   <div className="text-xs text-gray-400 italic py-2 text-center">
                     No tasks assigned to This Week horizon.
                   </div>
@@ -365,11 +436,14 @@ export function MobileViews({
                   {tasks.filter((t) => t.status === "in_progress_month").length}
                 </span>
               </div>
-              <span className="text-xs text-gray-400">{monthOpen ? "▴" : "▾"}</span>
+              <span className="text-xs text-gray-400">
+                {monthOpen ? "▴" : "▾"}
+              </span>
             </button>
             {monthOpen && (
               <div className="mt-2.5 space-y-2">
-                {tasks.filter((t) => t.status === "in_progress_month").length === 0 ? (
+                {tasks.filter((t) => t.status === "in_progress_month")
+                  .length === 0 ? (
                   <div className="text-xs text-gray-400 italic py-2 text-center">
                     No tasks assigned to This Month horizon.
                   </div>
@@ -386,7 +460,10 @@ export function MobileViews({
 
       {/* 2. PODS TAB (Project Swimlanes Screen) */}
       {currentTab === "pods" && (
-        <div data-testid="mobile-pods-view" className="flex-1 p-3 space-y-3 overflow-y-auto">
+        <div
+          data-testid="mobile-pods-view"
+          className="flex-1 p-3 space-y-3 overflow-y-auto"
+        >
           {/* Project Filter Chips & Reorder Trigger */}
           <div className="flex items-center justify-between gap-2">
             <div
@@ -415,7 +492,10 @@ export function MobileViews({
                       : "bg-[#1C2224] text-gray-400 border border-[#2A3235]"
                   }`}
                 >
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: proj.color }} />
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: proj.color }}
+                  />
                   {proj.name}
                 </button>
               ))}
@@ -433,14 +513,16 @@ export function MobileViews({
           <div className="space-y-3">
             {swimlanes
               .filter((lane) =>
-                selectedProjectId === "all" ? true : (lane.project?.id || "unassigned") === selectedProjectId
+                selectedProjectId === "all"
+                  ? true
+                  : (lane.project?.id || "unassigned") === selectedProjectId,
               )
               .map((lane) => {
                 const podId = lane.project?.id || "unassigned";
                 const isCollapsed = collapsedPods[podId] ?? false;
                 const activeFilter = podStatusFilter[podId] || "all";
                 const filteredTasks = lane.tasks.filter((t) =>
-                  activeFilter === "all" ? true : t.status === activeFilter
+                  activeFilter === "all" ? true : t.status === activeFilter,
                 );
 
                 return (
@@ -454,11 +536,16 @@ export function MobileViews({
                       <button
                         type="button"
                         onClick={() =>
-                          setCollapsedPods((prev) => ({ ...prev, [podId]: !isCollapsed }))
+                          setCollapsedPods((prev) => ({
+                            ...prev,
+                            [podId]: !isCollapsed,
+                          }))
                         }
                         className="flex items-center gap-2 text-left"
                       >
-                        <span className="text-xs text-gray-400">{isCollapsed ? "▸" : "▾"}</span>
+                        <span className="text-xs text-gray-400">
+                          {isCollapsed ? "▸" : "▾"}
+                        </span>
                         {lane.project ? (
                           <span
                             className="w-2.5 h-2.5 rounded-full"
@@ -468,7 +555,9 @@ export function MobileViews({
                           <span className="w-2.5 h-2.5 rounded-full bg-stone-500" />
                         )}
                         <span className="text-xs font-bold text-white">
-                          {lane.project ? lane.project.name : "Unassigned Tasks"}
+                          {lane.project
+                            ? lane.project.name
+                            : "Unassigned Tasks"}
                         </span>
                         <span className="text-xs px-1.5 py-0.2 rounded-full bg-[#1C2224] text-gray-300 border border-[#2A3235]">
                           {lane.tasks.length}
@@ -482,7 +571,9 @@ export function MobileViews({
                             type="button"
                             data-testid="mobile-pod-move-up"
                             aria-label="Move project pod up"
-                            onClick={() => handleMoveProject(lane.project!.id, "up")}
+                            onClick={() =>
+                              handleMoveProject(lane.project!.id, "up")
+                            }
                             className="px-1.5 py-0.5 rounded bg-[#1C2224] text-gray-400 hover:text-white border border-[#2A3235] text-xs"
                           >
                             ↑
@@ -491,7 +582,9 @@ export function MobileViews({
                             type="button"
                             data-testid="mobile-pod-move-down"
                             aria-label="Move project pod down"
-                            onClick={() => handleMoveProject(lane.project!.id, "down")}
+                            onClick={() =>
+                              handleMoveProject(lane.project!.id, "down")
+                            }
                             className="px-1.5 py-0.5 rounded bg-[#1C2224] text-gray-400 hover:text-white border border-[#2A3235] text-xs"
                           >
                             ↓
@@ -504,24 +597,33 @@ export function MobileViews({
                       <div className="space-y-2 mt-2">
                         {/* Intra-pod horizon filter */}
                         <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1 text-xs">
-                          {(["all", "in_progress_today", "in_progress_week", "todo", "tracking"] as const).map(
-                            (st) => (
-                              <button
-                                key={st}
-                                type="button"
-                                onClick={() =>
-                                  setPodStatusFilter((prev) => ({ ...prev, [podId]: st }))
-                                }
-                                className={`px-2 py-0.5 rounded-md text-xs whitespace-nowrap ${
-                                  activeFilter === st
-                                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium"
-                                    : "bg-[#1C2224] text-gray-400 border border-[#2A3235]"
-                                }`}
-                              >
-                                {st === "all" ? "All" : STATUS_LABELS[st]}
-                              </button>
-                            )
-                          )}
+                          {(
+                            [
+                              "all",
+                              "in_progress_today",
+                              "in_progress_week",
+                              "todo",
+                              "tracking",
+                            ] as const
+                          ).map((st) => (
+                            <button
+                              key={st}
+                              type="button"
+                              onClick={() =>
+                                setPodStatusFilter((prev) => ({
+                                  ...prev,
+                                  [podId]: st,
+                                }))
+                              }
+                              className={`px-2 py-0.5 rounded-md text-xs whitespace-nowrap ${
+                                activeFilter === st
+                                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium"
+                                  : "bg-[#1C2224] text-gray-400 border border-[#2A3235]"
+                              }`}
+                            >
+                              {st === "all" ? "All" : STATUS_LABELS[st]}
+                            </button>
+                          ))}
                         </div>
 
                         {/* Task List */}
@@ -545,11 +647,17 @@ export function MobileViews({
 
       {/* 3. CALENDAR TAB (7-Day Strip + Agenda Screen) */}
       {currentTab === "calendar" && (
-        <div data-testid="mobile-calendar-view" className="flex-1 p-3 space-y-3 overflow-y-auto">
+        <div
+          data-testid="mobile-calendar-view"
+          className="flex-1 p-3 space-y-3 overflow-y-auto"
+        >
           {/* Calendar Filter Controls */}
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs font-bold text-white">
-              {selectedDate.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+              {selectedDate.toLocaleDateString("en-US", {
+                month: "short",
+                year: "numeric",
+              })}
             </span>
             <div className="flex items-center gap-1 text-xs">
               {(["all", "action", "due"] as const).map((mode) => (
@@ -563,7 +671,11 @@ export function MobileViews({
                       : "bg-[#1C2224] text-gray-400 border border-[#2A3235]"
                   }`}
                 >
-                  {mode === "all" ? "All" : mode === "action" ? "▶ Action" : "⚑ Due"}
+                  {mode === "all"
+                    ? "All"
+                    : mode === "action"
+                      ? "▶ Action"
+                      : "⚑ Due"}
                 </button>
               ))}
             </div>
@@ -610,7 +722,8 @@ export function MobileViews({
 
             {agendaTasks.length === 0 ? (
               <div className="text-xs text-gray-400 italic py-4 text-center">
-                No tasks scheduled for this day. Tap an unscheduled task below to schedule here.
+                No tasks scheduled for this day. Tap an unscheduled task below
+                to schedule here.
               </div>
             ) : (
               agendaTasks.map((task) => renderMobileCard(task))
@@ -635,7 +748,9 @@ export function MobileViews({
                   {unscheduledTasks.length}
                 </span>
               </div>
-              <span className="text-xs text-gray-400">{unscheduledDrawerOpen ? "▴" : "▾"}</span>
+              <span className="text-xs text-gray-400">
+                {unscheduledDrawerOpen ? "▴" : "▾"}
+              </span>
             </button>
 
             {unscheduledDrawerOpen && (
@@ -658,7 +773,9 @@ export function MobileViews({
                         <button
                           type="button"
                           data-testid="mobile-schedule-action-btn"
-                          onClick={() => onScheduleTask(t.id, selectedDateStr, "action")}
+                          onClick={() =>
+                            onScheduleTask(t.id, selectedDateStr, "action")
+                          }
                           className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-medium hover:bg-emerald-500/30"
                         >
                           + ▶ Action
@@ -666,7 +783,9 @@ export function MobileViews({
                         <button
                           type="button"
                           data-testid="mobile-schedule-due-btn"
-                          onClick={() => onScheduleTask(t.id, selectedDateStr, "due")}
+                          onClick={() =>
+                            onScheduleTask(t.id, selectedDateStr, "due")
+                          }
                           className="px-2 py-1 rounded bg-rose-500/15 text-rose-300 border border-rose-500/30 text-xs font-medium hover:bg-rose-500/20"
                         >
                           + ⚑ Due
@@ -683,7 +802,10 @@ export function MobileViews({
 
       {/* 4. TRIAGE TAB (Inbox Queue & Completed Archive Screen) */}
       {currentTab === "triage" && (
-        <div data-testid="mobile-triage-view" className="flex-1 p-3 space-y-3 overflow-y-auto">
+        <div
+          data-testid="mobile-triage-view"
+          className="flex-1 p-3 space-y-3 overflow-y-auto"
+        >
           {/* Segmented Switcher */}
           <div className="grid grid-cols-2 gap-1 bg-[#121718] p-1 rounded-xl border border-[#2A3235]">
             <button
@@ -695,7 +817,13 @@ export function MobileViews({
                   : "text-gray-400 hover:text-white"
               }`}
             >
-              📥 Triage / Todo ({tasks.filter((t) => t.status === "triage" || t.status === "todo").length})
+              📥 Triage / Todo (
+              {
+                tasks.filter(
+                  (t) => t.status === "triage" || t.status === "todo",
+                ).length
+              }
+              )
             </button>
             <button
               type="button"
@@ -712,7 +840,8 @@ export function MobileViews({
 
           {triageSubTab === "queue" ? (
             <div className="space-y-2">
-              {tasks.filter((t) => t.status === "triage" || t.status === "todo").length === 0 ? (
+              {tasks.filter((t) => t.status === "triage" || t.status === "todo")
+                .length === 0 ? (
                 <div className="text-xs text-gray-400 italic py-6 text-center">
                   Inbox zero! No tasks awaiting triage or todo.
                 </div>
@@ -768,7 +897,9 @@ export function MobileViews({
 
             <div className="flex items-center justify-between pb-2 border-b border-[#2A3235]">
               <div>
-                <p className="text-xs text-emerald-400 font-semibold">Quick Move Status</p>
+                <p className="text-xs text-emerald-400 font-semibold">
+                  Quick Move Status
+                </p>
                 <h4 className="text-xs font-bold text-white truncate max-w-[240px]">
                   {actionSheetTask.title}
                 </h4>
@@ -805,7 +936,11 @@ export function MobileViews({
                     data-testid={`action-sheet-status-${st}`}
                     onClick={() => {
                       if (onMoveTask) {
-                        onMoveTask(actionSheetTask.id, st, actionSheetTask.project_id);
+                        onMoveTask(
+                          actionSheetTask.id,
+                          st,
+                          actionSheetTask.project_id,
+                        );
                       } else {
                         onUpdateTaskStatus(actionSheetTask.id, st);
                       }
@@ -826,13 +961,19 @@ export function MobileViews({
             {/* Reassign Project Pod */}
             {projects.length > 0 && (
               <div>
-                <p className="text-xs text-gray-400 mb-1.5">Assign to Project Pod:</p>
+                <p className="text-xs text-gray-400 mb-1.5">
+                  Assign to Project Pod:
+                </p>
                 <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
                   <button
                     type="button"
                     onClick={() => {
                       if (onMoveTask) {
-                        onMoveTask(actionSheetTask.id, actionSheetTask.status, null);
+                        onMoveTask(
+                          actionSheetTask.id,
+                          actionSheetTask.status,
+                          null,
+                        );
                       }
                       setActionSheetTask(null);
                     }}
@@ -850,7 +991,11 @@ export function MobileViews({
                       type="button"
                       onClick={() => {
                         if (onMoveTask) {
-                          onMoveTask(actionSheetTask.id, actionSheetTask.status, p.id);
+                          onMoveTask(
+                            actionSheetTask.id,
+                            actionSheetTask.status,
+                            p.id,
+                          );
                         }
                         setActionSheetTask(null);
                       }}
@@ -860,7 +1005,10 @@ export function MobileViews({
                           : "bg-[#1C2224] text-gray-300 border-[#2A3235]"
                       }`}
                     >
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
+                      <span
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: p.color }}
+                      />
                       {p.name}
                     </button>
                   ))}
@@ -936,4 +1084,3 @@ export function MobileViews({
     </div>
   );
 }
-

@@ -1,8 +1,8 @@
 {
-  "last_audited_at": "2026-10-29T04:21:31.575150+00:00",
-  "total_requirements": 17,
-  "total_criteria": 72,
-  "verified_criteria_count": 72,
+  "last_audited_at": "2026-10-29T04:31:00.022136+00:00",
+  "total_requirements": 18,
+  "total_criteria": 77,
+  "verified_criteria_count": 77,
   "status": "PASS",
   "requirements": [
     {
@@ -422,6 +422,32 @@
       "implementation_files": [
         "src/client/App.tsx",
         "src/client/components/MobileViews.tsx",
+        "src/client/components/TopBar.tsx"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "UI-007",
+      "title": "Omnipresent Top Search Filter and Mobile Minimal Density Default",
+      "spec_file": "specs/ui.md",
+      "sha256": "421b7637b79b726af9ae6101979780164bee87f66b9a4eb2d7eb7f2bef9c4f51",
+      "verified_sha256": "421b7637b79b726af9ae6101979780164bee87f66b9a4eb2d7eb7f2bef9c4f51",
+      "acceptance_criteria": [
+        "AC-UI-007.1",
+        "AC-UI-007.2",
+        "AC-UI-007.3",
+        "AC-UI-007.4",
+        "AC-UI-007.5"
+      ],
+      "verified_criteria": [
+        "AC-UI-007.1",
+        "AC-UI-007.2",
+        "AC-UI-007.3",
+        "AC-UI-007.4",
+        "AC-UI-007.5"
+      ],
+      "implementation_files": [
+        "src/client/App.tsx",
         "src/client/components/TopBar.tsx"
       ],
       "status": "VERIFIED"

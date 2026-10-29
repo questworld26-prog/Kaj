@@ -2,6 +2,7 @@
 // [spec: UI-002]
 // [spec: UI-005]
 // [spec: UI-006]
+// [spec: UI-007]
 import { h } from "preact";
 
 export type CardDensity = "compact" | "minimal";
@@ -16,6 +17,8 @@ interface TopBarProps {
   onOpenReorder: () => void;
   completedCount: number;
   memoryMb?: number;
+  searchQuery?: string;
+  onSearchChange?: (q: string) => void;
 }
 
 export function TopBar({
@@ -28,41 +31,87 @@ export function TopBar({
   onOpenReorder,
   completedCount,
   memoryMb,
+  searchQuery = "",
+  onSearchChange = () => {},
 }: TopBarProps) {
   return (
     <header className="sticky top-0 z-30 w-full bg-[#121718]/90 backdrop-blur-md border-b border-[#2A3235] px-4 md:px-6 py-2.5 md:py-3 transition-colors">
       {/* Mobile Top Bar (< md) */}
-      <div className="flex md:hidden items-center justify-between w-full">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm shadow-sm shadow-emerald-950">
-            ক
+      <div className="flex md:hidden flex-col gap-2 w-full">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm shadow-sm shadow-emerald-950">
+              ক
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-semibold text-sm tracking-tight text-white">
+                Kaj
+              </span>
+              <span className="text-xs px-1.5 py-0.2 rounded bg-[#1C2224] text-emerald-400 font-medium border border-[#2A3235]">
+                কাজ
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-sm tracking-tight text-white">
-              Kaj
-            </span>
-            <span className="text-xs px-1.5 py-0.2 rounded bg-[#1C2224] text-emerald-400 font-medium border border-[#2A3235]">
-              কাজ
-            </span>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              data-testid="mobile-density-toggle"
+              onClick={() =>
+                onDensityChange(density === "compact" ? "minimal" : "compact")
+              }
+              className="px-2 py-1 rounded-lg text-xs font-medium bg-[#1C2224] text-gray-300 border border-[#2A3235] hover:border-gray-500 transition-colors"
+              title="Toggle Density"
+            >
+              {density === "compact" ? "Compact" : "Minimal"}
+            </button>
+            <button
+              type="button"
+              data-testid="mobile-add-task-btn"
+              onClick={onAddTask}
+              className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold bg-[#10B981] hover:bg-[#34D399] text-[#0E1111] shadow-md shadow-emerald-950 transition-colors"
+            >
+              + Task
+            </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => onDensityChange(density === "compact" ? "minimal" : "compact")}
-            className="px-2 py-1 rounded-lg text-xs font-medium bg-[#1C2224] text-gray-300 border border-[#2A3235] hover:border-gray-500 transition-colors"
-            title="Toggle Density"
+        {/* Mobile Search Bar */}
+        <div className="relative w-full flex items-center">
+          <input
+            type="text"
+            data-testid="mobile-task-search-input"
+            value={searchQuery}
+            onInput={(e) =>
+              onSearchChange((e.target as HTMLInputElement).value)
+            }
+            placeholder="Search tasks..."
+            className="w-full bg-[#0E1111] text-xs text-gray-200 placeholder-gray-500 rounded-xl px-3 py-1.5 pl-8 pr-7 border border-[#2A3235] focus:outline-none focus:border-emerald-500/80 transition-colors"
+          />
+          <svg
+            className="absolute left-2.5 w-3.5 h-3.5 text-gray-400 pointer-events-none"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            {density === "compact" ? "Compact" : "Minimal"}
-          </button>
-          <button
-            type="button"
-            onClick={onAddTask}
-            className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold bg-[#10B981] hover:bg-[#34D399] text-[#0E1111] shadow-md shadow-emerald-950 transition-colors"
-          >
-            + Task
-          </button>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          {searchQuery && (
+            <button
+              type="button"
+              data-testid="mobile-search-clear-btn"
+              onClick={() => onSearchChange("")}
+              className="absolute right-2 text-xs text-gray-400 hover:text-white p-0.5 rounded"
+              title="Clear search"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 
@@ -146,6 +195,44 @@ export function TopBar({
             Calendar
           </button>
         </nav>
+
+        {/* Omnipresent Top Search Bar (UI-007) */}
+        <div className="relative flex-1 max-w-xs flex items-center">
+          <input
+            type="text"
+            data-testid="desktop-task-search-input"
+            value={searchQuery}
+            onInput={(e) =>
+              onSearchChange((e.target as HTMLInputElement).value)
+            }
+            placeholder="Search tasks..."
+            className="w-full bg-[#0E1111] text-xs text-gray-200 placeholder-gray-500 rounded-xl px-3 py-1.5 pl-8 pr-7 border border-[#2A3235] focus:outline-none focus:border-emerald-500/80 transition-colors"
+          />
+          <svg
+            className="absolute left-2.5 w-3.5 h-3.5 text-gray-400 pointer-events-none"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          {searchQuery && (
+            <button
+              type="button"
+              data-testid="desktop-search-clear-btn"
+              onClick={() => onSearchChange("")}
+              className="absolute right-2 text-xs text-gray-400 hover:text-white p-0.5 rounded"
+              title="Clear search"
+            >
+              ✕
+            </button>
+          )}
+        </div>
 
         {/* Card Density Selector (UI-005) */}
         {currentView === "board" && (

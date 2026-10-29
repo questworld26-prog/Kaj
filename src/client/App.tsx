@@ -3,8 +3,9 @@
 // [spec: UI-003]
 // [spec: UI-004]
 // [spec: UI-006]
+// [spec: UI-007]
 import { h } from "preact";
-import { useState, useEffect, useCallback } from "preact/hooks";
+import { useState, useEffect, useCallback, useMemo } from "preact/hooks";
 import type {
   Task,
   Project,
@@ -31,11 +32,15 @@ function formatDateToYMD(d: Date): string {
 export function App() {
   const [currentView, setCurrentView] = useState<"board" | "calendar">("board");
   const [mobileTab, setMobileTab] = useState<MobileTab>("cockpit");
+  const [searchQuery, setSearchQuery] = useState("");
   const [cardDensity, setCardDensity] = useState<CardDensity>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("kaj_card_density") as CardDensity;
       if (stored === "compact" || stored === "minimal") {
         return stored;
+      }
+      if (window.innerWidth < 768) {
+        return "minimal";
       }
     }
     return "compact";
@@ -305,6 +310,49 @@ export function App() {
     }
   };
 
+  // Filter tasks based on omnipresent search query (UI-007)
+  const filterTask = useCallback((task: Task, query: string) => {
+    if (!query.trim()) return true;
+    const q = query.toLowerCase().trim();
+    const titleMatch = task.title.toLowerCase().includes(q);
+    const detailsMatch = (task.details || "").toLowerCase().includes(q);
+    return titleMatch || detailsMatch;
+  }, []);
+
+  const filteredTasks = useMemo(
+    () => tasks.filter((t) => filterTask(t, searchQuery)),
+    [tasks, searchQuery, filterTask],
+  );
+
+  const filteredSwimlanes = useMemo(
+    () =>
+      swimlanes.map((lane) => ({
+        ...lane,
+        tasks: lane.tasks.filter((t) => filterTask(t, searchQuery)),
+      })),
+    [swimlanes, searchQuery, filterTask],
+  );
+
+  const filteredCompletedTasks = useMemo(
+    () => completedTasks.filter((t) => filterTask(t, searchQuery)),
+    [completedTasks, searchQuery, filterTask],
+  );
+
+  const filteredUnscheduledTasks = useMemo(
+    () => unscheduledTasks.filter((t) => filterTask(t, searchQuery)),
+    [unscheduledTasks, searchQuery, filterTask],
+  );
+
+  const matchingTaskIds = useMemo(
+    () => new Set(filteredTasks.map((t) => t.id)),
+    [filteredTasks],
+  );
+
+  const filteredCalendarEvents = useMemo(() => {
+    if (!searchQuery.trim()) return calendarEvents;
+    return calendarEvents.filter((ev) => matchingTaskIds.has(ev.task_id));
+  }, [calendarEvents, matchingTaskIds, searchQuery]);
+
   return (
     <div className="min-h-screen flex flex-col bg-[#0E1111] text-[#F3F4F6]">
       {/* Top Floating Command Bar */}
@@ -318,6 +366,8 @@ export function App() {
         onOpenReorder={() => setIsReorderOpen(true)}
         completedCount={completedTasks.length}
         memoryMb={memoryMb}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
 
       {/* Main View Area */}
@@ -326,12 +376,12 @@ export function App() {
         <MobileViews
           currentTab={mobileTab}
           onTabChange={setMobileTab}
-          swimlanes={swimlanes}
-          tasks={tasks}
+          swimlanes={filteredSwimlanes}
+          tasks={filteredTasks}
           projects={projects}
-          completedTasks={completedTasks}
-          unscheduledTasks={unscheduledTasks}
-          calendarEvents={calendarEvents}
+          completedTasks={filteredCompletedTasks}
+          unscheduledTasks={filteredUnscheduledTasks}
+          calendarEvents={filteredCalendarEvents}
           density={cardDensity}
           onSelectTask={handleSelectTask}
           onUpdateTaskStatus={handleUpdateTaskStatus}
@@ -347,7 +397,7 @@ export function App() {
         <div className="hidden md:flex flex-1 flex-col w-full">
           {currentView === "board" ? (
             <SwimlaneBoard
-              swimlanes={swimlanes}
+              swimlanes={filteredSwimlanes}
               density={cardDensity}
               onSelectTask={handleSelectTask}
               onUpdateTaskStatus={handleUpdateTaskStatus}
@@ -357,9 +407,9 @@ export function App() {
             />
           ) : (
             <CalendarView
-              tasks={tasks}
-              calendarEvents={calendarEvents}
-              unscheduledTasks={unscheduledTasks}
+              tasks={filteredTasks}
+              calendarEvents={filteredCalendarEvents}
+              unscheduledTasks={filteredUnscheduledTasks}
               onSelectTask={handleSelectTask}
               onScheduleTask={handleScheduleTask}
               onRangeChange={handleCalendarRangeChange}

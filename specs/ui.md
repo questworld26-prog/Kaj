@@ -75,5 +75,17 @@ Acceptance Criteria:
 - AC-UI-006.4: On the Calendar tab, the system shall display a 7-day date strip, a daily agenda list, and an unscheduled task drawer with one-tap action and due scheduling buttons.
 - AC-UI-006.5: When a task status pill is tapped on mobile, the system shall open a touch-friendly bottom action sheet to move the task between columns, change project pod, or complete the task.
 
+## UI-007: Omnipresent Top Search Filter and Mobile Minimal Density Default
+
+The system shall provide an omnipresent search input in the top command bar across desktop and mobile viewports that filters active Kanban and Calendar views by task title and details, and shall default mobile viewports to Minimal card density.
+
+Acceptance Criteria:
+- AC-UI-007.1: The top command bar shall render a search input on both desktop and mobile viewports with placeholder "Search tasks...".
+- AC-UI-007.2: When a search query is entered, the Kanban board view shall filter tasks in real-time across all swimlanes and columns, displaying only tasks matching the title or details (case-insensitive).
+- AC-UI-007.3: When a search query is entered, the Calendar view shall filter tasks in real-time across the calendar horizon grid, agenda, and unscheduled sidebar, displaying only tasks matching the title or details.
+- AC-UI-007.4: The search input shall provide a clear button (`✕`) when text is present, immediately restoring the unfiltered view upon selection.
+- AC-UI-007.5: On mobile viewports below 768px without a stored density preference, the card density shall default to Minimal mode.
+
+
 
 
