@@ -11,6 +11,21 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v2.1.0`: Telegram Bot Daemon, Recurrence Scheduling & Multi-Modal Task Completion
+
+- **Status**: 🚀 RELEASE CANDIDATE
+- **Focus**: Adds a native deterministic Telegram bot service running inside the Kaj background daemon for remote task creation and search without local LLM overhead; introduces explicit recurrence scheduling (day of the week, day of the month, day of the year); and delivers multi-modal task completion interactions (1-click circular card checkboxes on desktop, direct "Mark Complete" modal action, and mobile swipe-to-complete gestures).
+- **Deliverables**:
+  - [x] **TG-001**: Configurable deterministic Telegram bot integration (`src/server/telegram.ts`) with feature toggle flag, `telegram.config.json` credential loader, shorthand parsing (`#Project`, `!today`, `@date`, `due:date`, `wait:note`), `/search` query handler with inline buttons, `/today` horizon list, and daemon control CLI (`npm run telegram:on|off|status`).
+  - [x] **TASK-002 / AC-TASK-002.3**: Recurrence customization supporting explicit repeat days (`repeat_day_of_week` 0-6, `repeat_day_of_month` 1-31, `repeat_day_of_year` MM-DD) in schemas, SQLite migrations, task rollover engine, and interactive Task Modal selectors.
+  - [x] **UI-007**: Omnipresent top search filter across Kanban and Calendar views with real-time text matching and clear button, plus default Minimal card density on mobile devices.
+  - [x] **UI-008**: Multi-modal task completion interactions:
+    - [x] **AC-UI-008.1**: Circular completion checkboxes on desktop cards (Compact and Minimal views) with emerald hover micro-interactions and 1-click archiving.
+    - [x] **AC-UI-008.2**: Explicit "✓ Mark Complete" button in the task edit modal dialog for immediate completion.
+    - [x] **AC-UI-008.3**: Mobile touch swipe-to-complete gesture with emerald reveal background and 75px completion threshold.
+  - [x] **Daemon Management**: macOS LaunchAgent auto-start integration (`scripts/daemon-ctl.sh install|uninstall`) ensuring Kaj runs automatically on laptop boot.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (86/86), 68 unit & integration tests + 31 Playwright E2E tests passing, clean working tree, version bumped to `2.1.0`.
+
 ### Release `v2.0.0`: Responsive Mobile Execution Cockpit & Touch Action Sheets
 
 - **Status**: ✅ RELEASED
