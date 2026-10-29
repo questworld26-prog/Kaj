@@ -152,9 +152,6 @@ export function SwimlaneBoard({
                   : "text-gray-300"
             }`}
           >
-            {isTodayFocus && (
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
-            )}
             {icon && <span>{icon}</span>}
             <span>{label}</span>
           </span>
@@ -466,7 +463,6 @@ export function SwimlaneBoard({
             className="flex items-center justify-between px-2.5 py-1 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-300"
           >
             <span className="text-xs font-bold flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
               ⚡ Today
             </span>
           </div>

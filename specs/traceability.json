@@ -1,5 +1,5 @@
 {
-  "last_audited_at": "2026-10-29T03:31:30.723994+00:00",
+  "last_audited_at": "2026-10-29T03:34:23.450853+00:00",
   "total_requirements": 16,
   "total_criteria": 66,
   "verified_criteria_count": 66,
@@ -270,8 +270,8 @@
       "requirement_id": "UI-001",
       "title": "Bento Full-Width Layout, Swimlane Pods, and Consolidated In-Progress Chamber",
       "spec_file": "specs/ui.md",
-      "sha256": "a38ae8e7112aa1a7fbba67235a55e20ce34f7d33bada3a425d152e8c1d08b8d7",
-      "verified_sha256": "a38ae8e7112aa1a7fbba67235a55e20ce34f7d33bada3a425d152e8c1d08b8d7",
+      "sha256": "e23927ea94c6014a38649fa86066f3ef00a734c32963b95ca98443773c4aef03",
+      "verified_sha256": "e23927ea94c6014a38649fa86066f3ef00a734c32963b95ca98443773c4aef03",
       "acceptance_criteria": [
         "AC-UI-001.1",
         "AC-UI-001.2",

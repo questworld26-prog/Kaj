@@ -14,7 +14,7 @@ Acceptance Criteria:
 - AC-UI-001.3: Tracking column cards shall render with dashed borders and dedicated carrier/blocker badge indicators.
 - AC-UI-001.4: Dragging or selecting a card shall allow moving tasks across columns and swimlanes.
 - AC-UI-001.5: The UI shall provide controls to reorder project swimlanes, persisting the new sort order and updating the board layout immediately.
-- AC-UI-001.6: The In Progress chamber within each swimlane shall render as a unified elevated box with an "In Progress" badge, housing 3 sub-columns with distinct horizon icons: Today (`⚡`) on an accented focus plate with pulsing indicator, This Week (`📅`), and This Month (`🗓`).
+- AC-UI-001.6: The In Progress chamber within each swimlane shall render as a unified elevated box with an "In Progress" badge, housing 3 sub-columns with distinct horizon icons: Today (`⚡`) on an accented focus plate, This Week (`📅`), and This Month (`🗓`).
 
 ---
 

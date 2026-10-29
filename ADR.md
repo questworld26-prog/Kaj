@@ -1,0 +1,286 @@
+# Architecture Decision Records: Kaj (কাজ)
+
+This document records the foundational architectural decisions, technical trade-offs, and design rationales for the **Kaj (কাজ)** task management system and Model Context Protocol (MCP) daemon.
+
+---
+
+## Status Legend
+
+- **ACCEPTED**: Currently active architectural baseline in production.
+- **SUPERSEDED**: Decision was valid at the time but replaced by a later record.
+- **DEPRECATED**: Decision has been sunset and removed from the active system.
+
+---
+
+## Index of Architecture Decisions
+
+1. [ADR-001: Low-Footprint Daemon with Node 26 Native `node:sqlite` in WAL Mode](#adr-001-low-footprint-daemon-with-node-26-native-nodesqlite-in-wal-mode)
+2. [ADR-002: Dual Model Context Protocol (MCP) Transports (Streamable HTTP + stdio)](#adr-002-dual-model-context-protocol-mcp-transports-streamable-http--stdio)
+3. [ADR-003: 6-Column Kanban Architecture with Consolidated In-Progress Hero Chamber](#adr-003-6-column-kanban-architecture-with-consolidated-in-progress-hero-chamber)
+4. [ADR-004: Dual-Date Scheduling Model (Action Date vs. Due Date Decoupling)](#adr-004-dual-date-scheduling-model-action-date-vs-due-date-decoupling)
+5. [ADR-005: Spawn-on-Complete Recurrence Rollover Engine](#adr-005-spawn-on-complete-recurrence-rollover-engine)
+6. [ADR-006: Bento Layout & Chronos Dark-Mode Design System](#adr-006-bento-layout--chronos-dark-mode-design-system)
+7. [ADR-007: Streamlined Card Density Architecture (Compact & Minimum Modes)](#adr-007-streamlined-card-density-architecture-compact--minimum-modes)
+8. [ADR-008: Real-Time Event Synchronization via Server-Sent Events (SSE)](#adr-008-real-time-event-synchronization-via-server-sent-events-sse)
+9. [ADR-009: Spec-Driven Development (SDD) & Automated Guardian Audit Gatekeeping](#adr-009-spec-driven-development-sdd--automated-guardian-audit-gatekeeping)
+
+---
+
+## ADR-001: Low-Footprint Daemon with Node 26 Native `node:sqlite` in WAL Mode
+
+- **Status**: ACCEPTED
+- **Date**: 2026-10-27
+- **Deciders**: Systems Architect, Backend Engineering
+
+### Context & Problem Statement
+
+Kaj runs as an always-on background daemon on macOS and developer workstations. Many local productivity tools consume 300–800 MB RSS by bundling Chromium (Electron), heavy ORM layers (Prisma), or running separate database server processes (PostgreSQL/MySQL). Kaj requires a background memory footprint under ~95 MB RSS while handling concurrent reads and writes from both the web UI and external AI agent processes.
+
+### Considered Options
+
+1. **Node 26 built-in `node:sqlite` in WAL mode** (Zero external native C++ bindings, zero bundled server process).
+2. **`better-sqlite3` native addon** (Fast, but requires node-gyp native compilation and increases bundle attack surface).
+3. **Embedded PostgreSQL / DuckDB** (High memory overhead, 150–250 MB baseline RSS).
+4. **Prisma / TypeORM with SQLite** (Heavy query engines consuming 40–80 MB overhead alone).
+
+### Decision Outcome
+
+Chosen **Option 1**: Use Node 26 native built-in `node:sqlite` configured with:
+
+```sql
+PRAGMA journal_mode = WAL;
+PRAGMA busy_timeout = 5000;
+PRAGMA foreign_keys = ON;
+PRAGMA synchronous = NORMAL;
+```
+
+The web dashboard is served directly by `Hono` as pre-compiled static assets (Preact + Vite), with zero Chromium or Electron runtime running in the daemon.
+
+### Consequences
+
+- **Positive**: Background memory stays strictly between **~75–92 MB RSS** under production agent traffic.
+- **Positive**: Zero external C++ native compile step during `npm install`.
+- **Positive**: WAL mode allows concurrent readers without blocking writes.
+- **Negative**: Requires Node.js v26+ for stable built-in `node:sqlite`.
+
+---
+
+## ADR-002: Dual Model Context Protocol (MCP) Transports (Streamable HTTP + stdio)
+
+- **Status**: ACCEPTED
+- **Date**: 2026-10-27
+- **Deciders**: Systems Architect, AI Integration Engineer
+
+### Context & Problem Statement
+
+Autonomous AI agents (such as Google Antigravity, Claude Desktop, Cursor, and custom CLI agents) need to query and manipulate tasks and projects. Different AI hosts communicate over different transports: web-based and networked agents prefer HTTP (`Streamable HTTP`), while desktop orchestrators expect process-spawned `stdio` JSON-RPC streams. Running two disconnected servers risks database lock contention and memory ballooning.
+
+### Considered Options
+
+1. **Dual Transport Architecture**: A persistent HTTP server (`POST /mcp` on `127.0.0.1:4820`) plus a lightweight stdio CLI proxy (`dist/mcp/stdio.js`) that proxies requests to the daemon over HTTP, falling back to direct SQLite WAL access if the daemon is offline.
+2. **stdio-only CLI**: Forces agent commands to spawn a separate Node process per call, causing high process-spawn latency (~180ms per invocation).
+3. **HTTP-only**: Incompatible with desktop apps like Claude Desktop that strictly launch agents via stdio commands.
+
+### Decision Outcome
+
+Chosen **Option 1**: Implement dual transport support. The core daemon serves Streamable HTTP at `POST /mcp`, while `dist/mcp/stdio.js` provides an instant stdio adapter with automatic proxying and WAL fallback. All MCP tools declare explicit safety hints (`readOnlyHint`, `destructiveHint`) and enforce soft-deletion safety guards.
+
+### Consequences
+
+- **Positive**: Full interoperability across both HTTP agents and stdio desktop applications.
+- **Positive**: Single source of truth with real-time SSE broadcasts whenever an agent mutates state.
+- **Negative**: Requires handling both streaming HTTP JSON-RPC responses and newline-delimited stdio framing.
+
+---
+
+## ADR-003: 6-Column Kanban Architecture with Consolidated In-Progress Hero Chamber
+
+- **Status**: ACCEPTED (Updated 2026-10-29)
+- **Date**: 2026-10-27 (Revised 2026-10-29)
+- **Deciders**: UI/UX Lead, Product Architect
+
+### Context & Problem Statement
+
+Standard Kanban boards typically feature 3–4 disconnected columns (Todo, Doing, Done). Active work often spans different time horizons (what is urgent today vs. what is committed for this week vs. this month). Having 6 flat columns created horizontal visual clutter where "Today" looked visually identical to "Todo" or "Triage".
+
+### Considered Options
+
+1. **Consolidated In-Progress Hero Chamber**: Group `Today`, `This Week`, and `This Month` inside a single elevated visual container box spanning 3 grid tracks, with an `[IN PROGRESS]` badge, horizon icons (`⚡`, `📅`, `🗓`), and an accented focus plate on `Today`.
+2. **Flat 6 Independent Columns**: Simple to render, but visually noisy and lacks clear hierarchy between backlog and active execution.
+3. **Accordion / Tabbed Single Column**: Saves screen width, but hides two of the three active horizons, forcing unnecessary click interaction.
+
+### Decision Outcome
+
+Chosen **Option 1**: Implement the **In Progress Hero Chamber** (Option 2 archetype with Option 1 icons). The board layout presents 4 outer blocks (`Triage [1fr]`, `Todo [1fr]`, `In Progress Chamber [3fr]`, `Tracking [1fr]`). Within the chamber, `⚡ Today` receives an accented focus plate, while `📅 This Week` and `🗓 This Month` serve as secondary execution tracks.
+
+### Consequences
+
+- **Positive**: Immediate visual focus on daily execution while preserving weekly and monthly visibility.
+- **Positive**: 100% viewport width utilization without horizontal scroll bars.
+- **Positive**: Smooth drag-and-drop between backlog, active horizons, and tracking parking.
+
+---
+
+## ADR-004: Dual-Date Scheduling Model (Action Date vs. Due Date Decoupling)
+
+- **Status**: ACCEPTED
+- **Date**: 2026-10-27
+- **Deciders**: Systems Architect, UX Lead
+
+### Context & Problem Statement
+
+Most task managers force a single `due_date` field. This conflates **when you plan to work on a task** (scheduling intent) with **when the task must be completed** (hard legal/business deadline). Users often set due dates artificially early to force items onto their daily agenda, losing track of real deadlines.
+
+### Considered Options
+
+1. **Decoupled Dual-Date Model**: Separate `action_date` (intent to execute) from `due_date` (hard deadline). Tasks can have neither, either, or both.
+2. **Single Date with Reminder Flag**: Insufficient for multi-day calendar projections.
+3. **Start Date + Due Date (Gantt style)**: Encourages duration estimation rather than focused daily commitment.
+
+### Decision Outcome
+
+Chosen **Option 1**: Implement dual dates in the schema (`action_date DATE NULL`, `due_date DATE NULL`). In the calendar view, Action Dates render with an emerald play badge (`▶`), while Due Dates render with a rose flag badge (`⚑`), with dedicated filter toggles.
+
+### Consequences
+
+- **Positive**: High clarity in calendar projections: users can schedule a task for `Today` (`action_date`) while knowing its hard deadline is `Friday` (`due_date`).
+- **Positive**: Unscheduled sidebar cleanly surfaces active tasks lacking an `action_date` for drag-to-schedule planning.
+
+---
+
+## ADR-005: Spawn-on-Complete Recurrence Rollover Engine
+
+- **Status**: ACCEPTED
+- **Date**: 2026-10-27
+- **Deciders**: Systems Architect, Backend Lead
+
+### Context & Problem Statement
+
+Recurring tasks in calendar/todo tools often flood databases with dozens or hundreds of "ghost" future instances, causing database bloat, synchronization conflicts, and stale task mutations.
+
+### Considered Options
+
+1. **Spawn-on-Complete Rollover**: The database maintains strictly **one active row** for any recurring task. When marked `done`, the current task is completed/archived, and the next instance is spawned into `todo` with forward-shifted dates (including month-end clamping, e.g., Jan 31 → Feb 28). Future dates are projected onto the Calendar virtually without database rows.
+2. **Pre-generation of Future Instances**: Pre-creates 52 instances for weekly tasks. High database bloat and difficult bulk updates.
+3. **In-place Date Shifting (No history)**: Erases completion history of prior occurrences.
+
+### Decision Outcome
+
+Chosen **Option 1**: Implement `Spawn-on-Complete`. Recurring tasks carry a `repeat_rule` (`none`, `daily`, `weekly`, `monthly`, `yearly`). When `POST /api/tasks/:id/complete` is called, the completed record is preserved in the archive, and the subsequent task is created atomically in an SQLite transaction.
+
+### Consequences
+
+- **Positive**: Zero database ghost bloat; minimal row counts.
+- **Positive**: Preserves historic completion logs for audit and tracking.
+- **Positive**: Safe handling of leap years and month-end clamping.
+
+---
+
+## ADR-006: Bento Layout & Chronos Dark-Mode Design System
+
+- **Status**: ACCEPTED
+- **Date**: 2026-10-28
+- **Deciders**: UI/UX Lead, Frontend Engineer
+
+### Context & Problem Statement
+
+Desktop task interfaces frequently suffer from left-sidebar clutter, low contrast, and uninspired template designs. Kaj needed a distinctive, dark-mode-first aesthetic with strict accessibility compliance.
+
+### Considered Options
+
+1. **Bento × Chronos Design System**: Deep Graphite canvas (`#0E1111`), elevated container pods (`#121718`), card surfaces (`#1C2224`), Emerald execution accents (`#10B981`), and warm Gold Tracking accents (`#EAB308`). Floating command top bar without left sidebars.
+2. **Standard Sidebar Navigation**: Consumes 200–240px of valuable horizontal space, constraining Kanban columns.
+3. **Generic Light/Dark Theme**: Generic slate palette lacking distinct brand identity.
+
+### Decision Outcome
+
+Chosen **Option 1**: Standardize on Chronos dark-mode surfaces. All text maintains >= 4.5:1 contrast against card surfaces, and component boundaries maintain >= 3:1 contrast.
+
+### Consequences
+
+- **Positive**: Immersive, high-contrast dark environment optimized for long focus sessions.
+- **Positive**: Maximum horizontal workspace dedicated to task swimlanes and calendar grids.
+
+---
+
+## ADR-007: Streamlined Card Density Architecture (Compact & Minimum Modes)
+
+- **Status**: ACCEPTED
+- **Date**: 2026-10-29
+- **Deciders**: UI/UX Lead, Product Architect
+
+### Context & Problem Statement
+
+The initial Kanban card implementation featured a tall "Comfortable" mode (~140px) with inline status dropdowns, multi-line titles, and multiple badge rows. Users found that boards quickly became vertically unwieldy, forcing extensive vertical scrolling even with modest backlogs.
+
+### Considered Options
+
+1. **Two Focused Modes (Compact & Minimum)**: Deprecate Comfortable mode entirely. Make **Compact** (~65px, inline dates, hidden status dropdowns) the default, and provide an ultra-dense **Minimum** (~36px single-line row) for high-volume backlogs.
+2. **Three Modes (Comfortable, Compact, Minimal)**: Keeping Comfortable added ~4 KB of redundant DOM code and confused users with overlapping density options.
+3. **Continuous Zoom Slider**: Overly complex, unpredictable DOM layouts across swimlanes.
+
+### Decision Outcome
+
+Chosen **Option 1**: Completely remove Comfortable mode. Support only **Compact** (default) and **Minimum** density options via a top bar toggle, persisted in `localStorage` (`kaj_card_density`).
+
+### Consequences
+
+- **Positive**: Reduces board height by **55%** in Compact mode and **75%** in Minimum mode.
+- **Positive**: Shrank frontend client bundle by ~4 KB.
+- **Positive**: Simplifies user choices into two clear ergonomic states.
+
+---
+
+## ADR-008: Real-Time Event Synchronization via Server-Sent Events (SSE)
+
+- **Status**: ACCEPTED
+- **Date**: 2026-10-28
+- **Deciders**: Systems Architect, Frontend Engineer
+
+### Context & Problem Statement
+
+When autonomous AI agents (running via MCP) create, reorder, or complete tasks, connected browser tabs must reflect the changes immediately without requiring manual browser refreshes.
+
+### Considered Options
+
+1. **Server-Sent Events (SSE) via `/events`**: Lightweight, unidirectional HTTP streaming native to browsers (`EventSource`), requiring zero WebSocket handshake overhead and minimal memory.
+2. **WebSockets (`ws`)**: Bidirectional overhead unnecessary since client writes occur over clean REST endpoints; requires additional connection management and ping-pong state.
+3. **Client Polling**: Unacceptable latency and CPU/battery waste on macOS.
+
+### Decision Outcome
+
+Chosen **Option 1**: Implement an in-memory event bus broadcasting mutations over `GET /events` using standard SSE format (`event: task:created`, `task:updated`, etc.). Browser clients update their state in `< 20ms`.
+
+### Consequences
+
+- **Positive**: Instant real-time UI updates when agents operate in the background.
+- **Positive**: Reconnects automatically with native browser `EventSource`.
+- **Negative**: HTTP/1.1 connection limits per domain (mitigated by local daemon topology).
+
+---
+
+## ADR-009: Spec-Driven Development (SDD) & Automated Guardian Audit Gatekeeping
+
+- **Status**: ACCEPTED
+- **Date**: 2026-10-27
+- **Deciders**: Quality Architect, Lead Maintainer
+
+### Context & Problem Statement
+
+AI-assisted coding often causes architectural drift, untested edge cases, and documentation rot when requirements are only tracked in informal chat history.
+
+### Considered Options
+
+1. **Spec-Driven Development with EARS & Spec Guardian**: Formal Easy Approach to Requirements Syntax (EARS) in `specs/`, atomic Acceptance Criteria (`AC-*`), code/test traceability annotations (`// [spec: REQ-ID]`, `// [verifies: REQ-ID/AC-ID]`), normalized SHA-256 requirement block hashing, and automated gatekeeping (`npm run audit:specs`).
+2. **Ad-hoc Markdown Docs**: No automated verification; drift occurs within days.
+3. **Jira / Linear Issue Tracking Only**: Decoupled from Git commits and code annotations.
+
+### Decision Outcome
+
+Chosen **Option 1**: Mandate SDD for all features. Releases and commits require a clean Spec Guardian audit with 100% active criteria verified and zero hash drift violations.
+
+### Consequences
+
+- **Positive**: 100% traceable requirement-to-code-to-test pipeline.
+- **Positive**: Immediate detection when code changes outpace formal specifications.
+- **Positive**: Zero ambiguity during autonomous agent implementation turns.
