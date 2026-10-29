@@ -54,11 +54,11 @@ Acceptance Criteria:
 
 ## UI-005: Card Density Display Options and Intra-Column Drag Reordering
 
-The board interface shall provide controls to adjust task card density and drag-reorder tasks vertically within column cells.
+The board interface shall provide controls to toggle between Compact and Minimal task card densities and drag-reorder tasks vertically within column cells.
 
 Acceptance Criteria:
-- AC-UI-005.1: The board view shall provide a density display mode selector offering Comfortable, Compact, and Minimal options.
-- AC-UI-005.2: In Compact mode, the card shall hide the quick status footer and show dates inline to reduce card height by at least 40%.
+- AC-UI-005.1: The board view shall provide a density display mode selector offering Compact and Minimal options, omitting comfortable mode.
+- AC-UI-005.2: In Compact mode, the card shall hide the quick status footer and show dates inline to maintain a streamlined card height.
 - AC-UI-005.3: In Minimal mode, the card shall render as an ultra-dense single-line row displaying completion button, priority indicator, and title to minimize board height.
 - AC-UI-005.4: The selected density display mode shall persist across browser page reloads in local storage.
 - AC-UI-005.5: Dragging a task card over another task within the same column cell shall reorder the tasks and persist the updated order immediately.

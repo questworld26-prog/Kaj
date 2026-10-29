@@ -31,15 +31,11 @@ export function App() {
   const [cardDensity, setCardDensity] = useState<CardDensity>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("kaj_card_density") as CardDensity;
-      if (
-        stored === "compact" ||
-        stored === "minimal" ||
-        stored === "comfortable"
-      ) {
+      if (stored === "compact" || stored === "minimal") {
         return stored;
       }
     }
-    return "comfortable";
+    return "compact";
   });
   const [projects, setProjects] = useState<Project[]>([]);
   const [swimlanes, setSwimlanes] = useState<SwimlaneGroup[]>([]);

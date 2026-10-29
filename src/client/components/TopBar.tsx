@@ -3,7 +3,7 @@
 // [spec: UI-005]
 import { h } from "preact";
 
-export type CardDensity = "comfortable" | "compact" | "minimal";
+export type CardDensity = "compact" | "minimal";
 
 interface TopBarProps {
   currentView: "board" | "calendar";
@@ -122,20 +122,6 @@ export function TopBar({
             </span>
             <button
               type="button"
-              data-testid="density-comfortable-btn"
-              data-active={density === "comfortable" ? "true" : "false"}
-              onClick={() => onDensityChange("comfortable")}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                density === "comfortable"
-                  ? "bg-[#1C2224] text-emerald-400 border border-[#2A3235] shadow-sm"
-                  : "text-gray-400 hover:text-gray-200"
-              }`}
-              title="Comfortable (Full card details)"
-            >
-              Comfortable
-            </button>
-            <button
-              type="button"
               data-testid="density-compact-btn"
               data-active={density === "compact" ? "true" : "false"}
               onClick={() => onDensityChange("compact")}
@@ -158,9 +144,9 @@ export function TopBar({
                   ? "bg-[#1C2224] text-emerald-400 border border-[#2A3235] shadow-sm"
                   : "text-gray-400 hover:text-gray-200"
               }`}
-              title="Minimal (Ultra-dense single-line strips)"
+              title="Minimum (Ultra-dense single-line strips)"
             >
-              Minimal
+              Minimum
             </button>
           </div>
         )}

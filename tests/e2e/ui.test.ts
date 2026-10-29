@@ -148,9 +148,11 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     const taskCard = page.locator(`[data-task-id="${task.id}"]`);
     await expect(taskCard).toBeVisible();
 
-    // Use task quick status mover dropdown or drag
-    const statusSelect = taskCard.locator('[data-testid="task-status-select"]');
-    await statusSelect.selectOption("in_progress_today");
+    // Drag task from triage to in_progress_today
+    const targetTodayCol = page.locator(
+      '[data-testid="swimlane-pod-unassigned"] [data-col="in_progress_today"]',
+    );
+    await taskCard.dragTo(targetTodayCol);
 
     // Verify it updated in UI and persisted
     await expect(
@@ -586,16 +588,17 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
   });
 
   // [verifies: UI-005/AC-UI-005.1]
-  test("density selector in top command bar offers Comfortable, Compact, and Minimal options", async ({
+  test("density selector in top command bar offers Compact and Minimal options", async ({
     page,
   }) => {
     await page.goto("/");
     await expect(
       page.locator('[data-testid="density-selector"]'),
     ).toBeVisible();
+    // Comfortable mode is removed per UI-005 spec
     await expect(
       page.locator('[data-testid="density-comfortable-btn"]'),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect(
       page.locator('[data-testid="density-compact-btn"]'),
     ).toBeVisible();
@@ -605,7 +608,7 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
   });
 
   // [verifies: UI-005/AC-UI-005.2]
-  test("compact mode reduces card height by at least 40% and hides quick status footer", async ({
+  test("compact mode maintains streamlined card height and hides quick status footer", async ({
     page,
   }) => {
     await page.goto("/");
@@ -624,25 +627,19 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     const card = page.locator(`[data-task-id="${task.id}"]`);
     await expect(card).toBeVisible();
 
-    // Default comfortable height
-    const boxComfortable = await card.boundingBox();
-    expect(boxComfortable).not.toBeNull();
-    const comfortableHeight = boxComfortable!.height;
-
-    // Switch to compact
-    await page.locator('[data-testid="density-compact-btn"]').click();
-
+    // Default mode is compact: verify streamlined height (<= 85px)
     const boxCompact = await card.boundingBox();
     expect(boxCompact).not.toBeNull();
-    const compactHeight = boxCompact!.height;
-
-    // Height should be reduced by at least 40%
-    expect(compactHeight).toBeLessThanOrEqual(comfortableHeight * 0.65);
+    expect(boxCompact!.height).toBeLessThanOrEqual(85);
 
     // Quick status select footer should be hidden in compact mode
     await expect(
       card.locator('[data-testid="task-status-select"]'),
     ).toBeHidden();
+
+    // Action and due date indicators should be visible inline
+    await expect(card.locator("text=2026-11-01")).toBeVisible();
+    await expect(card.locator("text=2026-11-05")).toBeVisible();
   });
 
   // [verifies: UI-005/AC-UI-005.3]
@@ -678,13 +675,26 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     page,
   }) => {
     await page.goto("/");
+    // Verify default mode is compact
+    const compactBtn = page.locator('[data-testid="density-compact-btn"]');
+    await expect(compactBtn).toHaveAttribute("data-active", "true");
+
     // Switch to minimal
-    await page.locator('[data-testid="density-minimal-btn"]').click();
+    const minimalBtn = page.locator('[data-testid="density-minimal-btn"]');
+    await minimalBtn.click();
     await page.reload();
 
-    // Verify minimal button is active
-    const minimalBtn = page.locator('[data-testid="density-minimal-btn"]');
-    await expect(minimalBtn).toHaveAttribute("data-active", "true");
+    // Verify minimal button is active after reload
+    await expect(
+      page.locator('[data-testid="density-minimal-btn"]'),
+    ).toHaveAttribute("data-active", "true");
+
+    // Switch back to compact
+    await page.locator('[data-testid="density-compact-btn"]').click();
+    await page.reload();
+    await expect(
+      page.locator('[data-testid="density-compact-btn"]'),
+    ).toHaveAttribute("data-active", "true");
   });
 
   // [verifies: UI-005/AC-UI-005.5]

@@ -1,5 +1,5 @@
 {
-  "last_audited_at": "2026-10-29T02:56:19.849218+00:00",
+  "last_audited_at": "2026-10-29T03:18:43.243117+00:00",
   "total_requirements": 16,
   "total_criteria": 65,
   "verified_criteria_count": 65,
@@ -372,8 +372,8 @@
       "requirement_id": "UI-005",
       "title": "Card Density Display Options and Intra-Column Drag Reordering",
       "spec_file": "specs/ui.md",
-      "sha256": "5da9d1b4a6b4d250d32b1e58082e9cdc61022a2cc2bcde82743143b84361efd9",
-      "verified_sha256": "5da9d1b4a6b4d250d32b1e58082e9cdc61022a2cc2bcde82743143b84361efd9",
+      "sha256": "e9e88b86a35a0a925e544465d48bdfc7c54f551a801b74f1d958cc9c504877b2",
+      "verified_sha256": "e9e88b86a35a0a925e544465d48bdfc7c54f551a801b74f1d958cc9c504877b2",
       "acceptance_criteria": [
         "AC-UI-005.1",
         "AC-UI-005.2",
