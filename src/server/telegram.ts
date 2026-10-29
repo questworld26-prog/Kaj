@@ -374,6 +374,24 @@ function buildTaskActionKeyboard(taskId: string): TelegramInlineKeyboardMarkup {
   };
 }
 
+function buildNewTaskActionKeyboard(taskId: string): TelegramInlineKeyboardMarkup {
+  return {
+    inline_keyboard: [
+      [
+        {
+          text: "⚡ Today",
+          callback_data: `status:${taskId}:in_progress_today`,
+        },
+        { text: "📅 Week", callback_data: `status:${taskId}:in_progress_week` },
+        {
+          text: "🗓 Month",
+          callback_data: `status:${taskId}:in_progress_month`,
+        },
+      ],
+    ],
+  };
+}
+
 function formatTaskSummary(task: Task, projects: Project[]): string {
   const proj = task.project_id
     ? projects.find((p) => p.id === task.project_id)?.name
@@ -718,7 +736,7 @@ export class TelegramBotService {
     await this.transport.sendMessage(
       chatId,
       `✅ Added: ${formatTaskSummary(created, projects)}`,
-      buildTaskActionKeyboard(created.id),
+      buildNewTaskActionKeyboard(created.id),
     );
   }
 }
