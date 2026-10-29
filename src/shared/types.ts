@@ -27,7 +27,12 @@ export const REPEAT_RULES = ["none", "weekly", "monthly", "yearly"] as const;
 export type RepeatRule = (typeof REPEAT_RULES)[number];
 
 export const RepeatDayOfWeekSchema = z.number().int().min(0).max(6).nullable();
-export const RepeatDayOfMonthSchema = z.number().int().min(1).max(31).nullable();
+export const RepeatDayOfMonthSchema = z
+  .number()
+  .int()
+  .min(1)
+  .max(31)
+  .nullable();
 export const RepeatDayOfYearSchema = z
   .string()
   .regex(/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, "Must be in MM-DD format")

@@ -52,6 +52,7 @@ export interface TelegramApiTransport {
     replyMarkup?: TelegramInlineKeyboardMarkup,
   ): Promise<void>;
   answerCallbackQuery(callbackQueryId: string, text?: string): Promise<void>;
+  setMyCommands?(commands: Array<{ command: string; description: string }>): Promise<void>;
 }
 
 const DEFAULT_CONFIG: TelegramConfig = {
@@ -334,6 +335,14 @@ export function createFetchTelegramTransport(
         }),
       });
     },
+
+    async setMyCommands(commands) {
+      await fetch(`${baseUrl}/setMyCommands`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commands }),
+      });
+    },
   };
 }
 
@@ -350,9 +359,15 @@ function buildTaskActionKeyboard(taskId: string): TelegramInlineKeyboardMarkup {
     inline_keyboard: [
       [
         { text: "✓ Done", callback_data: `done:${taskId}` },
-        { text: "⚡ Today", callback_data: `status:${taskId}:in_progress_today` },
+        {
+          text: "⚡ Today",
+          callback_data: `status:${taskId}:in_progress_today`,
+        },
         { text: "📅 Week", callback_data: `status:${taskId}:in_progress_week` },
-        { text: "🗓 Month", callback_data: `status:${taskId}:in_progress_month` },
+        {
+          text: "🗓 Month",
+          callback_data: `status:${taskId}:in_progress_month`,
+        },
         { text: "Todo", callback_data: `status:${taskId}:todo` },
       ],
     ],
@@ -394,7 +409,7 @@ export class TelegramBotService {
   private hasValidToken(): boolean {
     return Boolean(
       this.config.bot_token &&
-        this.config.bot_token !== "YOUR_TELEGRAM_BOT_TOKEN",
+      this.config.bot_token !== "YOUR_TELEGRAM_BOT_TOKEN",
     );
   }
 
@@ -406,7 +421,10 @@ export class TelegramBotService {
     return { ...this.config };
   }
 
-  public updateConfig(newConfig: TelegramConfig, transport?: TelegramApiTransport): void {
+  public updateConfig(
+    newConfig: TelegramConfig,
+    transport?: TelegramApiTransport,
+  ): void {
     const wasRunning = this.running;
     if (wasRunning) {
       this.stop();
@@ -429,6 +447,19 @@ export class TelegramBotService {
     }
     if (this.running) return;
     this.running = true;
+
+    // Automatically sync official clean Kaj menu commands to Telegram
+    if (this.transport.setMyCommands) {
+      this.transport
+        .setMyCommands([
+          { command: "today", description: "View today tasks with quick actions" },
+          { command: "search", description: "Search tasks by title, details, or notes" },
+          { command: "add", description: "Add a task: /add <title> [#project] [!today]" },
+          { command: "help", description: "Show Kaj syntax guide and commands" },
+        ])
+        .catch(() => {});
+    }
+
     this.scheduleNextPoll();
   }
 
@@ -541,7 +572,10 @@ export class TelegramBotService {
               );
             }
           } else {
-            await this.transport.answerCallbackQuery(cb.id, "⚠️ Task not found");
+            await this.transport.answerCallbackQuery(
+              cb.id,
+              "⚠️ Task not found",
+            );
           }
         }
         return;

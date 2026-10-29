@@ -28,16 +28,26 @@ test.describe("Kaj (কাজ) Top Search & Mobile Density Default (UI-007)", ()
     // 1. Desktop
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
-    const desktopSearch = page.locator('[data-testid="desktop-task-search-input"]');
+    const desktopSearch = page.locator(
+      '[data-testid="desktop-task-search-input"]',
+    );
     await expect(desktopSearch).toBeVisible();
-    await expect(desktopSearch).toHaveAttribute("placeholder", "Search tasks...");
+    await expect(desktopSearch).toHaveAttribute(
+      "placeholder",
+      "Search tasks...",
+    );
 
     // 2. Mobile
     await page.setViewportSize({ width: 390, height: 844 });
     await page.reload();
-    const mobileSearch = page.locator('[data-testid="mobile-task-search-input"]');
+    const mobileSearch = page.locator(
+      '[data-testid="mobile-task-search-input"]',
+    );
     await expect(mobileSearch).toBeVisible();
-    await expect(mobileSearch).toHaveAttribute("placeholder", "Search tasks...");
+    await expect(mobileSearch).toHaveAttribute(
+      "placeholder",
+      "Search tasks...",
+    );
   });
 
   // [verifies: UI-007/AC-UI-007.2]
@@ -71,39 +81,57 @@ test.describe("Kaj (কাজ) Top Search & Mobile Density Default (UI-007)", ()
 
     await page.goto("/");
 
-    const searchInput = page.locator('[data-testid="desktop-task-search-input"]');
+    const searchInput = page.locator(
+      '[data-testid="desktop-task-search-input"]',
+    );
 
     // 1. Search by title match: "Encryption"
     await searchInput.fill("Encryption");
     await expect(
-      page.locator('[data-testid="task-card"]').filter({ hasText: "Quantum Encryption Protocol" }),
+      page
+        .locator('[data-testid="task-card"]')
+        .filter({ hasText: "Quantum Encryption Protocol" }),
     ).toBeVisible();
     await expect(
-      page.locator('[data-testid="task-card"]').filter({ hasText: "Database Backup Procedure" }),
+      page
+        .locator('[data-testid="task-card"]')
+        .filter({ hasText: "Database Backup Procedure" }),
     ).toHaveCount(0);
     await expect(
-      page.locator('[data-testid="task-card"]').filter({ hasText: "Frontend Styling Pass" }),
+      page
+        .locator('[data-testid="task-card"]')
+        .filter({ hasText: "Frontend Styling Pass" }),
     ).toHaveCount(0);
 
     // 2. Search by description match: "cold storage" (matches Database Backup)
     await searchInput.fill("cold storage");
     await expect(
-      page.locator('[data-testid="task-card"]').filter({ hasText: "Database Backup Procedure" }),
+      page
+        .locator('[data-testid="task-card"]')
+        .filter({ hasText: "Database Backup Procedure" }),
     ).toBeVisible();
     await expect(
-      page.locator('[data-testid="task-card"]').filter({ hasText: "Quantum Encryption Protocol" }),
+      page
+        .locator('[data-testid="task-card"]')
+        .filter({ hasText: "Quantum Encryption Protocol" }),
     ).toHaveCount(0);
 
     // 3. Search word appearing in title of one and details of another: "quantum" (case-insensitive)
     await searchInput.fill("quantum");
     await expect(
-      page.locator('[data-testid="task-card"]').filter({ hasText: "Quantum Encryption Protocol" }),
+      page
+        .locator('[data-testid="task-card"]')
+        .filter({ hasText: "Quantum Encryption Protocol" }),
     ).toBeVisible();
     await expect(
-      page.locator('[data-testid="task-card"]').filter({ hasText: "Frontend Styling Pass" }),
+      page
+        .locator('[data-testid="task-card"]')
+        .filter({ hasText: "Frontend Styling Pass" }),
     ).toBeVisible();
     await expect(
-      page.locator('[data-testid="task-card"]').filter({ hasText: "Database Backup Procedure" }),
+      page
+        .locator('[data-testid="task-card"]')
+        .filter({ hasText: "Database Backup Procedure" }),
     ).toHaveCount(0);
   });
 
@@ -136,18 +164,28 @@ test.describe("Kaj (কাজ) Top Search & Mobile Density Default (UI-007)", ()
     await page.click('[data-testid="nav-calendar-btn"]');
     await expect(page.locator('[data-testid="calendar-view"]')).toBeVisible();
 
-    const searchInput = page.locator('[data-testid="desktop-task-search-input"]');
+    const searchInput = page.locator(
+      '[data-testid="desktop-task-search-input"]',
+    );
     const calView = page.locator('[data-testid="calendar-view"]');
 
     // Search by title
     await searchInput.fill("Unique Alpha");
-    await expect(calView.locator("text=Calendar Unique Alpha Event")).toBeVisible();
-    await expect(calView.locator("text=Calendar Unique Beta Event")).toHaveCount(0);
+    await expect(
+      calView.locator("text=Calendar Unique Alpha Event"),
+    ).toBeVisible();
+    await expect(
+      calView.locator("text=Calendar Unique Beta Event"),
+    ).toHaveCount(0);
 
     // Search by details: "sync meeting"
     await searchInput.fill("sync meeting");
-    await expect(calView.locator("text=Calendar Unique Beta Event")).toBeVisible();
-    await expect(calView.locator("text=Calendar Unique Alpha Event")).toHaveCount(0);
+    await expect(
+      calView.locator("text=Calendar Unique Beta Event"),
+    ).toBeVisible();
+    await expect(
+      calView.locator("text=Calendar Unique Alpha Event"),
+    ).toHaveCount(0);
   });
 
   // [verifies: UI-007/AC-UI-007.4]
@@ -157,7 +195,9 @@ test.describe("Kaj (কাজ) Top Search & Mobile Density Default (UI-007)", ()
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
 
-    const searchInput = page.locator('[data-testid="desktop-task-search-input"]');
+    const searchInput = page.locator(
+      '[data-testid="desktop-task-search-input"]',
+    );
     const clearBtn = page.locator('[data-testid="desktop-search-clear-btn"]');
 
     // Initially clear button is hidden

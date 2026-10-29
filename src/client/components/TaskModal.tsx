@@ -278,24 +278,24 @@ export function TaskModal({
                     repeat_rule: val,
                     repeat_day_of_week:
                       val === "weekly"
-                        ? formData.repeat_day_of_week ??
+                        ? (formData.repeat_day_of_week ??
                           (formData.action_date
                             ? new Date(formData.action_date).getUTCDay()
-                            : 1)
+                            : 1))
                         : null,
                     repeat_day_of_month:
                       val === "monthly"
-                        ? formData.repeat_day_of_month ??
+                        ? (formData.repeat_day_of_month ??
                           (formData.action_date
                             ? Number(formData.action_date.split("-")[2])
-                            : 1)
+                            : 1))
                         : null,
                     repeat_day_of_year:
                       val === "yearly"
-                        ? formData.repeat_day_of_year ??
+                        ? (formData.repeat_day_of_year ??
                           (formData.action_date
                             ? formData.action_date.slice(5)
-                            : "01-01")
+                            : "01-01"))
                         : null,
                   });
                 }}
@@ -387,7 +387,8 @@ export function TaskModal({
                   className="w-24 px-3 py-1.5 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white focus:border-emerald-500 focus:outline-none"
                 />
                 <span className="text-xs text-gray-400">
-                  Day of every month (e.g. 1st, 15th, 31st with month-end clamping)
+                  Day of every month (e.g. 1st, 15th, 31st with month-end
+                  clamping)
                 </span>
               </div>
             </div>

@@ -63,7 +63,7 @@ export function shiftDate(
     const preferredDay =
       opts.repeatDayOfMonth !== undefined && opts.repeatDayOfMonth !== null
         ? opts.repeatDayOfMonth
-        : opts.targetDay ?? d;
+        : (opts.targetDay ?? d);
 
     const daysInNextMonth = new Date(
       Date.UTC(nextYear, nextMonth, 0),
@@ -77,8 +77,7 @@ export function shiftDate(
   if (rule === "yearly") {
     const nextYear = y + 1;
     let targetMonth = m;
-    let targetDay =
-      opts.targetDay ?? d;
+    let targetDay = opts.targetDay ?? d;
 
     if (
       opts.repeatDayOfYear &&
@@ -280,11 +279,9 @@ export class TaskRepository {
     const sql = includeCompleted
       ? "SELECT * FROM tasks WHERE deleted_at IS NULL ORDER BY sort_order ASC, created_at DESC"
       : "SELECT * FROM tasks WHERE status != ? AND deleted_at IS NULL ORDER BY sort_order ASC, created_at DESC";
-    return (
-      includeCompleted
-        ? this.db.prepare(sql).all()
-        : this.db.prepare(sql).all("done")
-    ) as unknown as Task[];
+    return (includeCompleted
+      ? this.db.prepare(sql).all()
+      : this.db.prepare(sql).all("done")) as unknown as Task[];
   }
 
   updateTask(id: string, input: UpdateTaskInput): Task | null {

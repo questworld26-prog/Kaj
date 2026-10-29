@@ -5,7 +5,10 @@ import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { initSchema } from "../../src/server/db.js";
-import { TaskRepository, ProjectRepository } from "../../src/server/repository.js";
+import {
+  TaskRepository,
+  ProjectRepository,
+} from "../../src/server/repository.js";
 import { EventBus } from "../../src/server/events.js";
 import {
   loadTelegramConfig,
@@ -353,4 +356,3 @@ describe("Telegram Bot Integration (TG-001)", () => {
     expect(callbackAnswers[0]).toContain("Completed");
   });
 });
-

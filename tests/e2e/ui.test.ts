@@ -573,10 +573,14 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     await expect(dialog.locator('[data-testid="repeat-dow-1"]')).toBeVisible();
 
     await dialog.locator('select[name="repeat_rule"]').selectOption("monthly");
-    await expect(dialog.locator('[data-testid="repeat-dom-input"]')).toBeVisible();
+    await expect(
+      dialog.locator('[data-testid="repeat-dom-input"]'),
+    ).toBeVisible();
 
     await dialog.locator('select[name="repeat_rule"]').selectOption("yearly");
-    await expect(dialog.locator('[data-testid="repeat-doy-picker"]')).toBeVisible();
+    await expect(
+      dialog.locator('[data-testid="repeat-doy-picker"]'),
+    ).toBeVisible();
 
     await dialog.locator('select[name="repeat_rule"]').selectOption("weekly");
     await dialog.locator('[data-testid="repeat-dow-3"]').click(); // Select Wednesday

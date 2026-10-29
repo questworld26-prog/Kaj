@@ -257,7 +257,8 @@ export function MobileViews({
       <div
         className="rounded-lg bg-[#1C2224] border border-[#2A3235] px-2.5 py-1.5 flex items-center justify-between gap-2 transition-colors hover:border-gray-500 w-full"
         style={{
-          transform: currentOffset > 0 ? `translateX(${currentOffset}px)` : "none",
+          transform:
+            currentOffset > 0 ? `translateX(${currentOffset}px)` : "none",
           transition: isSwipingThis ? "none" : "transform 0.2s ease-out",
         }}
       >
@@ -301,7 +302,8 @@ export function MobileViews({
       <div
         className="rounded-xl bg-[#1C2224] border border-[#2A3235] p-3 flex flex-col gap-2 transition-colors hover:border-gray-500 w-full"
         style={{
-          transform: currentOffset > 0 ? `translateX(${currentOffset}px)` : "none",
+          transform:
+            currentOffset > 0 ? `translateX(${currentOffset}px)` : "none",
           transition: isSwipingThis ? "none" : "transform 0.2s ease-out",
         }}
       >

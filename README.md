@@ -135,17 +135,18 @@ npm start
 
 Kaj includes a built-in background daemon manager (`scripts/daemon-ctl.sh`) that integrates directly with macOS `launchd` LaunchAgents, allowing the daemon to run silently in the background and automatically start whenever your laptop boots or logs in:
 
-| Action | NPM Script | CLI Equivalent | Description |
-| :--- | :--- | :--- | :--- |
-| **Start Daemon** | `npm run daemon:start` | `./scripts/daemon-ctl.sh start` | Starts Kaj in background (~75–95 MB RSS) |
-| **Stop Daemon** | `npm run daemon:stop` | `./scripts/daemon-ctl.sh stop` | Gracefully stops the running daemon |
-| **Restart Daemon** | `npm run daemon:restart` | `./scripts/daemon-ctl.sh restart` | Restarts daemon and reloads compiled code |
-| **Check Status** | `npm run daemon:status` | `./scripts/daemon-ctl.sh status` | Displays PID, memory usage, and endpoints |
-| **View Live Logs** | `npm run daemon:logs` | `./scripts/daemon-ctl.sh logs` | Tails live daemon logs (`~/.local/share/kaj/daemon.log`) |
-| **Enable Auto-Start** | `npm run daemon:install` | `./scripts/daemon-ctl.sh install` | Registers macOS LaunchAgent (`~/Library/LaunchAgents/com.kaj.daemon.plist`) |
-| **Disable Auto-Start** | `npm run daemon:uninstall` | `./scripts/daemon-ctl.sh uninstall` | Unloads and removes the LaunchAgent |
+| Action                 | NPM Script                 | CLI Equivalent                      | Description                                                                 |
+| :--------------------- | :------------------------- | :---------------------------------- | :-------------------------------------------------------------------------- |
+| **Start Daemon**       | `npm run daemon:start`     | `./scripts/daemon-ctl.sh start`     | Starts Kaj in background (~75–95 MB RSS)                                    |
+| **Stop Daemon**        | `npm run daemon:stop`      | `./scripts/daemon-ctl.sh stop`      | Gracefully stops the running daemon                                         |
+| **Restart Daemon**     | `npm run daemon:restart`   | `./scripts/daemon-ctl.sh restart`   | Restarts daemon and reloads compiled code                                   |
+| **Check Status**       | `npm run daemon:status`    | `./scripts/daemon-ctl.sh status`    | Displays PID, memory usage, and endpoints                                   |
+| **View Live Logs**     | `npm run daemon:logs`      | `./scripts/daemon-ctl.sh logs`      | Tails live daemon logs (`~/.local/share/kaj/daemon.log`)                    |
+| **Enable Auto-Start**  | `npm run daemon:install`   | `./scripts/daemon-ctl.sh install`   | Registers macOS LaunchAgent (`~/Library/LaunchAgents/com.kaj.daemon.plist`) |
+| **Disable Auto-Start** | `npm run daemon:uninstall` | `./scripts/daemon-ctl.sh uninstall` | Unloads and removes the LaunchAgent                                         |
 
 #### Setup Auto-Start on Boot (One-Time Setup)
+
 ```bash
 # 1. Build latest code
 npm run build
@@ -153,6 +154,7 @@ npm run build
 # 2. Register LaunchAgent with macOS
 npm run daemon:install
 ```
+
 Once installed, macOS manages Kaj automatically—rebooting or logging in will start the server and MCP endpoints with zero user interaction.
 
 ### Telegram Bot Integration (Zero-LLM, Ultra-Low Footprint)
@@ -180,13 +182,13 @@ Credentials and feature settings are stored in `telegram.config.json` in the pro
 
 You can toggle the Telegram bot on or off at any time without restarting your laptop:
 
-| Action | NPM Script | CLI Equivalent | Description |
-| :--- | :--- | :--- | :--- |
-| **Enable Telegram Bot** | `npm run telegram:on` | `./scripts/daemon-ctl.sh telegram-on` | Sets `"enabled": true` in `telegram.config.json` and activates live polling |
-| **Disable Telegram Bot** | `npm run telegram:off` | `./scripts/daemon-ctl.sh telegram-off` | Sets `"enabled": false` and stops all Telegram network polling immediately |
-| **Check Bot Status** | `npm run telegram:status` | `./scripts/daemon-ctl.sh telegram-status` | Shows config state, token presence, and live daemon polling status |
+| Action                   | NPM Script                | CLI Equivalent                            | Description                                                                 |
+| :----------------------- | :------------------------ | :---------------------------------------- | :-------------------------------------------------------------------------- |
+| **Enable Telegram Bot**  | `npm run telegram:on`     | `./scripts/daemon-ctl.sh telegram-on`     | Sets `"enabled": true` in `telegram.config.json` and activates live polling |
+| **Disable Telegram Bot** | `npm run telegram:off`    | `./scripts/daemon-ctl.sh telegram-off`    | Sets `"enabled": false` and stops all Telegram network polling immediately  |
+| **Check Bot Status**     | `npm run telegram:status` | `./scripts/daemon-ctl.sh telegram-status` | Shows config state, token presence, and live daemon polling status          |
 
-*(You can also override the flag via environment variable `KAJ_TELEGRAM_ENABLED=true|false` or `POST /api/telegram/toggle` with `{"enabled": true}`).*
+_(You can also override the flag via environment variable `KAJ_TELEGRAM_ENABLED=true|false` or `POST /api/telegram/toggle` with `{"enabled": true}`)._
 
 #### 3. Bot Commands & Shorthand Syntax
 

@@ -36,7 +36,9 @@ test.describe("Multi-Modal Task Completion Interactions (UI-008)", () => {
     await page.goto("/");
     await expect(page.locator("#app-root")).toBeVisible();
 
-    const card = page.locator('[data-testid="task-card"]').filter({ hasText: title });
+    const card = page
+      .locator('[data-testid="task-card"]')
+      .filter({ hasText: title });
     await expect(card).toBeVisible();
 
     // Verify circular checkbox on desktop card
@@ -49,8 +51,12 @@ test.describe("Multi-Modal Task Completion Interactions (UI-008)", () => {
 
     // Verify task is in archive
     await page.locator('[data-testid="open-archive-btn"]').click();
-    await expect(page.locator('[data-testid="completed-archive-drawer"]')).toBeVisible();
-    await expect(page.locator('[data-testid="completed-archive-drawer"]')).toContainText(title);
+    await expect(
+      page.locator('[data-testid="completed-archive-drawer"]'),
+    ).toBeVisible();
+    await expect(
+      page.locator('[data-testid="completed-archive-drawer"]'),
+    ).toContainText(title);
   });
 
   // [verifies: UI-008/AC-UI-008.2]
@@ -67,7 +73,9 @@ test.describe("Multi-Modal Task Completion Interactions (UI-008)", () => {
     const task = (await res.json()) as { id: string };
 
     await page.goto("/");
-    const card = page.locator('[data-testid="task-card"]').filter({ hasText: title });
+    const card = page
+      .locator('[data-testid="task-card"]')
+      .filter({ hasText: title });
     await expect(card).toBeVisible();
 
     // Open task dialog
@@ -76,7 +84,9 @@ test.describe("Multi-Modal Task Completion Interactions (UI-008)", () => {
     await expect(dialog).toBeVisible();
 
     // Verify Mark Complete button exists
-    const markCompleteBtn = dialog.locator('[data-testid="modal-mark-complete-btn"]');
+    const markCompleteBtn = dialog.locator(
+      '[data-testid="modal-mark-complete-btn"]',
+    );
     await expect(markCompleteBtn).toBeVisible();
     await markCompleteBtn.click();
 
@@ -97,9 +107,13 @@ test.describe("Multi-Modal Task Completion Interactions (UI-008)", () => {
     });
 
     await page.goto("/");
-    await expect(page.locator('[data-testid="mobile-bottom-dock"]')).toBeVisible();
+    await expect(
+      page.locator('[data-testid="mobile-bottom-dock"]'),
+    ).toBeVisible();
 
-    const mobileCard = page.locator('[data-testid^="mobile-task-card-"]').filter({ hasText: title });
+    const mobileCard = page
+      .locator('[data-testid^="mobile-task-card-"]')
+      .filter({ hasText: title });
     await expect(mobileCard).toBeVisible();
 
     // Perform swipe right touch gesture past 80px threshold
@@ -120,4 +134,3 @@ test.describe("Multi-Modal Task Completion Interactions (UI-008)", () => {
     await expect(mobileCard).toBeHidden();
   });
 });
-

@@ -203,9 +203,7 @@ export function createApp(options: AppOptions): Hono {
       }
     } catch {}
 
-    const tgCfg = telegramBot
-      ? telegramBot.getConfig()
-      : loadTelegramConfig();
+    const tgCfg = telegramBot ? telegramBot.getConfig() : loadTelegramConfig();
 
     return c.json({
       status: "ok",

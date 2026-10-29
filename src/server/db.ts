@@ -68,9 +68,9 @@ export function initSchema(db: DatabaseSync): void {
 
   // Migrate existing databases: add repeat customization columns if missing
   try {
-    const cols = db
-      .prepare("PRAGMA table_info(tasks)")
-      .all() as { name: string }[];
+    const cols = db.prepare("PRAGMA table_info(tasks)").all() as {
+      name: string;
+    }[];
     const colNames = new Set(cols.map((c) => c.name));
     if (!colNames.has("repeat_day_of_week")) {
       db.exec("ALTER TABLE tasks ADD COLUMN repeat_day_of_week INTEGER;");
