@@ -226,6 +226,46 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     expect(betaIdx).toBeLessThan(alphaIdx);
   });
 
+  // [verifies: UI-001/AC-UI-001.6]
+  test("renders consolidated In Progress chamber with 'In Progress' badge and horizon icons (Today ⚡, Week 📅, Month 🗓)", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // Locate the In Progress chamber within the unassigned swimlane
+    const chamber = page.locator(
+      '[data-testid="swimlane-pod-unassigned"] [data-testid="in-progress-chamber"]',
+    );
+    await expect(chamber).toBeVisible();
+
+    // Verify "In Progress" badge on the chamber header
+    const badge = chamber.locator('[data-testid="in-progress-badge"]');
+    await expect(badge).toBeVisible();
+    await expect(badge).toContainText(/In Progress/i);
+
+    // Verify the 3 sub-columns and their icons
+    const todayCol = chamber.locator('[data-col="in_progress_today"]');
+    const weekCol = chamber.locator('[data-col="in_progress_week"]');
+    const monthCol = chamber.locator('[data-col="in_progress_month"]');
+
+    await expect(todayCol).toBeVisible();
+    await expect(weekCol).toBeVisible();
+    await expect(monthCol).toBeVisible();
+
+    // Verify icons in headers
+    await expect(todayCol).toContainText("⚡");
+    await expect(todayCol).toContainText("Today");
+    await expect(weekCol).toContainText("📅");
+    await expect(weekCol).toContainText("This Week");
+    await expect(monthCol).toContainText("🗓");
+    await expect(monthCol).toContainText("This Month");
+
+    // Verify Today column has accented focus plate
+    await expect(
+      chamber.locator('[data-testid="today-focus-plate"]'),
+    ).toBeVisible();
+  });
+
   // [verifies: UI-002/AC-UI-002.1]
   test("enforces Chronos dark-mode surfaces #0E1111 canvas and #1C2224 cards", async ({
     page,

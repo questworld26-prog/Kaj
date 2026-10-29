@@ -4,16 +4,17 @@ This specification defines the Bento full-width layout, Chronos dark-mode color 
 
 ---
 
-## UI-001: Bento Full-Width 6-Column Layout and Swimlane Pods
+## UI-001: Bento Full-Width Layout, Swimlane Pods, and Consolidated In-Progress Chamber
 
-The system shall render a full-width Kanban board without a left sidebar, utilizing floating command chrome, sticky 6-track column headers, and rounded dark Swimlane Pods.
+The system shall render a full-width Kanban board without a left sidebar, utilizing floating command chrome, sticky column headers, rounded dark Swimlane Pods, and a consolidated In Progress chamber containing Today, This Week, and This Month execution horizons.
 
 Acceptance Criteria:
-- AC-UI-001.1: The board view shall dedicate 100% of viewport width to columns: Triage, Todo, In Progress (Today, This Week, This Month), and Tracking.
+- AC-UI-001.1: The board view shall dedicate 100% of viewport width across Triage, Todo, a consolidated In Progress chamber spanning 3 column widths, and Tracking.
 - AC-UI-001.2: Projects shall render as rounded container pods with collapsible swimlane headers and task counts.
 - AC-UI-001.3: Tracking column cards shall render with dashed borders and dedicated carrier/blocker badge indicators.
 - AC-UI-001.4: Dragging or selecting a card shall allow moving tasks across columns and swimlanes.
 - AC-UI-001.5: The UI shall provide controls to reorder project swimlanes, persisting the new sort order and updating the board layout immediately.
+- AC-UI-001.6: The In Progress chamber within each swimlane shall render as a unified elevated box with an "In Progress" badge, housing 3 sub-columns with distinct horizon icons: Today (`⚡`) on an accented focus plate with pulsing indicator, This Week (`📅`), and This Month (`🗓`).
 
 ---
 

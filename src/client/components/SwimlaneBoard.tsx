@@ -71,31 +71,431 @@ export function SwimlaneBoard({
     setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const renderCol = (
+    lane: SwimlaneGroup,
+    colKey: TaskStatus,
+    label: string,
+    icon?: string,
+    isTodayFocus?: boolean,
+  ) => {
+    const podId = lane.project?.id || "unassigned";
+    const colTasks = lane.tasks.filter((t) => t.status === colKey);
+    const cellKey = `${podId}-${colKey}`;
+    const isDragOver = dragOverKey === cellKey;
+    const isTracking = colKey === "tracking";
+
+    return (
+      <div
+        key={colKey}
+        data-col={colKey}
+        data-swimlane={podId}
+        {...(isTodayFocus ? { "data-testid": "today-focus-plate" } : {})}
+        onDragOver={(e) => {
+          e.preventDefault();
+          if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+          if (dragOverKey !== cellKey) setDragOverKey(cellKey);
+        }}
+        onDragLeave={() => {
+          if (dragOverKey === cellKey) setDragOverKey(null);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOverKey(null);
+          setDragOverTaskId(null);
+          const raw =
+            e.dataTransfer?.getData("application/kaj-task") ||
+            e.dataTransfer?.getData("text/plain");
+          if (!raw) return;
+          try {
+            const data = JSON.parse(raw);
+            if (data.taskId) {
+              const targetProjectId = lane.project?.id || null;
+              if (onMoveTask) {
+                onMoveTask(data.taskId, colKey, targetProjectId);
+              } else {
+                onUpdateTaskStatus(data.taskId, colKey);
+              }
+              const currentIds = colTasks
+                .map((t) => t.id)
+                .filter((id) => id !== data.taskId);
+              currentIds.push(data.taskId);
+              if (onReorderTasks) {
+                onReorderTasks(currentIds);
+              }
+            }
+          } catch (err) {
+            console.error("Error handling drop on board:", err);
+          }
+        }}
+        className={`flex flex-col rounded-xl p-2 min-h-[110px] transition-all ${
+          isTodayFocus
+            ? "bg-emerald-950/20 border border-emerald-500/30 shadow-inner"
+            : isTracking
+              ? "bg-[#161D1F] border border-[#2A3235]"
+              : colKey.startsWith("in_progress")
+                ? "bg-[#151D1F] border border-[#2A3235]"
+                : "bg-[#161D1F] border border-[#2A3235]"
+        } ${
+          isDragOver
+            ? "ring-2 ring-emerald-400 border-emerald-400 bg-emerald-500/10 shadow-inner"
+            : ""
+        }`}
+      >
+        {/* Sub-column Header inside swimlane pod */}
+        <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-[#2A3235]/60 text-xs font-semibold">
+          <span
+            className={`flex items-center gap-1.5 ${
+              isTodayFocus
+                ? "text-emerald-300 font-bold"
+                : isTracking
+                  ? "text-amber-300 font-bold"
+                  : "text-gray-300"
+            }`}
+          >
+            {isTodayFocus && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+            )}
+            {icon && <span>{icon}</span>}
+            <span>{label}</span>
+          </span>
+          <span
+            className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+              isTodayFocus
+                ? "bg-emerald-500/30 text-emerald-200"
+                : isTracking
+                  ? "bg-[#1C2224] text-amber-400"
+                  : "bg-[#1C2224] text-gray-400"
+            }`}
+          >
+            {colTasks.length}
+          </span>
+        </div>
+
+        {/* Task Cards list */}
+        <div className="space-y-2 flex-1">
+          {colTasks.map((task) => {
+            const priStyle =
+              PRIORITY_STYLES[task.priority] || PRIORITY_STYLES.week;
+
+            const handleCardDragOver = (e: DragEvent) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+              if (dragOverTaskId !== task.id) setDragOverTaskId(task.id);
+            };
+
+            const handleCardDragLeave = (e: DragEvent) => {
+              e.stopPropagation();
+              if (dragOverTaskId === task.id) setDragOverTaskId(null);
+            };
+
+            const handleCardDrop = (e: DragEvent) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDragOverTaskId(null);
+              setDragOverKey(null);
+              const raw =
+                e.dataTransfer?.getData("application/kaj-task") ||
+                e.dataTransfer?.getData("text/plain");
+              if (!raw) return;
+              try {
+                const data = JSON.parse(raw);
+                const draggedId = data.taskId;
+                if (!draggedId || draggedId === task.id) return;
+
+                const targetProjectId = lane.project?.id || null;
+                if (
+                  data.sourceStatus !== colKey ||
+                  data.sourceProjectId !== targetProjectId
+                ) {
+                  if (onMoveTask)
+                    onMoveTask(draggedId, colKey, targetProjectId);
+                  else onUpdateTaskStatus(draggedId, colKey);
+                }
+
+                const currentIds = colTasks
+                  .map((t) => t.id)
+                  .filter((id) => id !== draggedId);
+                const targetIdx = currentIds.indexOf(task.id);
+                currentIds.splice(targetIdx, 0, draggedId);
+                if (onReorderTasks) {
+                  onReorderTasks(currentIds);
+                }
+              } catch (err) {
+                console.error("Error reordering task:", err);
+              }
+            };
+
+            // Minimal Density View (UI-005)
+            if (density === "minimal") {
+              return (
+                <article
+                  key={task.id}
+                  data-testid="task-card"
+                  data-task-id={task.id}
+                  draggable={true}
+                  onDragStart={(e) => {
+                    const payload = JSON.stringify({
+                      taskId: task.id,
+                      sourceStatus: task.status,
+                      sourceProjectId: task.project_id,
+                    });
+                    e.dataTransfer?.setData("application/kaj-task", payload);
+                    e.dataTransfer?.setData("text/plain", payload);
+                    if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+                  }}
+                  onDragOver={handleCardDragOver}
+                  onDragLeave={handleCardDragLeave}
+                  onDrop={handleCardDrop}
+                  className={`group relative rounded-lg py-1 px-2.5 bg-[#1C2224] transition-all hover:border-gray-500 hover:shadow-sm cursor-grab active:cursor-grabbing flex items-center justify-between gap-2 h-9 min-h-[36px] max-h-[38px] ${
+                    dragOverTaskId === task.id
+                      ? "ring-2 ring-emerald-400 border-emerald-400 shadow-md"
+                      : isTracking
+                        ? "border-2 border-dashed border-amber-500/60"
+                        : "border border-[#2A3235]"
+                  }`}
+                  onClick={(e) => {
+                    if (
+                      (e.target as HTMLElement).tagName === "BUTTON" ||
+                      (e.target as HTMLElement).closest("button")
+                    )
+                      return;
+                    onSelectTask(task);
+                  }}
+                >
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCompleteTask(task.id);
+                      }}
+                      title="Mark complete"
+                      className="p-0.5 rounded text-gray-400 hover:text-emerald-400 transition-colors shrink-0"
+                    >
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2.5"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </button>
+                    <div
+                      className={`w-2 h-2 rounded-full shrink-0 ${
+                        task.priority === "today"
+                          ? "bg-rose-500"
+                          : task.priority === "week"
+                            ? "bg-amber-500"
+                            : task.priority === "month"
+                              ? "bg-sky-500"
+                              : task.priority === "quarter"
+                                ? "bg-indigo-500"
+                                : "bg-stone-500"
+                      }`}
+                      title={`Priority: ${task.priority}`}
+                    />
+                    <span
+                      className="text-xs font-medium text-gray-100 truncate"
+                      title={task.title}
+                    >
+                      {task.title}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 text-[10px]">
+                    {task.repeat_rule !== "none" && (
+                      <span
+                        className="text-emerald-400"
+                        title={`Repeats ${task.repeat_rule}`}
+                      >
+                        ↻
+                      </span>
+                    )}
+                    {task.due_date && (
+                      <span className="text-rose-400 font-medium">
+                        ⚑ {task.due_date.slice(5)}
+                      </span>
+                    )}
+                  </div>
+                </article>
+              );
+            }
+
+            // Compact Density View (Default, UI-005)
+            return (
+              <article
+                key={task.id}
+                data-testid="task-card"
+                data-task-id={task.id}
+                draggable={true}
+                onDragStart={(e) => {
+                  const payload = JSON.stringify({
+                    taskId: task.id,
+                    sourceStatus: task.status,
+                    sourceProjectId: task.project_id,
+                  });
+                  e.dataTransfer?.setData("application/kaj-task", payload);
+                  e.dataTransfer?.setData("text/plain", payload);
+                  if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+                }}
+                onDragOver={handleCardDragOver}
+                onDragLeave={handleCardDragLeave}
+                onDrop={handleCardDrop}
+                className={`group relative rounded-xl p-2.5 bg-[#1C2224] transition-all hover:border-gray-500 hover:shadow-md cursor-grab active:cursor-grabbing ${
+                  dragOverTaskId === task.id
+                    ? "ring-2 ring-emerald-400 border-emerald-400 shadow-md"
+                    : isTracking
+                      ? "border-2 border-dashed border-amber-500/60 shadow-amber-950/20"
+                      : "border border-[#2A3235]"
+                }`}
+                onClick={(e) => {
+                  if (
+                    (e.target as HTMLElement).tagName === "BUTTON" ||
+                    (e.target as HTMLElement).closest("button")
+                  )
+                    return;
+                  onSelectTask(task);
+                }}
+              >
+                <div className="flex items-center justify-between gap-1 mb-1.5">
+                  <span
+                    className={`text-[9px] font-bold px-1.5 py-0.2 rounded border uppercase tracking-wider ${priStyle.badge}`}
+                  >
+                    {priStyle.label}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {task.repeat_rule !== "none" && (
+                      <span
+                        title={`Recurring: ${task.repeat_rule}`}
+                        className="text-[10px] px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                      >
+                        ↻
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCompleteTask(task.id);
+                      }}
+                      title="Mark complete"
+                      className="p-0.5 rounded text-gray-400 hover:text-emerald-400 hover:bg-[#121718] transition-colors"
+                    >
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2.5"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <h4
+                  className="text-xs font-semibold text-gray-100 truncate mb-1 leading-snug"
+                  title={task.title}
+                >
+                  {task.title}
+                </h4>
+
+                <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-gray-400">
+                  {task.action_date && (
+                    <span className="flex items-center gap-0.5 text-emerald-400 font-medium">
+                      <span>▶</span> {task.action_date}
+                    </span>
+                  )}
+                  {task.due_date && (
+                    <span className="flex items-center gap-0.5 text-rose-400 font-medium">
+                      <span>⚑</span> {task.due_date}
+                    </span>
+                  )}
+                  {isTracking && task.waiting_on && (
+                    <span
+                      data-testid="blocker-badge"
+                      className="truncate max-w-[140px] px-1 py-0.2 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[9px]"
+                    >
+                      {task.waiting_on}
+                    </span>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="w-full flex-1 flex flex-col p-6 space-y-6">
       {/* 6-Column Sticky Column Headers */}
-      <div className="w-full grid grid-cols-6 gap-4 sticky top-[65px] z-20 bg-[#0E1111]/95 py-2 backdrop-blur-sm border-b border-[#2A3235]">
-        {COLUMNS.map((col) => (
+      <div className="w-full grid grid-cols-6 gap-3.5 sticky top-[65px] z-20 bg-[#0E1111]/95 py-2 backdrop-blur-sm border-b border-[#2A3235]">
+        {/* Triage */}
+        <div
+          data-testid="column-header"
+          className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#121718] border border-[#2A3235]"
+        >
+          <span className="text-xs font-semibold text-gray-200">Triage</span>
+        </div>
+
+        {/* Todo */}
+        <div
+          data-testid="column-header"
+          className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#121718] border border-[#2A3235]"
+        >
+          <span className="text-xs font-semibold text-gray-200">Todo</span>
+        </div>
+
+        {/* Consolidated In-Progress Header Track (spanning 3 columns) */}
+        <div className="col-span-3 grid grid-cols-3 gap-2 px-2 py-1 rounded-xl bg-[#12191A] border border-emerald-500/30 shadow-sm">
           <div
-            key={col.key}
             data-testid="column-header"
-            className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#121718] border border-[#2A3235]"
+            className="flex items-center justify-between px-2.5 py-1 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-300"
           >
-            <div className="flex items-center gap-1.5">
-              {col.group && (
-                <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400/80">
-                  {col.group}:
-                </span>
-              )}
-              <span className="text-xs font-semibold text-gray-200">
-                {col.label}
-              </span>
-            </div>
-            {col.key === "tracking" && (
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-            )}
+            <span className="text-xs font-bold flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+              ⚡ Today
+            </span>
           </div>
-        ))}
+          <div
+            data-testid="column-header"
+            className="flex items-center justify-between px-2.5 py-1 rounded-lg bg-[#151D1F] border border-[#2A3235] text-gray-300"
+          >
+            <span className="text-xs font-semibold flex items-center gap-1.5">
+              📅 This Week
+            </span>
+          </div>
+          <div
+            data-testid="column-header"
+            className="flex items-center justify-between px-2.5 py-1 rounded-lg bg-[#151D1F] border border-[#2A3235] text-gray-300"
+          >
+            <span className="text-xs font-semibold flex items-center gap-1.5">
+              🗓 This Month
+            </span>
+          </div>
+        </div>
+
+        {/* Tracking */}
+        <div
+          data-testid="column-header"
+          className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#121718] border border-[#2A3235]"
+        >
+          <span className="text-xs font-semibold text-amber-300">Tracking</span>
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+        </div>
       </div>
 
       {/* Swimlane Pods */}
@@ -158,358 +558,77 @@ export function SwimlaneBoard({
                 </div>
               </div>
 
-              {/* Pod Content: 6-Track Grid */}
+              {/* Pod Content: 4 Outer Blocks (Triage [1fr], Todo [1fr], In Progress Chamber [3fr], Tracking [1fr]) */}
               {!isCollapsed && (
                 <div
                   data-testid="swimlane-content"
                   className="w-full grid grid-cols-6 gap-3.5 p-4 min-h-[140px] bg-[#0E1111]/40"
                 >
-                  {COLUMNS.map((col) => {
-                    const colTasks = lane.tasks.filter(
-                      (t) => t.status === col.key,
-                    );
-                    const cellKey = `${podId}-${col.key}`;
-                    const isDragOver = dragOverKey === cellKey;
+                  {/* Col 1: Triage */}
+                  {renderCol(lane, "triage", "Triage")}
 
+                  {/* Col 2: Todo */}
+                  {renderCol(lane, "todo", "Todo")}
+
+                  {/* Cols 3, 4, 5: The Consolidated In Progress Chamber (Option 2 Hero Chamber) */}
+                  {(() => {
+                    const inProgressTasks = lane.tasks.filter(
+                      (t) =>
+                        t.status === "in_progress_today" ||
+                        t.status === "in_progress_week" ||
+                        t.status === "in_progress_month",
+                    );
                     return (
                       <div
-                        key={col.key}
-                        data-col={col.key}
-                        data-swimlane={podId}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          if (e.dataTransfer)
-                            e.dataTransfer.dropEffect = "move";
-                          if (dragOverKey !== cellKey) setDragOverKey(cellKey);
-                        }}
-                        onDragLeave={() => {
-                          if (dragOverKey === cellKey) setDragOverKey(null);
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          setDragOverKey(null);
-                          setDragOverTaskId(null);
-                          const raw =
-                            e.dataTransfer?.getData("application/kaj-task") ||
-                            e.dataTransfer?.getData("text/plain");
-                          if (!raw) return;
-                          try {
-                            const data = JSON.parse(raw);
-                            if (data.taskId) {
-                              const targetProjectId = lane.project?.id || null;
-                              if (onMoveTask) {
-                                onMoveTask(
-                                  data.taskId,
-                                  col.key,
-                                  targetProjectId,
-                                );
-                              } else {
-                                onUpdateTaskStatus(data.taskId, col.key);
-                              }
-                              const currentIds = colTasks
-                                .map((t) => t.id)
-                                .filter((id) => id !== data.taskId);
-                              currentIds.push(data.taskId);
-                              if (onReorderTasks) {
-                                onReorderTasks(currentIds);
-                              }
-                            }
-                          } catch (err) {
-                            console.error("Error handling drop on board:", err);
-                          }
-                        }}
-                        className={`flex flex-col space-y-2 rounded-xl p-2 min-h-[110px] transition-all ${
-                          isDragOver
-                            ? "bg-emerald-500/10 ring-2 ring-emerald-500/50 border border-emerald-500/40 shadow-inner"
-                            : "bg-[#121718]/40 border border-[#2A3235]/40"
-                        }`}
+                        data-testid="in-progress-chamber"
+                        className="col-span-3 flex flex-col rounded-2xl bg-[#12191A] border-2 border-emerald-500/40 shadow-xl shadow-emerald-950/30 ring-1 ring-emerald-500/20 overflow-hidden"
                       >
-                        {colTasks.map((task) => {
-                          const isTracking = task.status === "tracking";
-                          const priStyle =
-                            PRIORITY_STYLES[task.priority] ||
-                            PRIORITY_STYLES.week;
-
-                          const handleCardDragOver = (e: DragEvent) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (e.dataTransfer)
-                              e.dataTransfer.dropEffect = "move";
-                            if (dragOverTaskId !== task.id)
-                              setDragOverTaskId(task.id);
-                          };
-
-                          const handleCardDragLeave = (e: DragEvent) => {
-                            e.stopPropagation();
-                            if (dragOverTaskId === task.id)
-                              setDragOverTaskId(null);
-                          };
-
-                          const handleCardDrop = (e: DragEvent) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setDragOverTaskId(null);
-                            setDragOverKey(null);
-                            const raw =
-                              e.dataTransfer?.getData("application/kaj-task") ||
-                              e.dataTransfer?.getData("text/plain");
-                            if (!raw) return;
-                            try {
-                              const data = JSON.parse(raw);
-                              const draggedId = data.taskId;
-                              if (!draggedId || draggedId === task.id) return;
-
-                              const targetProjectId = lane.project?.id || null;
-                              if (
-                                data.sourceStatus !== col.key ||
-                                data.sourceProjectId !== targetProjectId
-                              ) {
-                                if (onMoveTask)
-                                  onMoveTask(
-                                    draggedId,
-                                    col.key,
-                                    targetProjectId,
-                                  );
-                                else onUpdateTaskStatus(draggedId, col.key);
-                              }
-
-                              const currentIds = colTasks
-                                .map((t) => t.id)
-                                .filter((id) => id !== draggedId);
-                              const targetIdx = currentIds.indexOf(task.id);
-                              currentIds.splice(targetIdx, 0, draggedId);
-                              if (onReorderTasks) {
-                                onReorderTasks(currentIds);
-                              }
-                            } catch (err) {
-                              console.error("Error reordering task:", err);
-                            }
-                          };
-
-                          // Minimal Density View (UI-005)
-                          if (density === "minimal") {
-                            return (
-                              <article
-                                key={task.id}
-                                data-testid="task-card"
-                                data-task-id={task.id}
-                                draggable={true}
-                                onDragStart={(e) => {
-                                  const payload = JSON.stringify({
-                                    taskId: task.id,
-                                    sourceStatus: task.status,
-                                    sourceProjectId: task.project_id,
-                                  });
-                                  e.dataTransfer?.setData(
-                                    "application/kaj-task",
-                                    payload,
-                                  );
-                                  e.dataTransfer?.setData(
-                                    "text/plain",
-                                    payload,
-                                  );
-                                  if (e.dataTransfer)
-                                    e.dataTransfer.effectAllowed = "move";
-                                }}
-                                onDragOver={handleCardDragOver}
-                                onDragLeave={handleCardDragLeave}
-                                onDrop={handleCardDrop}
-                                className={`group relative rounded-lg py-1 px-2.5 bg-[#1C2224] transition-all hover:border-gray-500 hover:shadow-sm cursor-grab active:cursor-grabbing flex items-center justify-between gap-2 h-9 min-h-[36px] max-h-[38px] ${
-                                  dragOverTaskId === task.id
-                                    ? "ring-2 ring-emerald-400 border-emerald-400 shadow-md"
-                                    : isTracking
-                                      ? "border-2 border-dashed border-amber-500/60"
-                                      : "border border-[#2A3235]"
-                                }`}
-                                onClick={(e) => {
-                                  if (
-                                    (e.target as HTMLElement).tagName ===
-                                      "BUTTON" ||
-                                    (e.target as HTMLElement).closest("button")
-                                  )
-                                    return;
-                                  onSelectTask(task);
-                                }}
-                              >
-                                <div className="flex items-center gap-2 min-w-0 flex-1">
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onCompleteTask(task.id);
-                                    }}
-                                    title="Mark complete"
-                                    className="p-0.5 rounded text-gray-400 hover:text-emerald-400 transition-colors shrink-0"
-                                  >
-                                    <svg
-                                      className="w-3.5 h-3.5"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      stroke="currentColor"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2.5"
-                                        d="M5 13l4 4L19 7"
-                                      />
-                                    </svg>
-                                  </button>
-                                  <div
-                                    className={`w-2 h-2 rounded-full shrink-0 ${
-                                      task.priority === "today"
-                                        ? "bg-rose-500"
-                                        : task.priority === "week"
-                                          ? "bg-amber-500"
-                                          : task.priority === "month"
-                                            ? "bg-sky-500"
-                                            : task.priority === "quarter"
-                                              ? "bg-indigo-500"
-                                              : "bg-stone-500"
-                                    }`}
-                                    title={`Priority: ${task.priority}`}
-                                  />
-                                  <span
-                                    className="text-xs font-medium text-gray-100 truncate"
-                                    title={task.title}
-                                  >
-                                    {task.title}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-1.5 shrink-0 text-[10px]">
-                                  {task.repeat_rule !== "none" && (
-                                    <span
-                                      className="text-emerald-400"
-                                      title={`Repeats ${task.repeat_rule}`}
-                                    >
-                                      ↻
-                                    </span>
-                                  )}
-                                  {task.due_date && (
-                                    <span className="text-rose-400 font-medium">
-                                      ⚑ {task.due_date.slice(5)}
-                                    </span>
-                                  )}
-                                </div>
-                              </article>
-                            );
-                          }
-
-                          // Compact Density View (Default, UI-005)
-                          return (
-                            <article
-                              key={task.id}
-                              data-testid="task-card"
-                              data-task-id={task.id}
-                              draggable={true}
-                              onDragStart={(e) => {
-                                const payload = JSON.stringify({
-                                  taskId: task.id,
-                                  sourceStatus: task.status,
-                                  sourceProjectId: task.project_id,
-                                });
-                                e.dataTransfer?.setData(
-                                  "application/kaj-task",
-                                  payload,
-                                );
-                                e.dataTransfer?.setData("text/plain", payload);
-                                if (e.dataTransfer)
-                                  e.dataTransfer.effectAllowed = "move";
-                              }}
-                              onDragOver={handleCardDragOver}
-                              onDragLeave={handleCardDragLeave}
-                              onDrop={handleCardDrop}
-                              className={`group relative rounded-xl p-2.5 bg-[#1C2224] transition-all hover:border-gray-500 hover:shadow-md cursor-grab active:cursor-grabbing ${
-                                dragOverTaskId === task.id
-                                  ? "ring-2 ring-emerald-400 border-emerald-400 shadow-md"
-                                  : isTracking
-                                    ? "border-2 border-dashed border-amber-500/60 shadow-amber-950/20"
-                                    : "border border-[#2A3235]"
-                              }`}
-                              onClick={(e) => {
-                                if (
-                                  (e.target as HTMLElement).tagName ===
-                                    "BUTTON" ||
-                                  (e.target as HTMLElement).closest("button")
-                                )
-                                  return;
-                                onSelectTask(task);
-                              }}
+                        {/* Chamber Header Bar */}
+                        <div className="px-3.5 py-2 bg-gradient-to-r from-emerald-950/40 via-[#172224] to-emerald-950/30 border-b border-emerald-500/30 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span
+                              data-testid="in-progress-badge"
+                              className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500 text-slate-950 uppercase tracking-wider"
                             >
-                              <div className="flex items-center justify-between gap-1 mb-1.5">
-                                <span
-                                  className={`text-[9px] font-bold px-1.5 py-0.2 rounded border uppercase tracking-wider ${priStyle.badge}`}
-                                >
-                                  {priStyle.label}
-                                </span>
-                                <div className="flex items-center gap-1">
-                                  {task.repeat_rule !== "none" && (
-                                    <span
-                                      title={`Recurring: ${task.repeat_rule}`}
-                                      className="text-[10px] px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                                    >
-                                      ↻
-                                    </span>
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onCompleteTask(task.id);
-                                    }}
-                                    title="Mark complete"
-                                    className="p-0.5 rounded text-gray-400 hover:text-emerald-400 hover:bg-[#121718] transition-colors"
-                                  >
-                                    <svg
-                                      className="w-3.5 h-3.5"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      stroke="currentColor"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2.5"
-                                        d="M5 13l4 4L19 7"
-                                      />
-                                    </svg>
-                                  </button>
-                                </div>
-                              </div>
+                              In Progress
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-mono text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-500/40">
+                            {inProgressTasks.length}{" "}
+                            {inProgressTasks.length === 1 ? "task" : "tasks"}
+                          </span>
+                        </div>
 
-                              <h4
-                                className="text-xs font-semibold text-gray-100 truncate mb-1 leading-snug"
-                                title={task.title}
-                              >
-                                {task.title}
-                              </h4>
-
-                              <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-gray-400">
-                                {task.action_date && (
-                                  <span className="flex items-center gap-0.5 text-emerald-400 font-medium">
-                                    <span>▶</span> {task.action_date}
-                                  </span>
-                                )}
-                                {task.due_date && (
-                                  <span className="flex items-center gap-0.5 text-rose-400 font-medium">
-                                    <span>⚑</span> {task.due_date}
-                                  </span>
-                                )}
-                                {isTracking && task.waiting_on && (
-                                  <span
-                                    data-testid="blocker-badge"
-                                    className="truncate max-w-[140px] px-1 py-0.2 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[9px]"
-                                  >
-                                    {task.waiting_on}
-                                  </span>
-                                )}
-                              </div>
-                            </article>
-                          );
-                        })}
+                        {/* 3 Internal Sub-Columns */}
+                        <div className="grid grid-cols-3 p-2 gap-2 flex-1">
+                          {renderCol(
+                            lane,
+                            "in_progress_today",
+                            "Today",
+                            "⚡",
+                            true,
+                          )}
+                          {renderCol(
+                            lane,
+                            "in_progress_week",
+                            "This Week",
+                            "📅",
+                            false,
+                          )}
+                          {renderCol(
+                            lane,
+                            "in_progress_month",
+                            "This Month",
+                            "🗓",
+                            false,
+                          )}
+                        </div>
                       </div>
                     );
-                  })}
+                  })()}
+
+                  {/* Col 6: Tracking */}
+                  {renderCol(lane, "tracking", "Tracking")}
                 </div>
               )}
             </section>

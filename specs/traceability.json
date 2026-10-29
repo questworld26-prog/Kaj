@@ -1,8 +1,8 @@
 {
-  "last_audited_at": "2026-10-29T03:18:43.243117+00:00",
+  "last_audited_at": "2026-10-29T03:31:30.723994+00:00",
   "total_requirements": 16,
-  "total_criteria": 65,
-  "verified_criteria_count": 65,
+  "total_criteria": 66,
+  "verified_criteria_count": 66,
   "status": "PASS",
   "requirements": [
     {
@@ -268,23 +268,25 @@
     },
     {
       "requirement_id": "UI-001",
-      "title": "Bento Full-Width 6-Column Layout and Swimlane Pods",
+      "title": "Bento Full-Width Layout, Swimlane Pods, and Consolidated In-Progress Chamber",
       "spec_file": "specs/ui.md",
-      "sha256": "4c81188043f6d0c67e315921d2dc53b60d432a92a28062ee2219557848d11dea",
-      "verified_sha256": "4c81188043f6d0c67e315921d2dc53b60d432a92a28062ee2219557848d11dea",
+      "sha256": "a38ae8e7112aa1a7fbba67235a55e20ce34f7d33bada3a425d152e8c1d08b8d7",
+      "verified_sha256": "a38ae8e7112aa1a7fbba67235a55e20ce34f7d33bada3a425d152e8c1d08b8d7",
       "acceptance_criteria": [
         "AC-UI-001.1",
         "AC-UI-001.2",
         "AC-UI-001.3",
         "AC-UI-001.4",
-        "AC-UI-001.5"
+        "AC-UI-001.5",
+        "AC-UI-001.6"
       ],
       "verified_criteria": [
         "AC-UI-001.1",
         "AC-UI-001.2",
         "AC-UI-001.3",
         "AC-UI-001.4",
-        "AC-UI-001.5"
+        "AC-UI-001.5",
+        "AC-UI-001.6"
       ],
       "implementation_files": [
         "src/client/App.tsx",
