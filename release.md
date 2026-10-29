@@ -11,9 +11,21 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v1.1.0`: Intra-Column Reordering, Card Density Modes, In-Progress Hero Chamber & ADRs
+
+- **Status**: ✅ RELEASED
+- **Focus**: Adds intra-column drag-and-drop task reordering, streamlines card density display options into Compact and Minimum modes, introduces the consolidated In Progress Hero Chamber with horizon icons (Today ⚡, This Week 📅, This Month 🗓), formalizes the project's Architecture Decision Records (ADR.md), and eliminates distracting flashing indicators.
+- **Deliverables**:
+  - [x] **TASK-006**: Intra-column drag-and-drop task reordering and atomic SQLite reordering API (`POST /api/tasks/reorder`) broadcasting SSE `task:reordered`.
+  - [x] **UI-005**: Streamlined 2-mode card density display controls: **Compact** (~65px default, inline dates, hidden status dropdowns) and **Minimum** (~36px ultra-dense single-line row) persisted in `localStorage`.
+  - [x] **UI-001 / AC-UI-001.6**: Consolidated In Progress Hero Chamber spanning 3 columns with prominent `[IN PROGRESS]` badge, accented `⚡ Today` focus plate, and `📅 This Week` / `🗓 This Month` sub-columns.
+  - [x] **ADR Foundation**: Comprehensive `ADR.md` documenting 9 foundational architectural decisions, alternatives, and trade-offs.
+  - [x] **UI Polish**: Removal of pulsing green beacon next to Today for a clean, calm dashboard experience.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (66/66), 59 unit & integration tests + 18 Playwright E2E tests passing, clean working tree, version bumped to `1.1.0`.
+
 ### Release `v1.0.1`: Architectural Stability, Security & Recurrence Hardening
 
-- **Status**: 🚀 RELEASE CANDIDATE
+- **Status**: ✅ RELEASED
 - **Focus**: Resolves multi-request transport reuse crash in MCP HTTP daemon, patches CORS/CSRF vulnerabilities, enforces idempotent task completion and recurrence rollover on PATCH/status transitions, eliminates date/monthly recurrence drift, adds dynamic calendar date fetching on horizon navigation, upgrades muted text contrast to WCAG AA >= 4.5:1, and replaces blocking modal dialogs with non-blocking error notifications.
 - **Deliverables**:
   - [x] **C1 Fix**: Fresh `McpServer` instance per HTTP request on `POST /mcp` eliminating transport connection collisions.

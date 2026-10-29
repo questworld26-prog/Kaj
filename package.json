@@ -1,6 +1,6 @@
 {
   "name": "kaj",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Kaj (কাজ) — Low-footprint Kanban & Calendar task management app with Model Context Protocol (MCP) server daemon",
   "type": "module",
   "scripts": {
