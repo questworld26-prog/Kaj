@@ -187,10 +187,19 @@ export function createApp(options: AppOptions): Hono {
 
   // Health check
   app.get("/api/health", (c) => {
+    let appVersion = "2.0.0";
+    try {
+      const pkgPath = path.resolve("./package.json");
+      if (fs.existsSync(pkgPath)) {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+        if (pkg.version) appVersion = pkg.version;
+      }
+    } catch {}
+
     return c.json({
       status: "ok",
       service: "kaj",
-      version: "1.0.1",
+      version: appVersion,
       uptime: process.uptime(),
       memory_rss_mb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
       timestamp: new Date().toISOString(),
