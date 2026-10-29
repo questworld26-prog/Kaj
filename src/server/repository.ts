@@ -441,6 +441,33 @@ export class TaskRepository {
     return this.getTask(id);
   }
 
+  // [spec: TASK-006]
+  reorderTasks(taskIds: string[]): void {
+    if (taskIds.length === 0) return;
+    const placeholders = taskIds.map(() => "?").join(",");
+    const existingRows = this.db
+      .prepare(`SELECT id FROM tasks WHERE id IN (${placeholders})`)
+      .all(...taskIds) as { id: string }[];
+    if (existingRows.length !== taskIds.length) {
+      throw new Error("One or more task IDs are invalid");
+    }
+
+    const now = new Date().toISOString();
+    this.db.exec("BEGIN TRANSACTION;");
+    try {
+      const stmt = this.db.prepare(
+        "UPDATE tasks SET sort_order = ?, updated_at = ? WHERE id = ?",
+      );
+      for (let i = 0; i < taskIds.length; i++) {
+        stmt.run(i, now, taskIds[i]);
+      }
+      this.db.exec("COMMIT;");
+    } catch (err) {
+      this.db.exec("ROLLBACK;");
+      throw err;
+    }
+  }
+
   deleteTask(id: string, soft = true): boolean {
     if (soft) {
       const now = new Date().toISOString();

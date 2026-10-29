@@ -12,7 +12,7 @@ import type {
   TaskStatus,
 } from "../shared/types.js";
 import * as api from "./api.js";
-import { TopBar } from "./components/TopBar.js";
+import { TopBar, type CardDensity } from "./components/TopBar.js";
 import { SwimlaneBoard } from "./components/SwimlaneBoard.js";
 import { CalendarView } from "./components/CalendarView.js";
 import { TaskModal } from "./components/TaskModal.js";
@@ -28,6 +28,19 @@ function formatDateToYMD(d: Date): string {
 
 export function App() {
   const [currentView, setCurrentView] = useState<"board" | "calendar">("board");
+  const [cardDensity, setCardDensity] = useState<CardDensity>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("kaj_card_density") as CardDensity;
+      if (
+        stored === "compact" ||
+        stored === "minimal" ||
+        stored === "comfortable"
+      ) {
+        return stored;
+      }
+    }
+    return "comfortable";
+  });
   const [projects, setProjects] = useState<Project[]>([]);
   const [swimlanes, setSwimlanes] = useState<SwimlaneGroup[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -260,12 +273,47 @@ export function App() {
     }
   };
 
+  const handleDensityChange = (density: CardDensity) => {
+    setCardDensity(density);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("kaj_card_density", density);
+    }
+  };
+
+  // [spec: TASK-006]
+  // [spec: UI-005]
+  const handleReorderTasks = async (taskIds: string[]) => {
+    try {
+      setSwimlanes((prevLanes) => {
+        const orderMap = new Map(taskIds.map((id, idx) => [id, idx]));
+        return prevLanes.map((lane) => ({
+          ...lane,
+          tasks: [...lane.tasks].sort((a, b) => {
+            const ordA = orderMap.has(a.id)
+              ? orderMap.get(a.id)!
+              : (a.sort_order ?? 9999);
+            const ordB = orderMap.has(b.id)
+              ? orderMap.get(b.id)!
+              : (b.sort_order ?? 9999);
+            return ordA - ordB;
+          }),
+        }));
+      });
+      await api.reorderTasks(taskIds);
+      await loadData();
+    } catch (err) {
+      setErrorMessage((err as Error).message);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#0E1111] text-[#F3F4F6]">
       {/* Top Floating Command Bar */}
       <TopBar
         currentView={currentView}
         onViewChange={setCurrentView}
+        density={cardDensity}
+        onDensityChange={handleDensityChange}
         onAddTask={handleOpenAddTask}
         onOpenArchive={() => setIsArchiveOpen(true)}
         onOpenReorder={() => setIsReorderOpen(true)}
@@ -278,10 +326,12 @@ export function App() {
         {currentView === "board" ? (
           <SwimlaneBoard
             swimlanes={swimlanes}
+            density={cardDensity}
             onSelectTask={handleSelectTask}
             onUpdateTaskStatus={handleUpdateTaskStatus}
             onMoveTask={handleMoveTask}
             onCompleteTask={handleCompleteTask}
+            onReorderTasks={handleReorderTasks}
           />
         ) : (
           <CalendarView

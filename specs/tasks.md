@@ -63,3 +63,15 @@ Acceptance Criteria:
 - AC-TASK-005.3: Tasks without an action date shall be returned in the unscheduled tasks query for drag-to-schedule assignment.
 - AC-TASK-005.4: For recurring active tasks, the system shall project virtual preview occurrences onto dates within the queried calendar window without generating duplicate database rows.
 
+---
+
+## TASK-006: Task Intra-Column Ordering and Reordering
+
+The system shall maintain and update the relative vertical display order of tasks within each status column and project swimlane.
+
+Acceptance Criteria:
+- AC-TASK-006.1: The task repository and API shall expose a reorder endpoint (`POST /api/tasks/reorder`) that accepts an array of task IDs and updates their `sort_order` sequentially.
+- AC-TASK-006.2: The board query and swimlane groupers shall return active tasks within each column ordered by `sort_order` ascending.
+- AC-TASK-006.3: If invalid or non-existent task IDs are provided to the reorder endpoint, the request shall be rejected with status 400.
+
+

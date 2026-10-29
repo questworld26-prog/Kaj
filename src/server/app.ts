@@ -210,6 +210,22 @@ export function createApp(options: AppOptions): Hono {
     }
   });
 
+  // [spec: TASK-006]
+  app.post("/api/tasks/reorder", async (c) => {
+    try {
+      const body = await c.req.json();
+      const { task_ids } = body as { task_ids: string[] };
+      if (!Array.isArray(task_ids)) {
+        return c.json({ error: "task_ids must be an array" }, 400);
+      }
+      taskRepo.reorderTasks(task_ids);
+      eventBus.broadcast({ type: "task", action: "reordered", id: "all" });
+      return c.json({ success: true });
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 400);
+    }
+  });
+
   app.get("/api/tasks/:id", (c) => {
     const id = c.req.param("id");
     const task = taskRepo.getTask(id);

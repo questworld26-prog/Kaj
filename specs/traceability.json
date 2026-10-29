@@ -1,8 +1,8 @@
 {
-  "last_audited_at": "2026-10-28T09:40:17.586668+00:00",
-  "total_requirements": 14,
-  "total_criteria": 57,
-  "verified_criteria_count": 57,
+  "last_audited_at": "2026-10-29T02:56:19.849218+00:00",
+  "total_requirements": 16,
+  "total_criteria": 65,
+  "verified_criteria_count": 65,
   "status": "PASS",
   "requirements": [
     {
@@ -222,8 +222,8 @@
       "requirement_id": "TASK-005",
       "title": "Dual Date Scheduling and Calendar Projection",
       "spec_file": "specs/tasks.md",
-      "sha256": "2a89c0774f6e59b04f4cb47732fcf2fe95046cbfcc3fc39c5b46d4ce9c8fda7a",
-      "verified_sha256": "2a89c0774f6e59b04f4cb47732fcf2fe95046cbfcc3fc39c5b46d4ce9c8fda7a",
+      "sha256": "3c9a266febe432bd95b08f4010531e3b9e95b9c0ab36974a891481a09ae40513",
+      "verified_sha256": "3c9a266febe432bd95b08f4010531e3b9e95b9c0ab36974a891481a09ae40513",
       "acceptance_criteria": [
         "AC-TASK-005.1",
         "AC-TASK-005.2",
@@ -237,6 +237,31 @@
         "AC-TASK-005.4"
       ],
       "implementation_files": [
+        "src/server/repository.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "TASK-006",
+      "title": "Task Intra-Column Ordering and Reordering",
+      "spec_file": "specs/tasks.md",
+      "sha256": "d6665aa838239e893e72316c79ba191f606f81fabd93ff2340e31bd6a400b9b5",
+      "verified_sha256": "d6665aa838239e893e72316c79ba191f606f81fabd93ff2340e31bd6a400b9b5",
+      "acceptance_criteria": [
+        "AC-TASK-006.1",
+        "AC-TASK-006.2",
+        "AC-TASK-006.3"
+      ],
+      "verified_criteria": [
+        "AC-TASK-006.1",
+        "AC-TASK-006.2",
+        "AC-TASK-006.3"
+      ],
+      "implementation_files": [
+        "src/client/App.tsx",
+        "src/client/api.ts",
+        "src/client/components/SwimlaneBoard.tsx",
+        "src/server/app.ts",
         "src/server/repository.ts"
       ],
       "status": "VERIFIED"
@@ -324,8 +349,8 @@
       "requirement_id": "UI-004",
       "title": "Light-Dismiss Task Editor Dialog and Completed Archive Drawer",
       "spec_file": "specs/ui.md",
-      "sha256": "384e18bb59b900826b3a4eaacab301b7a3b24676489a5d7a168dd0c603b1b9fd",
-      "verified_sha256": "384e18bb59b900826b3a4eaacab301b7a3b24676489a5d7a168dd0c603b1b9fd",
+      "sha256": "b582cc5da12362fea0ac74cf66dc304d75da312fc147a5bd0ba0b829128704f9",
+      "verified_sha256": "b582cc5da12362fea0ac74cf66dc304d75da312fc147a5bd0ba0b829128704f9",
       "acceptance_criteria": [
         "AC-UI-004.1",
         "AC-UI-004.2",
@@ -340,6 +365,33 @@
         "src/client/App.tsx",
         "src/client/components/CompletedDrawer.tsx",
         "src/client/components/TaskModal.tsx"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "UI-005",
+      "title": "Card Density Display Options and Intra-Column Drag Reordering",
+      "spec_file": "specs/ui.md",
+      "sha256": "5da9d1b4a6b4d250d32b1e58082e9cdc61022a2cc2bcde82743143b84361efd9",
+      "verified_sha256": "5da9d1b4a6b4d250d32b1e58082e9cdc61022a2cc2bcde82743143b84361efd9",
+      "acceptance_criteria": [
+        "AC-UI-005.1",
+        "AC-UI-005.2",
+        "AC-UI-005.3",
+        "AC-UI-005.4",
+        "AC-UI-005.5"
+      ],
+      "verified_criteria": [
+        "AC-UI-005.1",
+        "AC-UI-005.2",
+        "AC-UI-005.3",
+        "AC-UI-005.4",
+        "AC-UI-005.5"
+      ],
+      "implementation_files": [
+        "src/client/App.tsx",
+        "src/client/components/SwimlaneBoard.tsx",
+        "src/client/components/TopBar.tsx"
       ],
       "status": "VERIFIED"
     }

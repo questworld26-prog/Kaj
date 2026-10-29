@@ -311,4 +311,55 @@ describe("Tasks Core Workflow & Attributes (TASK-001, TASK-002, TASK-003)", () =
       }),
     ).toThrow();
   });
+
+  // [verifies: TASK-006/AC-TASK-006.1]
+  it("reorderTasks updates sort_order sequentially for given task IDs", () => {
+    const t1 = taskRepo.createTask({ title: "Task 1", status: "todo" });
+    const t2 = taskRepo.createTask({ title: "Task 2", status: "todo" });
+    const t3 = taskRepo.createTask({ title: "Task 3", status: "todo" });
+
+    // Reverse order: t3, t1, t2
+    taskRepo.reorderTasks([t3.id, t1.id, t2.id]);
+
+    const updatedT3 = taskRepo.getTask(t3.id);
+    const updatedT1 = taskRepo.getTask(t1.id);
+    const updatedT2 = taskRepo.getTask(t2.id);
+
+    expect(updatedT3?.sort_order).toBe(0);
+    expect(updatedT1?.sort_order).toBe(1);
+    expect(updatedT2?.sort_order).toBe(2);
+  });
+
+  // [verifies: TASK-006/AC-TASK-006.2]
+  it("getBoardSwimlanes returns active tasks sorted by sort_order ascending", () => {
+    const p = projectRepo.createProject({ name: "Alpha Project" });
+    const t1 = taskRepo.createTask({
+      title: "First Added",
+      project_id: p.id,
+      status: "todo",
+    });
+    const t2 = taskRepo.createTask({
+      title: "Second Added",
+      project_id: p.id,
+      status: "todo",
+    });
+
+    // Explicitly reorder so t2 comes before t1
+    taskRepo.reorderTasks([t2.id, t1.id]);
+
+    const swimlanes = taskRepo.getBoardSwimlanes(projectRepo);
+    const alphaLane = swimlanes.find((l) => l.swimlane_id === p.id);
+    expect(alphaLane).toBeDefined();
+
+    const todoTasks = alphaLane!.tasks.filter((t) => t.status === "todo");
+    expect(todoTasks[0].id).toBe(t2.id);
+    expect(todoTasks[1].id).toBe(t1.id);
+  });
+
+  // [verifies: TASK-006/AC-TASK-006.3]
+  it("reorderTasks throws error when given invalid or non-existent task IDs", () => {
+    expect(() =>
+      taskRepo.reorderTasks(["tsk_non_existent_1", "tsk_non_existent_2"]),
+    ).toThrow();
+  });
 });

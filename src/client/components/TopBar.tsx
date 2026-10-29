@@ -1,10 +1,15 @@
 // [spec: UI-001]
 // [spec: UI-002]
+// [spec: UI-005]
 import { h } from "preact";
+
+export type CardDensity = "comfortable" | "compact" | "minimal";
 
 interface TopBarProps {
   currentView: "board" | "calendar";
   onViewChange: (view: "board" | "calendar") => void;
+  density: CardDensity;
+  onDensityChange: (density: CardDensity) => void;
   onAddTask: () => void;
   onOpenArchive: () => void;
   onOpenReorder: () => void;
@@ -15,6 +20,8 @@ interface TopBarProps {
 export function TopBar({
   currentView,
   onViewChange,
+  density,
+  onDensityChange,
   onAddTask,
   onOpenArchive,
   onOpenReorder,
@@ -102,6 +109,61 @@ export function TopBar({
             Calendar
           </button>
         </nav>
+
+        {/* Card Density Selector (UI-005) */}
+        {currentView === "board" && (
+          <div
+            data-testid="density-selector"
+            className="flex items-center gap-1 bg-[#0E1111] p-1 rounded-xl border border-[#2A3235]"
+            title="Card Density Display Option"
+          >
+            <span className="text-[10px] uppercase font-bold text-gray-400 px-2 tracking-wider">
+              Density:
+            </span>
+            <button
+              type="button"
+              data-testid="density-comfortable-btn"
+              data-active={density === "comfortable" ? "true" : "false"}
+              onClick={() => onDensityChange("comfortable")}
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                density === "comfortable"
+                  ? "bg-[#1C2224] text-emerald-400 border border-[#2A3235] shadow-sm"
+                  : "text-gray-400 hover:text-gray-200"
+              }`}
+              title="Comfortable (Full card details)"
+            >
+              Comfortable
+            </button>
+            <button
+              type="button"
+              data-testid="density-compact-btn"
+              data-active={density === "compact" ? "true" : "false"}
+              onClick={() => onDensityChange("compact")}
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                density === "compact"
+                  ? "bg-[#1C2224] text-emerald-400 border border-[#2A3235] shadow-sm"
+                  : "text-gray-400 hover:text-gray-200"
+              }`}
+              title="Compact (Streamlined height, inline dates)"
+            >
+              Compact
+            </button>
+            <button
+              type="button"
+              data-testid="density-minimal-btn"
+              data-active={density === "minimal" ? "true" : "false"}
+              onClick={() => onDensityChange("minimal")}
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                density === "minimal"
+                  ? "bg-[#1C2224] text-emerald-400 border border-[#2A3235] shadow-sm"
+                  : "text-gray-400 hover:text-gray-200"
+              }`}
+              title="Minimal (Ultra-dense single-line strips)"
+            >
+              Minimal
+            </button>
+          </div>
+        )}
 
         {/* Action Controls */}
         <div className="flex items-center gap-2.5">

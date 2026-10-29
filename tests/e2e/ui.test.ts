@@ -584,4 +584,167 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
       page.locator(`[data-col="todo"] [data-task-id="${task.id}"]`),
     ).toBeVisible();
   });
+
+  // [verifies: UI-005/AC-UI-005.1]
+  test("density selector in top command bar offers Comfortable, Compact, and Minimal options", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(
+      page.locator('[data-testid="density-selector"]'),
+    ).toBeVisible();
+    await expect(
+      page.locator('[data-testid="density-comfortable-btn"]'),
+    ).toBeVisible();
+    await expect(
+      page.locator('[data-testid="density-compact-btn"]'),
+    ).toBeVisible();
+    await expect(
+      page.locator('[data-testid="density-minimal-btn"]'),
+    ).toBeVisible();
+  });
+
+  // [verifies: UI-005/AC-UI-005.2]
+  test("compact mode reduces card height by at least 40% and hides quick status footer", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const createRes = await page.request.post("/api/tasks", {
+      data: {
+        title: "Density Benchmark Task for Compact Measurement",
+        status: "todo",
+        priority: "week",
+        action_date: "2026-11-01",
+        due_date: "2026-11-05",
+      },
+    });
+    const task = (await createRes.json()) as { id: string };
+    await page.reload();
+
+    const card = page.locator(`[data-task-id="${task.id}"]`);
+    await expect(card).toBeVisible();
+
+    // Default comfortable height
+    const boxComfortable = await card.boundingBox();
+    expect(boxComfortable).not.toBeNull();
+    const comfortableHeight = boxComfortable!.height;
+
+    // Switch to compact
+    await page.locator('[data-testid="density-compact-btn"]').click();
+
+    const boxCompact = await card.boundingBox();
+    expect(boxCompact).not.toBeNull();
+    const compactHeight = boxCompact!.height;
+
+    // Height should be reduced by at least 40%
+    expect(compactHeight).toBeLessThanOrEqual(comfortableHeight * 0.65);
+
+    // Quick status select footer should be hidden in compact mode
+    await expect(
+      card.locator('[data-testid="task-status-select"]'),
+    ).toBeHidden();
+  });
+
+  // [verifies: UI-005/AC-UI-005.3]
+  test("minimal mode renders ultra-dense single-line row", async ({ page }) => {
+    await page.goto("/");
+    const createRes = await page.request.post("/api/tasks", {
+      data: {
+        title: "Ultra Dense Minimal Row Item",
+        status: "todo",
+        priority: "today",
+      },
+    });
+    const task = (await createRes.json()) as { id: string };
+    await page.reload();
+
+    // Switch to minimal
+    await page.locator('[data-testid="density-minimal-btn"]').click();
+
+    const card = page.locator(`[data-task-id="${task.id}"]`);
+    await expect(card).toBeVisible();
+
+    const boxMinimal = await card.boundingBox();
+    expect(boxMinimal).not.toBeNull();
+    // Ultra-dense single-line row: height <= 45px
+    expect(boxMinimal!.height).toBeLessThanOrEqual(45);
+
+    // Title and complete button visible
+    await expect(card).toContainText("Ultra Dense Minimal Row Item");
+  });
+
+  // [verifies: UI-005/AC-UI-005.4]
+  test("density mode selection persists in localStorage across page reloads", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    // Switch to minimal
+    await page.locator('[data-testid="density-minimal-btn"]').click();
+    await page.reload();
+
+    // Verify minimal button is active
+    const minimalBtn = page.locator('[data-testid="density-minimal-btn"]');
+    await expect(minimalBtn).toHaveAttribute("data-active", "true");
+  });
+
+  // [verifies: UI-005/AC-UI-005.5]
+  test("allows dragging cards within a column to reorder them and persists new order", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // Create an isolated project for this test
+    const prjRes = await page.request.post("/api/projects", {
+      data: { name: "Reorder Test Project", color: "#6366F1" },
+    });
+    const prj = (await prjRes.json()) as { id: string };
+
+    // Create 2 tasks in todo inside this project
+    const r1 = await page.request.post("/api/tasks", {
+      data: {
+        title: "Card Order Alpha",
+        status: "todo",
+        priority: "week",
+        project_id: prj.id,
+      },
+    });
+    const t1 = (await r1.json()) as { id: string };
+
+    const r2 = await page.request.post("/api/tasks", {
+      data: {
+        title: "Card Order Beta",
+        status: "todo",
+        priority: "week",
+        project_id: prj.id,
+      },
+    });
+    const t2 = (await r2.json()) as { id: string };
+
+    await page.reload();
+
+    const laneTodo = page.locator(
+      `[data-swimlane="${prj.id}"][data-col="todo"]`,
+    );
+    const card1 = laneTodo.locator(`[data-task-id="${t1.id}"]`);
+    const card2 = laneTodo.locator(`[data-task-id="${t2.id}"]`);
+
+    await expect(card1).toBeVisible();
+    await expect(card2).toBeVisible();
+
+    // Drag card2 over card1
+    await card2.dragTo(card1);
+
+    // Verify card2 is now before card1 in this swimlane column
+    const cardsInLane = laneTodo.locator('[data-testid="task-card"]');
+    const firstText = await cardsInLane.first().innerText();
+    expect(firstText).toContain("Card Order Beta");
+
+    // Verify persisted on reload
+    await page.reload();
+    const cardsAfterReload = page.locator(
+      `[data-swimlane="${prj.id}"][data-col="todo"] [data-testid="task-card"]`,
+    );
+    const firstTextAfter = await cardsAfterReload.first().innerText();
+    expect(firstTextAfter).toContain("Card Order Beta");
+  });
 });

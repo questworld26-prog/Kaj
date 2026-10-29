@@ -168,4 +168,55 @@ describe("Hono REST API & SSE Live Sync", () => {
     const body = (await res.json()) as { error: string };
     expect(body.error).toBe("Endpoint not found");
   });
+
+  // [verifies: TASK-006/AC-TASK-006.1]
+  it("reorders tasks via POST /api/tasks/reorder successfully", async () => {
+    const c1 = await app.request("/api/tasks", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ title: "Task A", status: "todo" }),
+    });
+    const t1 = (await c1.json()) as { id: string };
+
+    const c2 = await app.request("/api/tasks", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ title: "Task B", status: "todo" }),
+    });
+    const t2 = (await c2.json()) as { id: string };
+
+    const reorderRes = await app.request("/api/tasks/reorder", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ task_ids: [t2.id, t1.id] }),
+    });
+    expect(reorderRes.status).toBe(200);
+    const body = (await reorderRes.json()) as { success: boolean };
+    expect(body.success).toBe(true);
+
+    const getT2 = await app.request(`/api/tasks/${t2.id}`);
+    const updatedT2 = (await getT2.json()) as { sort_order: number };
+    expect(updatedT2.sort_order).toBe(0);
+
+    const getT1 = await app.request(`/api/tasks/${t1.id}`);
+    const updatedT1 = (await getT1.json()) as { sort_order: number };
+    expect(updatedT1.sort_order).toBe(1);
+  });
+
+  // [verifies: TASK-006/AC-TASK-006.3]
+  it("rejects POST /api/tasks/reorder with 400 when task_ids is missing or invalid", async () => {
+    const badRes1 = await app.request("/api/tasks/reorder", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ task_ids: "not-an-array" }),
+    });
+    expect(badRes1.status).toBe(400);
+
+    const badRes2 = await app.request("/api/tasks/reorder", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ task_ids: ["tsk_does_not_exist"] }),
+    });
+    expect(badRes2.status).toBe(400);
+  });
 });

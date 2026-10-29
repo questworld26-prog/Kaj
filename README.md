@@ -38,6 +38,12 @@ Kaj combines a **6-column Kanban board with project swimlanes**, **dual-date sch
 - **Low Memory Footprint (~75–95 MB RSS under traffic)**:
   - Built on Node 26 using built-in `node:sqlite` in WAL mode (`PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;`).
   - Pre-compiled static single-page app (Preact + Vite + CSS design tokens) served directly by `Hono` — zero bundled Chromium or Electron bloat in the background daemon.
+- **Card Density Modes & Intra-Column Reordering**:
+  - Reorder tasks inside any column via drag-and-drop with instant persistence and visual drop targets.
+  - Three card density modes to control board vertical height (persisted in `localStorage`):
+    - **Comfortable** (~140px): Rich cards with full badges, 2-line titles, dates, blockers, and quick status dropdown.
+    - **Compact** (~65px, >50% height reduction): Streamlined card with priority chip, single-line title, dates, and blocker indicator (hides quick status footer).
+    - **Minimal** (~36px, >75% height reduction): Ultra-dense single-line row with priority dot indicator, title, and compact due badge — keeps massive backlogs visible on a single screen without vertical scrolling.
 - **Bento × Chronos Dark-Mode UI**:
   - Full-width layout without left-sidebar clutter.
   - Chronos dark palette: Deep Graphite canvas (`#0E1111`), elevated pods (`#121718`), Emerald execution accents (`#10B981`), and warm Gold Tracking accents (`#EAB308`).
