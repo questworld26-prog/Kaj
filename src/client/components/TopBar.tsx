@@ -1,6 +1,7 @@
 // [spec: UI-001]
 // [spec: UI-002]
 // [spec: UI-005]
+// [spec: UI-006]
 import { h } from "preact";
 
 export type CardDensity = "compact" | "minimal";
@@ -29,8 +30,44 @@ export function TopBar({
   memoryMb,
 }: TopBarProps) {
   return (
-    <header className="sticky top-0 z-30 w-full bg-[#121718]/90 backdrop-blur-md border-b border-[#2A3235] px-6 py-3 transition-colors">
-      <div className="flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-30 w-full bg-[#121718]/90 backdrop-blur-md border-b border-[#2A3235] px-4 md:px-6 py-2.5 md:py-3 transition-colors">
+      {/* Mobile Top Bar (< md) */}
+      <div className="flex md:hidden items-center justify-between w-full">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm shadow-sm shadow-emerald-950">
+            ক
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-sm tracking-tight text-white">
+              Kaj
+            </span>
+            <span className="text-xs px-1.5 py-0.2 rounded bg-[#1C2224] text-emerald-400 font-medium border border-[#2A3235]">
+              কাজ
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onDensityChange(density === "compact" ? "minimal" : "compact")}
+            className="px-2 py-1 rounded-lg text-xs font-medium bg-[#1C2224] text-gray-300 border border-[#2A3235] hover:border-gray-500 transition-colors"
+            title="Toggle Density"
+          >
+            {density === "compact" ? "Compact" : "Minimal"}
+          </button>
+          <button
+            type="button"
+            onClick={onAddTask}
+            className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold bg-[#10B981] hover:bg-[#34D399] text-[#0E1111] shadow-md shadow-emerald-950 transition-colors"
+          >
+            + Task
+          </button>
+        </div>
+      </div>
+
+      {/* Desktop Top Bar (>= md) */}
+      <div className="hidden md:flex items-center justify-between gap-4">
         {/* Brand and Logo */}
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg shadow-sm shadow-emerald-950">

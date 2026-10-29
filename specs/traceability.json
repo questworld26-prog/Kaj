@@ -1,8 +1,8 @@
 {
-  "last_audited_at": "2026-10-29T03:48:56.678634+00:00",
-  "total_requirements": 16,
-  "total_criteria": 67,
-  "verified_criteria_count": 67,
+  "last_audited_at": "2026-10-29T04:16:08.278707+00:00",
+  "total_requirements": 17,
+  "total_criteria": 72,
+  "verified_criteria_count": 72,
   "status": "PASS",
   "requirements": [
     {
@@ -395,6 +395,33 @@
       "implementation_files": [
         "src/client/App.tsx",
         "src/client/components/SwimlaneBoard.tsx",
+        "src/client/components/TopBar.tsx"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "UI-006",
+      "title": "Responsive Mobile Layout, Execution Cockpit, and Touch Action Sheets",
+      "spec_file": "specs/ui.md",
+      "sha256": "8c67e454332424fb04fa94ef07f4f4065b54c05bc9b2176eab2e6bd6896ce172",
+      "verified_sha256": "8c67e454332424fb04fa94ef07f4f4065b54c05bc9b2176eab2e6bd6896ce172",
+      "acceptance_criteria": [
+        "AC-UI-006.1",
+        "AC-UI-006.2",
+        "AC-UI-006.3",
+        "AC-UI-006.4",
+        "AC-UI-006.5"
+      ],
+      "verified_criteria": [
+        "AC-UI-006.1",
+        "AC-UI-006.2",
+        "AC-UI-006.3",
+        "AC-UI-006.4",
+        "AC-UI-006.5"
+      ],
+      "implementation_files": [
+        "src/client/App.tsx",
+        "src/client/components/MobileViews.tsx",
         "src/client/components/TopBar.tsx"
       ],
       "status": "VERIFIED"

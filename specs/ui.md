@@ -64,4 +64,16 @@ Acceptance Criteria:
 - AC-UI-005.4: The selected density display mode shall persist across browser page reloads in local storage.
 - AC-UI-005.5: Dragging a task card over another task within the same column cell shall reorder the tasks and persist the updated order immediately.
 
+## UI-006: Responsive Mobile Layout, Execution Cockpit, and Touch Action Sheets
+
+When the viewport width is below 768px, the system shall provide a mobile-optimized execution interface featuring an Execution Cockpit, Project Swimlane Pods, a 7-Day Calendar, Triage Queue, and one-thumb bottom action sheets, while preserving the full desktop layout on wider viewports.
+
+Acceptance Criteria:
+- AC-UI-006.1: When the viewport width is below 768px, the system shall display a sticky bottom navigation dock featuring Cockpit, Pods, Calendar, and Triage tabs, while maintaining the desktop layout on viewports 768px and wider.
+- AC-UI-006.2: On the Cockpit tab, the system shall display a pinned Today Focus Plate with active today tasks, a dedicated Tracking container, and collapsible Week and Month horizons.
+- AC-UI-006.3: On the Pods tab, the system shall display collapsible project swimlane pods with project filter chips, reorder buttons, and horizon sub-filters.
+- AC-UI-006.4: On the Calendar tab, the system shall display a 7-day date strip, a daily agenda list, and an unscheduled task drawer with one-tap action and due scheduling buttons.
+- AC-UI-006.5: When a task status pill is tapped on mobile, the system shall open a touch-friendly bottom action sheet to move the task between columns, change project pod, or complete the task.
+
+
 

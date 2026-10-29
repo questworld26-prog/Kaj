@@ -2,6 +2,7 @@
 // [spec: UI-002]
 // [spec: UI-003]
 // [spec: UI-004]
+// [spec: UI-006]
 import { h } from "preact";
 import { useState, useEffect, useCallback } from "preact/hooks";
 import type {
@@ -15,6 +16,7 @@ import * as api from "./api.js";
 import { TopBar, type CardDensity } from "./components/TopBar.js";
 import { SwimlaneBoard } from "./components/SwimlaneBoard.js";
 import { CalendarView } from "./components/CalendarView.js";
+import { MobileViews, type MobileTab } from "./components/MobileViews.js";
 import { TaskModal } from "./components/TaskModal.js";
 import { CompletedDrawer } from "./components/CompletedDrawer.js";
 import { ProjectReorderModal } from "./components/ProjectReorderModal.js";
@@ -28,6 +30,7 @@ function formatDateToYMD(d: Date): string {
 
 export function App() {
   const [currentView, setCurrentView] = useState<"board" | "calendar">("board");
+  const [mobileTab, setMobileTab] = useState<MobileTab>("cockpit");
   const [cardDensity, setCardDensity] = useState<CardDensity>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("kaj_card_density") as CardDensity;
@@ -319,26 +322,50 @@ export function App() {
 
       {/* Main View Area */}
       <main className="flex-1 flex flex-col w-full">
-        {currentView === "board" ? (
-          <SwimlaneBoard
-            swimlanes={swimlanes}
-            density={cardDensity}
-            onSelectTask={handleSelectTask}
-            onUpdateTaskStatus={handleUpdateTaskStatus}
-            onMoveTask={handleMoveTask}
-            onCompleteTask={handleCompleteTask}
-            onReorderTasks={handleReorderTasks}
-          />
-        ) : (
-          <CalendarView
-            tasks={tasks}
-            calendarEvents={calendarEvents}
-            unscheduledTasks={unscheduledTasks}
-            onSelectTask={handleSelectTask}
-            onScheduleTask={handleScheduleTask}
-            onRangeChange={handleCalendarRangeChange}
-          />
-        )}
+        {/* Mobile Layout (< md) */}
+        <MobileViews
+          currentTab={mobileTab}
+          onTabChange={setMobileTab}
+          swimlanes={swimlanes}
+          tasks={tasks}
+          projects={projects}
+          completedTasks={completedTasks}
+          unscheduledTasks={unscheduledTasks}
+          calendarEvents={calendarEvents}
+          density={cardDensity}
+          onSelectTask={handleSelectTask}
+          onUpdateTaskStatus={handleUpdateTaskStatus}
+          onMoveTask={handleMoveTask}
+          onCompleteTask={handleCompleteTask}
+          onRestoreTask={handleRestoreTask}
+          onScheduleTask={handleScheduleTask}
+          onReorderProjects={handleReorderProjects}
+          onOpenReorderModal={() => setIsReorderOpen(true)}
+        />
+
+        {/* Desktop Layout (>= md) - 100% untouched */}
+        <div className="hidden md:flex flex-1 flex-col w-full">
+          {currentView === "board" ? (
+            <SwimlaneBoard
+              swimlanes={swimlanes}
+              density={cardDensity}
+              onSelectTask={handleSelectTask}
+              onUpdateTaskStatus={handleUpdateTaskStatus}
+              onMoveTask={handleMoveTask}
+              onCompleteTask={handleCompleteTask}
+              onReorderTasks={handleReorderTasks}
+            />
+          ) : (
+            <CalendarView
+              tasks={tasks}
+              calendarEvents={calendarEvents}
+              unscheduledTasks={unscheduledTasks}
+              onSelectTask={handleSelectTask}
+              onScheduleTask={handleScheduleTask}
+              onRangeChange={handleCalendarRangeChange}
+            />
+          )}
+        </div>
       </main>
 
       {/* Task Modal (Light-dismiss dialog) */}

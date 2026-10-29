@@ -208,15 +208,15 @@ export function SwimlaneBoard({
                   if (onMoveTask)
                     onMoveTask(draggedId, colKey, targetProjectId);
                   else onUpdateTaskStatus(draggedId, colKey);
-                }
-
-                const currentIds = colTasks
-                  .map((t) => t.id)
-                  .filter((id) => id !== draggedId);
-                const targetIdx = currentIds.indexOf(task.id);
-                currentIds.splice(targetIdx, 0, draggedId);
-                if (onReorderTasks) {
-                  onReorderTasks(currentIds);
+                } else {
+                  const currentIds = colTasks
+                    .map((t) => t.id)
+                    .filter((id) => id !== draggedId);
+                  const targetIdx = currentIds.indexOf(task.id);
+                  currentIds.splice(targetIdx, 0, draggedId);
+                  if (onReorderTasks) {
+                    onReorderTasks(currentIds);
+                  }
                 }
               } catch (err) {
                 console.error("Error reordering task:", err);
