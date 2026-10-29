@@ -11,6 +11,19 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v2.0.0`: Responsive Mobile Execution Cockpit & Touch Action Sheets
+
+- **Status**: ✅ RELEASED
+- **Focus**: Introduces full responsive mobile layout architecture on viewports < 768px featuring a 4-tab execution dock, pinned Today Focus Plate, dedicated Tracking container, collapsible project swimlanes with quick filters, 7-day mobile calendar with one-tap scheduling, and a thumb-friendly bottom action sheet for instant status changes and project reassignment—while keeping the desktop 6-column Bento layout 100% untouched.
+- **Deliverables**:
+  - [x] **UI-006 / AC-UI-006.1**: Viewport-adaptive navigation rendering a sticky 4-tab bottom dock (⚡ Cockpit, 📋 Pods, 📅 7-Day, 📥 Triage) on mobile (< 768px) and preserving desktop 6-column Kanban and top nav on viewports >= 768px.
+  - [x] **UI-006 / AC-UI-006.2**: Mobile Execution Cockpit featuring an accented Today Focus Plate for `in_progress_today` tasks, dashed Tracking container for blocked items, and collapsible This Week and This Month horizon accordions.
+  - [x] **UI-006 / AC-UI-006.3**: Mobile Pods tab with horizontal project filter chips, collapsible project swimlanes with task counts, pod reordering (`↑`/`↓`), and intra-pod status filters.
+  - [x] **UI-006 / AC-UI-006.4**: Mobile 7-Day Calendar view with horizontal date strip, daily agenda with Action (`▶`) and Due (`⚑`) indicators, and slide-up Unscheduled Tasks drawer with one-tap scheduling buttons (`+ ▶ Action`, `+ ⚑ Due`).
+  - [x] **UI-006 / AC-UI-006.5**: One-thumb bottom action sheet replacing desktop drag-and-drop on mobile, enabling moving tasks across columns (`triage`, `todo`, `in_progress_today`, `in_progress_week`, `in_progress_month`, `tracking`), reassigning project pods, or completing tasks.
+  - [x] **Desktop Preservation**: Strict CSS scoping ensuring zero layout or behavioral regressions on desktop/tablet viewports >= 768px.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (72/72), 35 unit & integration tests + 23 Playwright E2E tests passing, clean working tree, version bumped to `2.0.0`.
+
 ### Release `v1.1.0`: Intra-Column Reordering, Card Density Modes, In-Progress Hero Chamber & ADRs
 
 - **Status**: ✅ RELEASED
