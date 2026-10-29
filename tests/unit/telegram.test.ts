@@ -282,6 +282,8 @@ describe("Telegram Bot Integration (TG-001)", () => {
     const markupStr = JSON.stringify(sentMessages[0].replyMarkup);
     expect(markupStr).toContain(`done:${t1.id}`);
     expect(markupStr).toContain(`status:${t1.id}:in_progress_today`);
+    expect(markupStr).toContain(`status:${t1.id}:in_progress_week`);
+    expect(markupStr).toContain(`status:${t1.id}:in_progress_month`);
   });
 
   // [verifies: TG-001/AC-TG-001.6]

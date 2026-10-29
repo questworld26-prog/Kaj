@@ -352,6 +352,7 @@ function buildTaskActionKeyboard(taskId: string): TelegramInlineKeyboardMarkup {
         { text: "✓ Done", callback_data: `done:${taskId}` },
         { text: "⚡ Today", callback_data: `status:${taskId}:in_progress_today` },
         { text: "📅 Week", callback_data: `status:${taskId}:in_progress_week` },
+        { text: "🗓 Month", callback_data: `status:${taskId}:in_progress_month` },
         { text: "Todo", callback_data: `status:${taskId}:todo` },
       ],
     ],

@@ -1,5 +1,5 @@
 {
-  "last_audited_at": "2026-10-29T08:40:51.591945+00:00",
+  "last_audited_at": "2026-10-29T08:43:48.190150+00:00",
   "total_requirements": 20,
   "total_criteria": 86,
   "verified_criteria_count": 86,
@@ -272,8 +272,8 @@
       "requirement_id": "TG-001",
       "title": "Configurable Deterministic Telegram Bot for Task Creation, Search, and Quick Actions",
       "spec_file": "specs/telegram.md",
-      "sha256": "353ef77cde58c66573705d7ab6ae57f609ff8b258570cbc728db8d755ef15f79",
-      "verified_sha256": "353ef77cde58c66573705d7ab6ae57f609ff8b258570cbc728db8d755ef15f79",
+      "sha256": "c904a1cb14de6f3f85149e282c17140c19dbc8b67f24320951119e8314a5179d",
+      "verified_sha256": "c904a1cb14de6f3f85149e282c17140c19dbc8b67f24320951119e8314a5179d",
       "acceptance_criteria": [
         "AC-TG-001.1",
         "AC-TG-001.2",

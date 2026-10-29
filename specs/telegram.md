@@ -13,6 +13,6 @@ Acceptance Criteria:
 - AC-TG-001.2: When `enabled` is `false` or `bot_token` is not configured, the Telegram polling service shall remain inactive with zero network requests.
 - AC-TG-001.3: When `allowed_user_ids` is non-empty, the bot shall reject messages and callback queries from any Telegram user ID not in `allowed_user_ids`.
 - AC-TG-001.4: Sending `/add <text>` or a plain text message shall parse deterministic shorthand tokens (`#ProjectName`, `!today`/`!week`/`!month`/`!todo`/`!triage`/`!track`, `@today`/`@tomorrow`/`@YYYY-MM-DD`, `due:today`/`due:tomorrow`/`due:YYYY-MM-DD`, `wait:<note>`) to create a task in SQLite and broadcast an SSE event.
-- AC-TG-001.5: Sending `/search <query>`, `/s <query>`, or `? <query>` shall search active tasks across `title` and `details` (case-insensitive) and reply with matching tasks accompanied by inline keyboard action buttons (`✓ Done`, `⚡ Today`, `📅 Week`, `Todo`).
+- AC-TG-001.5: Sending `/search <query>`, `/s <query>`, or `? <query>` shall search active tasks across `title` and `details` (case-insensitive) and reply with matching tasks accompanied by inline keyboard action buttons (`✓ Done`, `⚡ Today`, `📅 Week`, `🗓 Month`, `Todo`).
 - AC-TG-001.6: Sending `/today` shall list all active tasks in `in_progress_today`, and tapping an inline keyboard callback button (`done:<id>`, `status:<id>:<status>`) shall immediately update the task in SQLite and broadcast an SSE event.
 
