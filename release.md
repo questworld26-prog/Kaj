@@ -13,7 +13,7 @@
 
 ### Release `v2.2.0`: Triage Recurrence Rollover, Period Indicator Tags, Quick Click-to-Create & Emoji Prefix Picker
 
-- **Status**: 🚀 RELEASE CANDIDATE
+- **Status**: ✅ RELEASED
 - **Focus**: Routes spawned instances of completed recurring tasks into `triage` with automatic execution period tags `[x]` (ISO week number for weekly, month for monthly, year for yearly), adds click-to-create affordances directly from Kanban column cells and Calendar day dates, and introduces a built-in emoji prefix picker popover for task titles.
 - **Deliverables**:
   - [x] **TASK-004**: Spawns next instance of completed recurring tasks directly into `triage` with execution period indicator `[x]` appended (`[W45]`/`[45]` for weekly, `[11]` for monthly, `[2027]` for yearly), inheriting base title while cleanly stripping prior tags.
