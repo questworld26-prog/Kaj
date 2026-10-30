@@ -368,7 +368,7 @@ export function createMcpServer(options: McpServerOptions): McpServer {
     "complete_task",
     {
       description:
-        "Mark a task as done. If recurring (weekly, monthly, yearly), automatically spawns the next occurrence in todo.",
+        "Mark a task as done. If recurring (weekly, monthly, yearly), automatically spawns the next occurrence in triage.",
       inputSchema: {
         id: z.string().describe("Task ID to mark complete"),
       },

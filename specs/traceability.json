@@ -1,8 +1,8 @@
 {
-  "last_audited_at": "2026-10-29T08:44:09.982298+00:00",
+  "last_audited_at": "2026-10-30T06:19:34.449220+00:00",
   "total_requirements": 20,
-  "total_criteria": 86,
-  "verified_criteria_count": 86,
+  "total_criteria": 89,
+  "verified_criteria_count": 89,
   "status": "PASS",
   "requirements": [
     {
@@ -199,8 +199,8 @@
       "requirement_id": "TASK-004",
       "title": "Spawn-on-Complete Recurrence Rollover",
       "spec_file": "specs/tasks.md",
-      "sha256": "8ad7ca88cddba23eb1620e4db307f94da8d6ba6f6f9ddb87016e8a38482a36df",
-      "verified_sha256": "8ad7ca88cddba23eb1620e4db307f94da8d6ba6f6f9ddb87016e8a38482a36df",
+      "sha256": "6750c53fee8d4300061317768bc2afb7bf5a9a0ea2903af064c1be930b7b6a17",
+      "verified_sha256": "6750c53fee8d4300061317768bc2afb7bf5a9a0ea2903af064c1be930b7b6a17",
       "acceptance_criteria": [
         "AC-TASK-004.1",
         "AC-TASK-004.2",
@@ -301,15 +301,16 @@
       "requirement_id": "UI-001",
       "title": "Bento Full-Width Layout, Swimlane Pods, and Consolidated In-Progress Chamber",
       "spec_file": "specs/ui.md",
-      "sha256": "e23927ea94c6014a38649fa86066f3ef00a734c32963b95ca98443773c4aef03",
-      "verified_sha256": "e23927ea94c6014a38649fa86066f3ef00a734c32963b95ca98443773c4aef03",
+      "sha256": "a085c92789d414eb825ddaba9fd4e576519da57a11b7e0020842d0e957e2c4ba",
+      "verified_sha256": "a085c92789d414eb825ddaba9fd4e576519da57a11b7e0020842d0e957e2c4ba",
       "acceptance_criteria": [
         "AC-UI-001.1",
         "AC-UI-001.2",
         "AC-UI-001.3",
         "AC-UI-001.4",
         "AC-UI-001.5",
-        "AC-UI-001.6"
+        "AC-UI-001.6",
+        "AC-UI-001.7"
       ],
       "verified_criteria": [
         "AC-UI-001.1",
@@ -317,7 +318,8 @@
         "AC-UI-001.3",
         "AC-UI-001.4",
         "AC-UI-001.5",
-        "AC-UI-001.6"
+        "AC-UI-001.6",
+        "AC-UI-001.7"
       ],
       "implementation_files": [
         "src/client/App.tsx",
@@ -356,21 +358,23 @@
       "requirement_id": "UI-003",
       "title": "Interactive Calendar with Dual-Date Badges and Scheduling Sidebar",
       "spec_file": "specs/ui.md",
-      "sha256": "021d69ebb7516d7836043d303d0e624c6f6de7599abc50549fd678bd86b77294",
-      "verified_sha256": "021d69ebb7516d7836043d303d0e624c6f6de7599abc50549fd678bd86b77294",
+      "sha256": "6c956354ba5e9979bcbab92addc781436129b30dbb3a621292baeab5ce6ff015",
+      "verified_sha256": "6c956354ba5e9979bcbab92addc781436129b30dbb3a621292baeab5ce6ff015",
       "acceptance_criteria": [
         "AC-UI-003.1",
         "AC-UI-003.2",
         "AC-UI-003.3",
         "AC-UI-003.4",
-        "AC-UI-003.5"
+        "AC-UI-003.5",
+        "AC-UI-003.6"
       ],
       "verified_criteria": [
         "AC-UI-003.1",
         "AC-UI-003.2",
         "AC-UI-003.3",
         "AC-UI-003.4",
-        "AC-UI-003.5"
+        "AC-UI-003.5",
+        "AC-UI-003.6"
       ],
       "implementation_files": [
         "src/client/App.tsx",
@@ -382,17 +386,19 @@
       "requirement_id": "UI-004",
       "title": "Light-Dismiss Task Editor Dialog and Completed Archive Drawer",
       "spec_file": "specs/ui.md",
-      "sha256": "b582cc5da12362fea0ac74cf66dc304d75da312fc147a5bd0ba0b829128704f9",
-      "verified_sha256": "b582cc5da12362fea0ac74cf66dc304d75da312fc147a5bd0ba0b829128704f9",
+      "sha256": "ff172f84d32c8fdcbae724f0382083ab0543cf57a65e61eafd3d2816020d040c",
+      "verified_sha256": "ff172f84d32c8fdcbae724f0382083ab0543cf57a65e61eafd3d2816020d040c",
       "acceptance_criteria": [
         "AC-UI-004.1",
         "AC-UI-004.2",
-        "AC-UI-004.3"
+        "AC-UI-004.3",
+        "AC-UI-004.4"
       ],
       "verified_criteria": [
         "AC-UI-004.1",
         "AC-UI-004.2",
-        "AC-UI-004.3"
+        "AC-UI-004.3",
+        "AC-UI-004.4"
       ],
       "implementation_files": [
         "src/client/App.tsx",

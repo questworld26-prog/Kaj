@@ -39,6 +39,8 @@ interface MobileViewsProps {
   ) => void;
   onReorderProjects: (projectIds: string[]) => void;
   onOpenReorderModal: () => void;
+  onCreateTaskOnDate?: (dateStr: string) => void;
+  onCreateTaskInColumn?: (status: TaskStatus, projectId: string | null) => void;
 }
 
 function formatDateToYMD(d: Date): string {
@@ -99,6 +101,8 @@ export function MobileViews({
   onScheduleTask,
   onReorderProjects,
   onOpenReorderModal,
+  onCreateTaskOnDate,
+  onCreateTaskInColumn,
 }: MobileViewsProps) {
   // Action sheet state
   const [actionSheetTask, setActionSheetTask] = useState<Task | null>(null);
@@ -654,32 +658,50 @@ export function MobileViews({
                       </button>
 
                       {/* Reorder Buttons */}
-                      {lane.project && (
-                        <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1">
+                        {onCreateTaskInColumn && (
                           <button
                             type="button"
-                            data-testid="mobile-pod-move-up"
-                            aria-label="Move project pod up"
+                            data-testid="mobile-pod-add-task-btn"
+                            aria-label={`Add task to ${lane.project ? lane.project.name : "Unassigned"}`}
                             onClick={() =>
-                              handleMoveProject(lane.project!.id, "up")
+                              onCreateTaskInColumn(
+                                activeFilter === "all" ? "todo" : activeFilter,
+                                lane.project?.id || null,
+                              )
                             }
-                            className="px-1.5 py-0.5 rounded bg-[#1C2224] text-gray-400 hover:text-white border border-[#2A3235] text-xs"
+                            className="w-5 h-5 rounded flex items-center justify-center bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs font-bold"
                           >
-                            ↑
+                            +
                           </button>
-                          <button
-                            type="button"
-                            data-testid="mobile-pod-move-down"
-                            aria-label="Move project pod down"
-                            onClick={() =>
-                              handleMoveProject(lane.project!.id, "down")
-                            }
-                            className="px-1.5 py-0.5 rounded bg-[#1C2224] text-gray-400 hover:text-white border border-[#2A3235] text-xs"
-                          >
-                            ↓
-                          </button>
-                        </div>
-                      )}
+                        )}
+                        {lane.project && (
+                          <>
+                            <button
+                              type="button"
+                              data-testid="mobile-pod-move-up"
+                              aria-label="Move project pod up"
+                              onClick={() =>
+                                handleMoveProject(lane.project!.id, "up")
+                              }
+                              className="px-1.5 py-0.5 rounded bg-[#1C2224] text-gray-400 hover:text-white border border-[#2A3235] text-xs"
+                            >
+                              ↑
+                            </button>
+                            <button
+                              type="button"
+                              data-testid="mobile-pod-move-down"
+                              aria-label="Move project pod down"
+                              onClick={() =>
+                                handleMoveProject(lane.project!.id, "down")
+                              }
+                              className="px-1.5 py-0.5 rounded bg-[#1C2224] text-gray-400 hover:text-white border border-[#2A3235] text-xs"
+                            >
+                              ↓
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
 
                     {!isCollapsed && (
@@ -804,9 +826,22 @@ export function MobileViews({
               <span className="text-xs font-bold text-emerald-400">
                 Agenda for {selectedDateStr}
               </span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-[#1C2224] text-gray-300 border border-[#2A3235]">
-                {agendaTasks.length} tasks
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-[#1C2224] text-gray-300 border border-[#2A3235]">
+                  {agendaTasks.length} tasks
+                </span>
+                {onCreateTaskOnDate && (
+                  <button
+                    type="button"
+                    data-testid="mobile-add-task-on-date-btn"
+                    onClick={() => onCreateTaskOnDate(selectedDateStr)}
+                    className="p-1 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs font-bold"
+                    title={`Add task for ${selectedDateStr}`}
+                  >
+                    +
+                  </button>
+                )}
+              </div>
             </div>
 
             {agendaTasks.length === 0 ? (

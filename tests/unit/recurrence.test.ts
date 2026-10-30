@@ -19,14 +19,14 @@ describe("Spawn-on-Complete Recurrence Rollover (TASK-004)", () => {
   });
 
   // [verifies: TASK-004/AC-TASK-004.1]
-  it("weekly recurring task spawns next instance in todo with dates shifted forward by 7 days or to target day of week", () => {
+  it("weekly recurring task spawns next instance in triage with dates shifted forward and week number appended", () => {
     const p = projectRepo.createProject({ name: "Weekly Routines" });
     const weeklyTask = taskRepo.createTask({
       title: "Weekly Standup Notes",
       project_id: p.id,
       priority: "week",
       repeat_rule: "weekly",
-      action_date: "2026-10-28", // Wednesday (day 3)
+      action_date: "2026-10-28", // Wednesday (day 3, week 44)
       due_date: "2026-10-30", // Friday (day 5)
       status: "in_progress_today",
     });
@@ -36,11 +36,12 @@ describe("Spawn-on-Complete Recurrence Rollover (TASK-004)", () => {
     expect(result.spawned_task).not.toBeNull();
 
     const next = result.spawned_task!;
-    expect(next.status).toBe("todo");
-    expect(next.action_date).toBe("2026-11-04"); // +7 days
+    expect(next.status).toBe("triage");
+    expect(next.action_date).toBe("2026-11-04"); // +7 days (week 45)
     expect(next.due_date).toBe("2026-11-06"); // +7 days
     expect(next.repeat_rule).toBe("weekly");
     expect(next.parent_recurring_id).toBe(weeklyTask.id);
+    expect(next.title).toBe("Weekly Standup Notes [45]");
 
     // Weekly with custom repeat_day_of_week (e.g. 1 = Monday)
     const mondayTask = taskRepo.createTask({
@@ -51,14 +52,16 @@ describe("Spawn-on-Complete Recurrence Rollover (TASK-004)", () => {
       status: "todo",
     });
     const mondayRes = taskRepo.completeTask(mondayTask.id);
-    // Next Monday from Wed Oct 28 2026 is Nov 2 2026
+    // Next Monday from Wed Oct 28 2026 is Nov 2 2026 (week 45)
+    expect(mondayRes.spawned_task?.status).toBe("triage");
     expect(mondayRes.spawned_task?.action_date).toBe("2026-11-02");
     expect(mondayRes.spawned_task?.repeat_day_of_week).toBe(1);
+    expect(mondayRes.spawned_task?.title).toBe("Weekly Team Planning [45]");
   });
 
   // [verifies: TASK-004/AC-TASK-004.2]
-  it("monthly recurring task spawns next instance with 1 month advance, custom repeat_day_of_month, and end-of-month clamping", () => {
-    // Standard month advance: 2026-10-15 -> 2026-11-15
+  it("monthly recurring task spawns next instance in triage with 1 month advance and month appended", () => {
+    // Standard month advance: 2026-10-15 -> 2026-11-15 (Month 11)
     const monthlyStandard = taskRepo.createTask({
       title: "Monthly Review",
       repeat_rule: "monthly",
@@ -68,8 +71,10 @@ describe("Spawn-on-Complete Recurrence Rollover (TASK-004)", () => {
     });
 
     const resStandard = taskRepo.completeTask(monthlyStandard.id);
+    expect(resStandard.spawned_task?.status).toBe("triage");
     expect(resStandard.spawned_task?.action_date).toBe("2026-11-15");
     expect(resStandard.spawned_task?.due_date).toBe("2026-11-20");
+    expect(resStandard.spawned_task?.title).toBe("Monthly Review [11]");
 
     // Monthly with explicit repeat_day_of_month (e.g. 5th of each month)
     const monthly5th = taskRepo.createTask({
@@ -80,8 +85,10 @@ describe("Spawn-on-Complete Recurrence Rollover (TASK-004)", () => {
       status: "todo",
     });
     const res5th = taskRepo.completeTask(monthly5th.id);
+    expect(res5th.spawned_task?.status).toBe("triage");
     expect(res5th.spawned_task?.action_date).toBe("2026-11-05");
     expect(res5th.spawned_task?.repeat_day_of_month).toBe(5);
+    expect(res5th.spawned_task?.title).toBe("Pay Rent [11]");
 
     // End-of-month clamping: e.g. Jan 31 -> Feb 28 (or 29)
     const monthlyEOM = taskRepo.createTask({
@@ -93,12 +100,14 @@ describe("Spawn-on-Complete Recurrence Rollover (TASK-004)", () => {
     });
 
     const resEOM = taskRepo.completeTask(monthlyEOM.id);
+    expect(resEOM.spawned_task?.status).toBe("triage");
     expect(resEOM.spawned_task?.action_date).toBe("2026-02-28");
     expect(resEOM.spawned_task?.due_date).toBe("2026-02-28");
+    expect(resEOM.spawned_task?.title).toBe("End of Month Reconcile [2]");
   });
 
   // [verifies: TASK-004/AC-TASK-004.3]
-  it("yearly recurring task spawns next instance with dates shifted forward by 1 year or to custom repeat_day_of_year", () => {
+  it("yearly recurring task spawns next instance in triage with dates shifted forward by 1 year and year appended", () => {
     const yearlyTask = taskRepo.createTask({
       title: "Annual Property Insurance Review",
       repeat_rule: "yearly",
@@ -108,8 +117,10 @@ describe("Spawn-on-Complete Recurrence Rollover (TASK-004)", () => {
     });
 
     const res = taskRepo.completeTask(yearlyTask.id);
+    expect(res.spawned_task?.status).toBe("triage");
     expect(res.spawned_task?.action_date).toBe("2027-10-28");
     expect(res.spawned_task?.due_date).toBe("2027-11-15");
+    expect(res.spawned_task?.title).toBe("Annual Property Insurance Review [2027]");
 
     // Yearly with custom repeat_day_of_year (e.g. "04-15" for tax day)
     const taxTask = taskRepo.createTask({
@@ -120,15 +131,17 @@ describe("Spawn-on-Complete Recurrence Rollover (TASK-004)", () => {
       status: "todo",
     });
     const taxRes = taskRepo.completeTask(taxTask.id);
+    expect(taxRes.spawned_task?.status).toBe("triage");
     expect(taxRes.spawned_task?.action_date).toBe("2027-04-15");
     expect(taxRes.spawned_task?.repeat_day_of_year).toBe("04-15");
+    expect(taxRes.spawned_task?.title).toBe("File Taxes [2027]");
   });
 
   // [verifies: TASK-004/AC-TASK-004.4]
-  it("newly spawned recurring task inherits title, details, project, priority, and repeat rule", () => {
+  it("newly spawned recurring task inherits base title (replacing prior tag), details, project, priority, and repeat rule", () => {
     const p = projectRepo.createProject({ name: "Platform Ops" });
     const parent = taskRepo.createTask({
-      title: "Rotate API Keys",
+      title: "Rotate API Keys [10]",
       details: "Follow security checklist in docs",
       project_id: p.id,
       priority: "quarter",
@@ -140,7 +153,8 @@ describe("Spawn-on-Complete Recurrence Rollover (TASK-004)", () => {
 
     const res = taskRepo.completeTask(parent.id);
     const spawned = res.spawned_task!;
-    expect(spawned.title).toBe(parent.title);
+    expect(spawned.status).toBe("triage");
+    expect(spawned.title).toBe("Rotate API Keys [11]");
     expect(spawned.details).toBe(parent.details);
     expect(spawned.project_id).toBe(parent.project_id);
     expect(spawned.priority).toBe(parent.priority);

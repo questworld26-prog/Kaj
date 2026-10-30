@@ -266,6 +266,62 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     ).toBeVisible();
   });
 
+  // [verifies: UI-001/AC-UI-001.7]
+  test("clicking an add trigger or empty area in a Kanban column opens new task dialog with that status and project pre-populated", async ({
+    page,
+  }) => {
+    // 1. Create a project to test project pre-population
+    const projRes = await page.request.post("/api/projects", {
+      data: {
+        name: "Kanban Prepop Project",
+        color: "#10B981",
+      },
+    });
+    const proj = (await projRes.json()) as { id: string };
+
+    await page.goto("/");
+
+    // 2. Locate the column cell in the created project swimlane for "Todo"
+    const projPod = page.locator(`[data-testid="swimlane-pod-${proj.id}"]`);
+    await expect(projPod).toBeVisible();
+
+    const todoCol = projPod.locator('[data-col="todo"]');
+    await expect(todoCol).toBeVisible();
+
+    // Click on the column add button or cell header
+    const addBtn = todoCol.locator('[data-testid="col-add-task-btn"]');
+    await addBtn.click();
+
+    // Verify task modal opens
+    const modal = page.locator('[data-testid="task-modal"]');
+    await expect(modal).toBeVisible();
+
+    // Verify status is "todo"
+    const statusSelect = modal.locator('select[name="status"]');
+    await expect(statusSelect).toHaveValue("todo");
+
+    // Verify project is the created project ID
+    const projectSelect = modal.locator('select[name="project_id"]');
+    await expect(projectSelect).toHaveValue(proj.id);
+
+    // Close modal
+    await modal.locator('[data-testid="cancel-btn"]').click();
+    await expect(modal).not.toBeVisible();
+
+    // 3. Test In Progress: Today sub-column in Unassigned swimlane
+    const unassignedPod = page.locator('[data-testid="swimlane-pod-unassigned"]');
+    const todayCol = unassignedPod.locator('[data-col="in_progress_today"]');
+    const todayAddBtn = todayCol.locator('[data-testid="col-add-task-btn"]');
+    await todayAddBtn.click();
+
+    await expect(modal).toBeVisible();
+    await expect(statusSelect).toHaveValue("in_progress_today");
+    await expect(projectSelect).toHaveValue("");
+
+    await modal.locator('[data-testid="cancel-btn"]').click();
+    await expect(modal).not.toBeVisible();
+  });
+
   // [verifies: UI-002/AC-UI-002.1]
   test("enforces Chronos dark-mode surfaces #0E1111 canvas and #1C2224 cards", async ({
     page,
@@ -538,6 +594,52 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     expect(updated.action_date).toBe(date2);
   });
 
+  // [verifies: UI-003/AC-UI-003.6]
+  test("clicking a day or date in calendar mode opens new task dialog with that date as action date", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // Switch to Calendar view
+    await page.locator('[data-testid="nav-calendar-btn"]').click();
+    const calendarRoot = page.locator('[data-testid="calendar-view"]');
+    await expect(calendarRoot).toBeVisible();
+
+    // 1. Month View: click on a day cell
+    const targetCell = page.locator('[data-testid="calendar-day-cell"]').nth(15);
+    const targetDate = await targetCell.getAttribute("data-date");
+    expect(targetDate).toBeTruthy();
+
+    await targetCell.click();
+
+    // Verify task modal opens
+    const modal = page.locator('[data-testid="task-modal"]');
+    await expect(modal).toBeVisible();
+
+    // Verify action_date input is pre-populated with targetDate
+    const actionDateInput = page.locator('[data-testid="task-action-date-input"]');
+    await expect(actionDateInput).toHaveValue(targetDate!);
+
+    // Close modal
+    await page.locator('[data-testid="cancel-btn"]').click();
+    await expect(modal).not.toBeVisible();
+
+    // 2. Week View: switch to week view and click a day column
+    await page.locator('[data-testid="view-week-btn"]').click();
+    const weekCol = page.locator('[data-testid="week-day-column"]').nth(2);
+    const weekDate = await weekCol.getAttribute("data-date");
+    expect(weekDate).toBeTruthy();
+
+    await weekCol.click();
+
+    // Verify task modal opens with weekDate as action date
+    await expect(modal).toBeVisible();
+    await expect(actionDateInput).toHaveValue(weekDate!);
+
+    await page.locator('[data-testid="cancel-btn"]').click();
+    await expect(modal).not.toBeVisible();
+  });
+
   // [verifies: UI-004/AC-UI-004.1]
   // [verifies: UI-004/AC-UI-004.2]
   test("native task editor dialog exposes all inputs and supports light-dismiss", async ({
@@ -600,6 +702,59 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     await expect(dialog).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
+  });
+
+  // [verifies: UI-004/AC-UI-004.4]
+  test("task modal provides emoji prefix button and popover palette to prepend or update task title emoji", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // Open task dialog via Add Task button
+    await page.locator('[data-testid="add-task-btn"]').click();
+    const dialog = page.locator("dialog#task-dialog");
+    await expect(dialog).toBeVisible();
+
+    // Verify emoji prefix button exists
+    const emojiTrigger = dialog.locator('[data-testid="task-emoji-prefix-btn"]');
+    await expect(emojiTrigger).toBeVisible();
+
+    // Click emoji trigger to open popover palette
+    await emojiTrigger.click();
+
+    const emojiPalette = dialog.locator('[data-testid="task-emoji-palette"]');
+    await expect(emojiPalette).toBeVisible();
+
+    // Select a rocket emoji 🚀
+    const rocketOption = emojiPalette.locator('[data-emoji="🚀"]');
+    await expect(rocketOption).toBeVisible();
+    await rocketOption.click();
+
+    // Verify palette closed and title now has 🚀 prefix
+    await expect(emojiPalette).not.toBeVisible();
+    const titleInput = dialog.locator('input[name="title"]');
+    await expect(titleInput).toHaveValue(/🚀/);
+
+    // Type task name after emoji
+    await titleInput.fill("🚀 Launch Project Nova");
+
+    // Select a different emoji (e.g. ⚡) to verify replacement of prefix
+    await emojiTrigger.click();
+    await expect(emojiPalette).toBeVisible();
+    await emojiPalette.locator('[data-emoji="⚡"]').click();
+
+    await expect(titleInput).toHaveValue("⚡ Launch Project Nova");
+
+    // Submit task
+    await dialog.locator('button[type="submit"]').click();
+    await expect(dialog).toBeHidden();
+
+    // Verify task with emoji appears on the board
+    await expect(
+      page.locator('[data-testid="task-card"]').filter({
+        hasText: "⚡ Launch Project Nova",
+      }),
+    ).toBeVisible();
   });
 
   // [verifies: UI-004/AC-UI-004.3]

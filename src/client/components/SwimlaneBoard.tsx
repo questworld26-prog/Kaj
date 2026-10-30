@@ -20,6 +20,7 @@ interface SwimlaneBoardProps {
   onCompleteTask: (taskId: string) => void;
   onReorderTasks?: (taskIds: string[]) => void;
   onReorderProject?: (projectId: string, direction: "up" | "down") => void;
+  onCreateTaskInColumn?: (status: TaskStatus, projectId: string | null) => void;
 }
 
 const COLUMNS: { key: TaskStatus; label: string; group?: string }[] = [
@@ -62,6 +63,7 @@ export function SwimlaneBoard({
   onMoveTask,
   onCompleteTask,
   onReorderTasks,
+  onCreateTaskInColumn,
 }: SwimlaneBoardProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
@@ -90,6 +92,10 @@ export function SwimlaneBoard({
         data-col={colKey}
         data-swimlane={podId}
         {...(isTodayFocus ? { "data-testid": "today-focus-plate" } : {})}
+        onClick={(e) => {
+          if (e.defaultPrevented) return;
+          onCreateTaskInColumn?.(colKey, lane.project?.id || null);
+        }}
         onDragOver={(e) => {
           e.preventDefault();
           if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
@@ -155,17 +161,34 @@ export function SwimlaneBoard({
             {icon && <span>{icon}</span>}
             <span>{label}</span>
           </span>
-          <span
-            className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
-              isTodayFocus
-                ? "bg-emerald-500/30 text-emerald-200"
-                : isTracking
-                  ? "bg-[#1C2224] text-amber-400"
-                  : "bg-[#1C2224] text-gray-400"
-            }`}
-          >
-            {colTasks.length}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span
+              className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                isTodayFocus
+                  ? "bg-emerald-500/30 text-emerald-200"
+                  : isTracking
+                    ? "bg-[#1C2224] text-amber-400"
+                    : "bg-[#1C2224] text-gray-400"
+              }`}
+            >
+              {colTasks.length}
+            </span>
+            {onCreateTaskInColumn && (
+              <button
+                type="button"
+                data-testid="col-add-task-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCreateTaskInColumn(colKey, lane.project?.id || null);
+                }}
+                className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-emerald-400 hover:bg-[#1C2224] transition-colors text-xs font-bold"
+                title={`Add task to ${label} (${lane.project?.name || "Unassigned"})`}
+                aria-label={`Add task to ${label}`}
+              >
+                +
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Task Cards list */}
@@ -252,6 +275,7 @@ export function SwimlaneBoard({
                         : "border border-[#2A3235]"
                   }`}
                   onClick={(e) => {
+                    e.stopPropagation();
                     if (
                       (e.target as HTMLElement).tagName === "BUTTON" ||
                       (e.target as HTMLElement).closest("button")
@@ -353,6 +377,7 @@ export function SwimlaneBoard({
                       : "border border-[#2A3235]"
                 }`}
                 onClick={(e) => {
+                  e.stopPropagation();
                   if (
                     (e.target as HTMLElement).tagName === "BUTTON" ||
                     (e.target as HTMLElement).closest("button")

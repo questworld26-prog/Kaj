@@ -15,6 +15,7 @@ Acceptance Criteria:
 - AC-UI-001.4: Dragging or selecting a card shall allow moving tasks across columns and swimlanes.
 - AC-UI-001.5: The UI shall provide controls to reorder project swimlanes, persisting the new sort order and updating the board layout immediately.
 - AC-UI-001.6: The In Progress chamber within each swimlane shall render as a unified elevated box with an "In Progress" badge, housing 3 sub-columns with distinct horizon icons: Today (`⚡`) on an accented focus plate, This Week (`📅`), and This Month (`🗓`).
+- AC-UI-001.7: Clicking on an empty space or add action within a Kanban column cell or project swimlane shall open the task creation dialog with that column's status and the swimlane's project pre-populated.
 
 ---
 
@@ -31,7 +32,7 @@ Acceptance Criteria:
 
 ## UI-003: Interactive Calendar with Dual-Date Badges and Scheduling Sidebar
 
-The system shall provide an interactive Calendar view featuring Month and Week horizons, distinct Action Date and Due Date badges, a filter toggle, and an Unscheduled Tasks sidebar with drag-to-schedule.
+The system shall provide an interactive Calendar view featuring Month and Week horizons, distinct Action Date and Due Date badges, a filter toggle, an Unscheduled Tasks sidebar with drag-to-schedule, and click-to-create task actions from calendar day cells.
 
 Acceptance Criteria:
 - AC-UI-003.1: The Calendar view shall display Action Dates (`▶`) and Due Dates (`⚑`) with distinct visual styling and icons.
@@ -39,17 +40,19 @@ Acceptance Criteria:
 - AC-UI-003.3: The Unscheduled sidebar shall list active tasks lacking an action date, allowing scheduling onto a calendar date.
 - AC-UI-003.4: The Calendar view shall provide a toggle between Month view (multi-week month grid) and Week view (detailed 7-day grid), adapting layout and task density to the selected timeframe.
 - AC-UI-003.5: The Calendar view shall allow dragging scheduled tasks between calendar day cells to update their action date.
+- AC-UI-003.6: Clicking on a day cell or date header in the Calendar view (Month or Week grid) shall open the task creation dialog with the selected date pre-populated as the action date.
 
 ---
 
 ## UI-004: Light-Dismiss Task Editor Dialog and Completed Archive Drawer
 
-The system shall provide a native light-dismiss modal dialog for task creation and editing, and a toggleable archive drawer for completed tasks.
+The system shall provide a native light-dismiss modal dialog for task creation and editing, featuring an inline emoji prefix picker with categorized popover, and a toggleable archive drawer for completed tasks.
 
 Acceptance Criteria:
 - AC-UI-004.1: The task modal shall use `<dialog closedby="any">` with backdrop blur, supporting dismissal via Esc key or outside backdrop click.
 - AC-UI-004.2: The task modal shall expose inputs for name, status, project, independent priority, action date, due date, repeat rule, waiting note, and details.
 - AC-UI-004.3: The completed archive drawer shall list tasks with status `done` and provide one-click restoration back to active board status.
+- AC-UI-004.4: The task modal shall provide an emoji prefix button beside the task title input that opens a palette of quick work emojis and updates or prepends the chosen emoji into the task title.
 
 ---
 

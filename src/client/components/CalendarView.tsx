@@ -14,6 +14,7 @@ interface CalendarViewProps {
     dateType?: "action" | "due",
   ) => void;
   onRangeChange?: (start: string, end: string) => void;
+  onCreateTaskOnDate?: (dateStr: string) => void;
 }
 
 type HorizonView = "month" | "week";
@@ -33,6 +34,7 @@ export function CalendarView({
   onSelectTask,
   onScheduleTask,
   onRangeChange,
+  onCreateTaskOnDate,
 }: CalendarViewProps) {
   const [horizon, setHorizon] = useState<HorizonView>("month");
   const [filter, setFilter] = useState<FilterType>("all");
@@ -321,6 +323,10 @@ export function CalendarView({
                     key={day.dateStr}
                     data-testid="calendar-day-cell"
                     data-date={day.dateStr}
+                    onClick={(e) => {
+                      if (e.defaultPrevented) return;
+                      onCreateTaskOnDate?.(day.dateStr);
+                    }}
                     onDragOver={(e) => {
                       e.preventDefault();
                       if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
@@ -393,7 +399,8 @@ export function CalendarView({
                               if (e.dataTransfer)
                                 e.dataTransfer.effectAllowed = "move";
                             }}
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               const t = tasks.find((x) => x.id === ev.task_id);
                               if (t) onSelectTask(t);
                             }}
@@ -431,7 +438,8 @@ export function CalendarView({
                               if (e.dataTransfer)
                                 e.dataTransfer.effectAllowed = "move";
                             }}
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               const t = tasks.find((x) => x.id === ev.task_id);
                               if (t) onSelectTask(t);
                             }}
@@ -470,6 +478,10 @@ export function CalendarView({
                   key={day.dateStr}
                   data-testid="week-day-column"
                   data-date={day.dateStr}
+                  onClick={(e) => {
+                    if (e.defaultPrevented) return;
+                    onCreateTaskOnDate?.(day.dateStr);
+                  }}
                   onDragOver={(e) => {
                     e.preventDefault();
                     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
@@ -543,7 +555,8 @@ export function CalendarView({
                             if (e.dataTransfer)
                               e.dataTransfer.effectAllowed = "move";
                           }}
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             const t = tasks.find((x) => x.id === ev.task_id);
                             if (t) onSelectTask(t);
                           }}
@@ -580,7 +593,8 @@ export function CalendarView({
                             if (e.dataTransfer)
                               e.dataTransfer.effectAllowed = "move";
                           }}
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             const t = tasks.find((x) => x.id === ev.task_id);
                             if (t) onSelectTask(t);
                           }}

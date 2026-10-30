@@ -42,13 +42,13 @@ Acceptance Criteria:
 
 ## TASK-004: Spawn-on-Complete Recurrence Rollover
 
-When a task with a repeat rule other than `none` is marked `done`, the system shall record completion of the current occurrence and atomically spawn the next instance in `todo`.
+When a task with a repeat rule other than `none` is marked `done`, the system shall record completion of the current occurrence and atomically spawn the next instance in `triage` with an execution period indicator `[x]` appended to the title.
 
 Acceptance Criteria:
-- AC-TASK-004.1: When a weekly task is marked complete, the system shall create the next task in `todo` with action date and due date shifted forward to the repeat day of the week.
-- AC-TASK-004.2: When a monthly task is marked complete, the system shall create the next task in `todo` with action date and due date shifted forward the repeat date of the next month.
-- AC-TASK-004.3: When a yearly task is marked complete, the system shall create the next task in `todo` with action date and due date shifted forward to the repeat day of the next year.
-- AC-TASK-004.4: The newly spawned recurring task shall inherit the title, details, project, priority, and repeat rule of the parent task.
+- AC-TASK-004.1: When a weekly task is marked complete, the system shall create the next task in `triage` with action date and due date shifted forward to the repeat day of the week, and append `[x]` to the title where `x` is the week number (e.g. `[W45]` or `[45]`).
+- AC-TASK-004.2: When a monthly task is marked complete, the system shall create the next task in `triage` with action date and due date shifted forward to the repeat date of the next month, and append `[x]` to the title where `x` is the month (e.g. `[11]` or month name).
+- AC-TASK-004.3: When a yearly task is marked complete, the system shall create the next task in `triage` with action date and due date shifted forward to the repeat day of the next year, and append `[x]` to the title where `x` is the year (e.g. `[2027]`).
+- AC-TASK-004.4: The newly spawned recurring task shall inherit the base title (replacing any prior period tag), details, project, priority, and repeat rule of the parent task.
 - AC-TASK-004.5: The completed occurrence shall remain archived in status `done` with its `completed_at` timestamp recorded.
 
 ---

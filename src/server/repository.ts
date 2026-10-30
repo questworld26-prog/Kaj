@@ -102,6 +102,43 @@ export function shiftDate(
   return dateStr;
 }
 
+// [spec: TASK-004]
+export function getISOWeekNumber(dateStr: string): number {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil(
+    ((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+  );
+}
+
+// [spec: TASK-004]
+export function appendPeriodTag(
+  title: string,
+  rule: RepeatRule,
+  referenceDateStr: string | null,
+): string {
+  // Strip any existing trailing [x] period tag
+  const baseTitle = title.replace(/\s*\[[^\]]+\]\s*$/, "").trim();
+  if (rule === "none") return baseTitle;
+
+  const dateToUse = referenceDateStr || new Date().toISOString().slice(0, 10);
+  let tag = "";
+  if (rule === "weekly") {
+    tag = `[${getISOWeekNumber(dateToUse)}]`;
+  } else if (rule === "monthly") {
+    const month = Number(dateToUse.split("-")[1]);
+    tag = `[${month}]`;
+  } else if (rule === "yearly") {
+    const year = Number(dateToUse.split("-")[0]);
+    tag = `[${year}]`;
+  }
+
+  return tag ? `${baseTitle} ${tag}` : baseTitle;
+}
+
 // [spec: PROJ-001]
 export class ProjectRepository {
   constructor(private db: DatabaseSync) {}
@@ -492,6 +529,12 @@ export class TaskRepository {
         )
         .get() as { next_order: number };
 
+      const spawnedTitle = appendPeriodTag(
+        task.title,
+        task.repeat_rule,
+        nextAction || nextDue,
+      );
+
       this.db
         .prepare(
           `INSERT INTO tasks (
@@ -499,11 +542,11 @@ export class TaskRepository {
             repeat_rule, repeat_day_of_week, repeat_day_of_month, repeat_day_of_year,
             waiting_on, sort_order, completed_at, deleted_at,
             parent_recurring_id, created_at, updated_at
-          ) VALUES (?, ?, 'todo', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?)`,
+          ) VALUES (?, ?, 'triage', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?)`,
         )
         .run(
           newId,
-          task.title,
+          spawnedTitle,
           task.details,
           task.project_id,
           task.priority,

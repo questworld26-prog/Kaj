@@ -61,6 +61,9 @@ export function App() {
   // Modal / Drawer visibility
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [defaultActionDate, setDefaultActionDate] = useState<string | null>(null);
+  const [defaultStatus, setDefaultStatus] = useState<TaskStatus | null>(null);
+  const [defaultProjectId, setDefaultProjectId] = useState<string | null>(null);
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
   const [isReorderOpen, setIsReorderOpen] = useState(false);
 
@@ -134,6 +137,9 @@ export function App() {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "n") {
         e.preventDefault();
         setSelectedTask(null);
+        setDefaultActionDate(null);
+        setDefaultStatus(null);
+        setDefaultProjectId(null);
         setIsTaskModalOpen(true);
       }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "d") {
@@ -153,11 +159,36 @@ export function App() {
   // Actions
   const handleOpenAddTask = () => {
     setSelectedTask(null);
+    setDefaultActionDate(null);
+    setDefaultStatus(null);
+    setDefaultProjectId(null);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleCreateTaskOnDate = (dateStr: string) => {
+    setSelectedTask(null);
+    setDefaultActionDate(dateStr);
+    setDefaultStatus(null);
+    setDefaultProjectId(null);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleCreateTaskInColumn = (
+    status: TaskStatus,
+    projectId: string | null,
+  ) => {
+    setSelectedTask(null);
+    setDefaultActionDate(null);
+    setDefaultStatus(status);
+    setDefaultProjectId(projectId);
     setIsTaskModalOpen(true);
   };
 
   const handleSelectTask = (task: Task) => {
     setSelectedTask(task);
+    setDefaultActionDate(null);
+    setDefaultStatus(null);
+    setDefaultProjectId(null);
     setIsTaskModalOpen(true);
   };
 
@@ -391,6 +422,8 @@ export function App() {
           onScheduleTask={handleScheduleTask}
           onReorderProjects={handleReorderProjects}
           onOpenReorderModal={() => setIsReorderOpen(true)}
+          onCreateTaskOnDate={handleCreateTaskOnDate}
+          onCreateTaskInColumn={handleCreateTaskInColumn}
         />
 
         {/* Desktop Layout (>= md) - 100% untouched */}
@@ -404,6 +437,7 @@ export function App() {
               onMoveTask={handleMoveTask}
               onCompleteTask={handleCompleteTask}
               onReorderTasks={handleReorderTasks}
+              onCreateTaskInColumn={handleCreateTaskInColumn}
             />
           ) : (
             <CalendarView
@@ -413,6 +447,7 @@ export function App() {
               onSelectTask={handleSelectTask}
               onScheduleTask={handleScheduleTask}
               onRangeChange={handleCalendarRangeChange}
+              onCreateTaskOnDate={handleCreateTaskOnDate}
             />
           )}
         </div>
@@ -423,9 +458,15 @@ export function App() {
         isOpen={isTaskModalOpen}
         task={selectedTask}
         projects={projects}
+        defaultActionDate={defaultActionDate}
+        defaultStatus={defaultStatus}
+        defaultProjectId={defaultProjectId}
         onClose={() => {
           setIsTaskModalOpen(false);
           setSelectedTask(null);
+          setDefaultActionDate(null);
+          setDefaultStatus(null);
+          setDefaultProjectId(null);
         }}
         onSave={handleSaveTask}
         onDelete={handleDeleteTask}

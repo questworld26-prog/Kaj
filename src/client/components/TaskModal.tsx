@@ -10,10 +10,32 @@ import type {
   RecurrenceRule,
 } from "../../shared/types.js";
 
+const EMOJI_CATEGORIES: Record<string, string[]> = {
+  "Work & Tech": [
+    "🚀", "🐛", "📝", "⚡", "🎯", "📦", "🔍", "💡", "📅", "🔔", "🎨", "🧪",
+    "🔐", "⚙️", "🔥", "✅", "🛠️", "💬", "✨", "📊", "🌐", "💻", "🧹", "📌",
+    "📁", "📂", "📈", "📉", "📱", "🖥️", "⌨️", "📧", "📫", "🏷️", "💳", "💰"
+  ],
+  "Status & Focus": [
+    "🔴", "🟡", "🟢", "⭐", "🏆", "⏳", "🛑", "⚠️", "🚨", "🚩", "❓", "❗",
+    "💤", "💎", "💥", "🚧", "💯", "🔝", "🆗", "🆕", "🔒", "🔑", "📎", "📖"
+  ],
+  "Team & Life": [
+    "😀", "😎", "🤔", "🙌", "👍", "👎", "🤝", "💪", "👀", "🧠", "🧑‍💻", "🕵️",
+    "🎉", "☕", "🍕", "🌱", "🧘", "🚲", "✈️", "🏠", "☀️", "🌙", "🎵", "❤️"
+  ],
+};
+
+// Regex matching common unicode emojis at start of string
+const EMOJI_PREFIX_REGEX = /^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)\s*/u;
+
 interface TaskModalProps {
   isOpen: boolean;
   task: Task | null;
   projects: Project[];
+  defaultActionDate?: string | null;
+  defaultStatus?: TaskStatus | null;
+  defaultProjectId?: string | null;
   onClose: () => void;
   onSave: (data: Partial<Task>) => void;
   onDelete?: (id: string) => void;
@@ -24,12 +46,18 @@ export function TaskModal({
   isOpen,
   task,
   projects,
+  defaultActionDate = null,
+  defaultStatus = null,
+  defaultProjectId = null,
   onClose,
   onSave,
   onDelete,
   onComplete,
 }: TaskModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [isEmojiPaletteOpen, setIsEmojiPaletteOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string>("Work & Tech");
+  const [customEmojiInput, setCustomEmojiInput] = useState<string>("");
 
   const [formData, setFormData] = useState<Partial<Task>>({
     title: "",
@@ -48,6 +76,8 @@ export function TaskModal({
 
   // Sync state when task prop changes
   useEffect(() => {
+    setIsEmojiPaletteOpen(false);
+    setCustomEmojiInput("");
     if (task) {
       setFormData({
         title: task.title,
@@ -66,10 +96,10 @@ export function TaskModal({
     } else {
       setFormData({
         title: "",
-        status: "todo",
-        project_id: null,
+        status: defaultStatus || "todo",
+        project_id: defaultProjectId || null,
         priority: "week",
-        action_date: null,
+        action_date: defaultActionDate || null,
         due_date: null,
         repeat_rule: "none",
         repeat_day_of_week: null,
@@ -79,7 +109,7 @@ export function TaskModal({
         details: "",
       });
     }
-  }, [task, isOpen]);
+  }, [task, isOpen, defaultActionDate, defaultStatus, defaultProjectId]);
 
   // Dialog imperative control
   useEffect(() => {
@@ -122,6 +152,7 @@ export function TaskModal({
     <dialog
       ref={dialogRef}
       id="task-dialog"
+      data-testid="task-modal"
       // @ts-expect-error closedby is standard per HTML spec 2025+
       closedby="any"
       onClick={handleBackdropClick}
@@ -166,20 +197,133 @@ export function TaskModal({
             <label className="block text-xs font-semibold text-gray-300 mb-1.5">
               Task Title <span className="text-rose-400">*</span>
             </label>
-            <input
-              type="text"
-              name="title"
-              required
-              placeholder="e.g. Design system tokens & schema migration"
-              value={formData.title}
-              onInput={(e) =>
-                setFormData({
-                  ...formData,
-                  title: (e.target as HTMLInputElement).value,
-                })
-              }
-              className="w-full px-3 py-2 rounded-xl bg-[#1C2224] border border-[#2A3235] text-sm text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none"
-            />
+            <div className="flex items-center gap-2 relative">
+              {/* Option B: Emoji Prefix Trigger */}
+              <button
+                type="button"
+                data-testid="task-emoji-prefix-btn"
+                onClick={() => setIsEmojiPaletteOpen((prev) => !prev)}
+                className="w-10 h-10 rounded-xl bg-[#1C2224] border border-[#2A3235] hover:border-emerald-500/50 hover:bg-[#252D30] flex items-center justify-center text-lg transition-colors text-white shrink-0 shadow-sm"
+                title="Select emoji icon"
+                aria-label="Select emoji icon"
+              >
+                {(() => {
+                  const match = formData.title?.match(EMOJI_PREFIX_REGEX);
+                  return match ? match[1] : "✨";
+                })()}
+              </button>
+
+              <input
+                type="text"
+                name="title"
+                required
+                placeholder="e.g. Design system tokens & schema migration"
+                value={formData.title}
+                onInput={(e) =>
+                  setFormData({
+                    ...formData,
+                    title: (e.target as HTMLInputElement).value,
+                  })
+                }
+                className="flex-1 px-3 py-2 rounded-xl bg-[#1C2224] border border-[#2A3235] text-sm text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none"
+              />
+
+              {/* Categorized Emoji Palette Popover */}
+              {isEmojiPaletteOpen && (
+                <div
+                  data-testid="task-emoji-palette"
+                  className="absolute left-0 top-12 z-30 p-3.5 rounded-2xl bg-[#121718] border border-[#2A3235] shadow-2xl shadow-black/90 w-80 backdrop-blur-md space-y-2.5"
+                >
+                  <div className="flex items-center justify-between text-xs text-gray-400 pb-1.5 border-b border-[#2A3235]">
+                    <span className="font-semibold text-emerald-400">Choose Icon</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsEmojiPaletteOpen(false)}
+                      className="text-gray-400 hover:text-white text-xs px-1"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* Category Filter Tabs */}
+                  <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-0.5">
+                    {Object.keys(EMOJI_CATEGORIES).map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setActiveCategory(cat)}
+                        className={`px-2 py-1 rounded-lg text-[11px] whitespace-nowrap transition-colors ${
+                          activeCategory === cat
+                            ? "bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40"
+                            : "bg-[#1C2224] text-gray-400 hover:text-gray-200 border border-[#2A3235]"
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Emoji Grid */}
+                  <div className="grid grid-cols-6 gap-1.5 text-center text-lg max-h-48 overflow-y-auto py-1">
+                    {(EMOJI_CATEGORIES[activeCategory] || []).map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        data-emoji={emoji}
+                        onClick={() => {
+                          const currentTitle = formData.title || "";
+                          const match = currentTitle.match(EMOJI_PREFIX_REGEX);
+                          let nextTitle: string;
+                          if (match) {
+                            nextTitle = currentTitle.replace(EMOJI_PREFIX_REGEX, `${emoji} `);
+                          } else {
+                            nextTitle = currentTitle.trim() ? `${emoji} ${currentTitle.trim()}` : `${emoji} `;
+                          }
+                          setFormData({ ...formData, title: nextTitle });
+                          setIsEmojiPaletteOpen(false);
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-[#1C2224] hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Custom Emoji / Unicode Paste Input */}
+                  <div className="pt-2 border-t border-[#2A3235] flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Paste any emoji..."
+                      value={customEmojiInput}
+                      onInput={(e) => setCustomEmojiInput((e.target as HTMLInputElement).value)}
+                      className="flex-1 px-2.5 py-1.5 rounded-lg bg-[#0E1111] border border-[#2A3235] text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
+                    />
+                    <button
+                      type="button"
+                      disabled={!customEmojiInput.trim()}
+                      onClick={() => {
+                        const trimmed = customEmojiInput.trim();
+                        if (!trimmed) return;
+                        const currentTitle = formData.title || "";
+                        const match = currentTitle.match(EMOJI_PREFIX_REGEX);
+                        let nextTitle: string;
+                        if (match) {
+                          nextTitle = currentTitle.replace(EMOJI_PREFIX_REGEX, `${trimmed} `);
+                        } else {
+                          nextTitle = currentTitle.trim() ? `${trimmed} ${currentTitle.trim()}` : `${trimmed} `;
+                        }
+                        setFormData({ ...formData, title: nextTitle });
+                        setCustomEmojiInput("");
+                        setIsEmojiPaletteOpen(false);
+                      }}
+                      className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Status & Project Grid */}
@@ -441,6 +585,7 @@ export function TaskModal({
               <input
                 type="date"
                 name="action_date"
+                data-testid="task-action-date-input"
                 value={formData.action_date || ""}
                 onChange={(e) => {
                   const val = (e.target as HTMLInputElement).value;
@@ -544,6 +689,7 @@ export function TaskModal({
           <div className="flex items-center gap-2">
             <button
               type="button"
+              data-testid="cancel-btn"
               onClick={onClose}
               className="px-4 py-1.5 rounded-lg text-xs font-semibold text-gray-300 hover:text-white bg-[#1C2224] border border-[#2A3235] transition-colors"
             >

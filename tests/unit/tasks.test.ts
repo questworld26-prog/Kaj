@@ -302,9 +302,10 @@ describe("Tasks Core Workflow & Attributes (TASK-001, TASK-002, TASK-003)", () =
       (t) => t.parent_recurring_id === recurring.id,
     );
     expect(spawned).toBeDefined();
-    expect(spawned?.status).toBe("todo");
+    expect(spawned?.status).toBe("triage");
     expect(spawned?.action_date).toBe("2026-11-04");
     expect(spawned?.due_date).toBe("2026-11-05");
+    expect(spawned?.title).toBe("Weekly Review Meeting [45]");
   });
 
   // [verifies: TASK-004/AC-TASK-004.1]

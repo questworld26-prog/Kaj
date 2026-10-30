@@ -52,7 +52,10 @@ export interface TelegramApiTransport {
     replyMarkup?: TelegramInlineKeyboardMarkup,
   ): Promise<void>;
   answerCallbackQuery(callbackQueryId: string, text?: string): Promise<void>;
-  setMyCommands?(commands: Array<{ command: string; description: string }>): Promise<void>;
+  setMyCommands?(
+    commands: Array<{ command: string; description: string }>,
+    scope?: unknown,
+  ): Promise<void>;
 }
 
 const DEFAULT_CONFIG: TelegramConfig = {
@@ -336,11 +339,14 @@ export function createFetchTelegramTransport(
       });
     },
 
-    async setMyCommands(commands) {
+    async setMyCommands(commands, scope) {
       await fetch(`${baseUrl}/setMyCommands`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ commands }),
+        body: JSON.stringify({
+          commands,
+          ...(scope ? { scope } : {}),
+        }),
       });
     },
   };
@@ -466,16 +472,18 @@ export class TelegramBotService {
     if (this.running) return;
     this.running = true;
 
-    // Automatically sync official clean Kaj menu commands to Telegram
+    // Automatically sync official clean Kaj menu commands to Telegram (both default and chat-specific)
     if (this.transport.setMyCommands) {
-      this.transport
-        .setMyCommands([
-          { command: "today", description: "View today tasks with quick actions" },
-          { command: "search", description: "Search tasks by title, details, or notes" },
-          { command: "add", description: "Add a task: /add <title> [#project] [!today]" },
-          { command: "help", description: "Show Kaj syntax guide and commands" },
-        ])
-        .catch(() => {});
+      const kajCommands = [
+        { command: "today", description: "View today tasks with quick actions" },
+        { command: "search", description: "Search tasks by title, details, or notes" },
+        { command: "add", description: "Add a task: /add <title> [#project] [!today]" },
+        { command: "help", description: "Show Kaj syntax guide and commands" },
+      ];
+      this.transport.setMyCommands(kajCommands).catch(() => {});
+      for (const userId of this.config.allowed_user_ids) {
+        this.transport.setMyCommands(kajCommands, { type: "chat", chat_id: userId }).catch(() => {});
+      }
     }
 
     this.scheduleNextPoll();
