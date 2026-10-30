@@ -11,9 +11,21 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
-### Release `v2.1.0`: Telegram Bot Daemon, Recurrence Scheduling & Multi-Modal Task Completion
+### Release `v2.2.0`: Triage Recurrence Rollover, Period Indicator Tags, Quick Click-to-Create & Emoji Prefix Picker
 
 - **Status**: 🚀 RELEASE CANDIDATE
+- **Focus**: Routes spawned instances of completed recurring tasks into `triage` with automatic execution period tags `[x]` (ISO week number for weekly, month for monthly, year for yearly), adds click-to-create affordances directly from Kanban column cells and Calendar day dates, and introduces a built-in emoji prefix picker popover for task titles.
+- **Deliverables**:
+  - [x] **TASK-004**: Spawns next instance of completed recurring tasks directly into `triage` with execution period indicator `[x]` appended (`[W45]`/`[45]` for weekly, `[11]` for monthly, `[2027]` for yearly), inheriting base title while cleanly stripping prior tags.
+  - [x] **UI-001 / AC-UI-001.7**: Direct click-to-create affordance on Kanban column cells and empty areas pre-populating target column status and project swimlane.
+  - [x] **UI-003 / AC-UI-003.6**: Click-to-create affordance on Calendar day cells (Month and Week grids) pre-populating clicked date as task action date.
+  - [x] **UI-004 / AC-UI-004.4**: Task editor modal emoji prefix picker with categorized palette to quickly prepend or replace emoji indicators on task titles.
+  - [x] **MCP-001 / `complete_task`**: Synchronized tool documentation with the new `triage` rollover behavior.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (89/89), 41 unit & integration tests + 34 Playwright E2E tests passing, clean working tree, version bumped to `2.2.0`.
+
+### Release `v2.1.0`: Telegram Bot Daemon, Recurrence Scheduling & Multi-Modal Task Completion
+
+- **Status**: ✅ RELEASED
 - **Focus**: Adds a native deterministic Telegram bot service running inside the Kaj background daemon for remote task creation and search without local LLM overhead; introduces explicit recurrence scheduling (day of the week, day of the month, day of the year); and delivers multi-modal task completion interactions (1-click circular card checkboxes on desktop, direct "Mark Complete" modal action, and mobile swipe-to-complete gestures).
 - **Deliverables**:
   - [x] **TG-001**: Configurable deterministic Telegram bot integration (`src/server/telegram.ts`) with feature toggle flag, `telegram.config.json` credential loader, shorthand parsing (`#Project`, `!today`, `@date`, `due:date`, `wait:note`), `/search` query handler with inline buttons, `/today` horizon list, and daemon control CLI (`npm run telegram:on|off|status`).
