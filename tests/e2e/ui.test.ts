@@ -850,7 +850,7 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
         title: "Task Authored by Telegram User",
         status: "todo",
         priority: "week",
-        created_by: "Prithi",
+        created_by: "Alex",
       },
     });
     const task = (await createRes.json()) as { id: string };
@@ -862,7 +862,7 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     // Verify creator badge on card
     const badge = card.locator('[data-testid="creator-badge"]');
     await expect(badge).toBeVisible();
-    await expect(badge).toContainText("Prithi");
+    await expect(badge).toContainText("Alex");
 
     // Click card to open modal and verify modal creator badge and input
     await card.click();
@@ -871,11 +871,11 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
 
     const modalBadge = dialog.locator('[data-testid="modal-creator-badge"]');
     await expect(modalBadge).toBeVisible();
-    await expect(modalBadge).toContainText("Prithi");
+    await expect(modalBadge).toContainText("Alex");
 
     const createdByInput = dialog.locator('input[name="created_by"]');
     await expect(createdByInput).toBeVisible();
-    await expect(createdByInput).toHaveValue("Prithi");
+    await expect(createdByInput).toHaveValue("Alex");
 
     // Modify creator to "Sarah" and save
     await createdByInput.fill("Sarah");
@@ -1128,7 +1128,7 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
         status: "in_progress_today",
         priority: "today",
         project_id: prj.id,
-        created_by: "Prithi",
+        created_by: "Alex",
       },
     });
 

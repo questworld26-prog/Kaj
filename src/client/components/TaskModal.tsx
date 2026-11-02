@@ -452,7 +452,7 @@ export function TaskModal({
             <input
               type="text"
               name="created_by"
-              placeholder="e.g. Prithi, Alex, or Telegram User"
+              placeholder="e.g. Alex, Sam, or Telegram User"
               value={formData.created_by || ""}
               onInput={(e) =>
                 setFormData({

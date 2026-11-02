@@ -366,10 +366,10 @@ describe("Telegram Bot Integration (TG-001)", () => {
       JSON.stringify({
         enabled: true,
         bot_token: "123456:ABC",
-        allowed_user_ids: [847921997, 928147325],
+        allowed_user_ids: [111222333, 444555666],
         user_names: {
-          "847921997": "Prithi",
-          "928147325": "Alex",
+          "111222333": "Alex",
+          "444555666": "Sam",
         },
         default_status: "triage",
         poll_interval_ms: 2000,
@@ -379,8 +379,8 @@ describe("Telegram Bot Integration (TG-001)", () => {
 
     const cfg = loadTelegramConfig(cfgPath);
     expect(cfg.user_names).toEqual({
-      "847921997": "Prithi",
-      "928147325": "Alex",
+      "111222333": "Alex",
+      "444555666": "Sam",
     });
 
     const sentMessages: Array<{ chatId: number; text: string }> = [];
@@ -398,13 +398,13 @@ describe("Telegram Bot Integration (TG-001)", () => {
       },
     });
 
-    // 1. Task created by 847921997 maps to "Prithi"
+    // 1. Task created by 111222333 maps to "Alex"
     await bot.handleUpdate({
       update_id: 10,
       message: {
         message_id: 20,
-        from: { id: 847921997, first_name: "IgnoredFirstName" },
-        chat: { id: 847921997 },
+        from: { id: 111222333, first_name: "IgnoredFirstName" },
+        chat: { id: 111222333 },
         text: "Review quarterly report !today",
       },
     });
@@ -412,8 +412,8 @@ describe("Telegram Bot Integration (TG-001)", () => {
     const tasks = taskRepo.listTasks(false);
     const createdTask = tasks.find((t) => t.title.includes("Review quarterly report"));
     expect(createdTask).toBeDefined();
-    expect(createdTask?.created_by).toBe("Prithi");
-    expect(sentMessages[0].text).toContain("Prithi");
+    expect(createdTask?.created_by).toBe("Alex");
+    expect(sentMessages[0].text).toContain("Alex");
 
     // 2. Task created by user with no user_names entry falls back to first_name
     await bot.handleUpdate({
@@ -431,7 +431,7 @@ describe("Telegram Bot Integration (TG-001)", () => {
     // Now test with user in allowed_user_ids but without explicit mapping in user_names
     const cfgWithGuest = {
       ...cfg,
-      allowed_user_ids: [847921997, 555555],
+      allowed_user_ids: [111222333, 555555],
     };
     const botWithGuest = new TelegramBotService({
       config: cfgWithGuest,

@@ -1,16 +1,43 @@
+# Dependencies & Builds
 node_modules/
 dist/
 build/
+.vite/
+
+# Testing & Coverage
 coverage/
 test-results/
 playwright-report/
-.vite/
+
+# Environment & Secrets
 .env
-.env.local
+.env.*
+!.env.example
+telegram.config.json
+*.pem
+*.key
+*.cert
+
+# SQLite Databases & WAL Logs
 *.db
 *.sqlite
 *.sqlite3
 *.sqlite-wal
 *.sqlite-shm
-telegram.config.json
+*.db-wal
+*.db-shm
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS & Editor Files
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.gemini/
+.claude/
+.cursor/

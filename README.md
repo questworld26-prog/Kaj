@@ -1,69 +1,102 @@
 # Kaj (কাজ)
 
-> **Kaj** (pronounced _/kadʒ/_, Bengali for **task** or **work** — **কাজ**) is a high-performance, low-footprint task management system and Model Context Protocol (MCP) daemon for macOS and local development environments.
+<div align="center">
 
-Kaj combines a **6-column Kanban board with project swimlanes**, **dual-date scheduling** (Action Dates vs. Deadlines), an **interactive Month & Week calendar**, and a **first-class Model Context Protocol (MCP) server** that lets autonomous AI agents manage your tasks in real time over Streamable HTTP and stdio.
+[![Release](https://img.shields.io/badge/release-v2.5.0-emerald.svg)](release.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/node.js-v26%2B-green.svg)](https://nodejs.org/)
+[![Memory RSS](https://img.shields.io/badge/memory_RSS-~56--95_MB-brightgreen.svg)](#low-memory-architecture)
+[![Spec Guardian](https://img.shields.io/badge/specs-100%25_verified-success.svg)](specs/)
+
+**A high-performance, low-footprint task management system and Model Context Protocol (MCP) server daemon.**
+
+*Pronounced /kadʒ/, Bengali for task or work — **কাজ**.*
+
+</div>
 
 ---
 
-## Key Features
+## Overview
 
-- **6-Column Kanban with Execution Horizons**:
-  - `Triage`: Quick intake for unvetted items.
-  - `Todo`: Backlog ready for prioritization.
-  - `In Progress` grouped header with 3 execution sub-columns:
-    - `Today`: Tasks actively worked on today.
-    - `This Week`: Active weekly commitments.
-    - `This Month`: Active monthly execution window.
-  - `Tracking`: Dedicated parking column for blocked items, external dependencies, and package delivery tracking (with carrier numbers, status notes, and tracking links).
-- **Project Swimlanes & Reordering**:
-  - First-class Project entities with custom color tokens and collapsible swimlanes.
-  - Interactive swimlane reordering controls to prioritize projects vertically.
-  - Top-level `Unassigned / Quick Triage` swimlane for immediate friction-free task capture.
-- **Dual-Date Scheduling**:
-  - Independent **Action Date** (when you plan to work on the task) and **Due Date** (hard deadline).
+**Kaj** is a local-first task operating system engineered for individual builders, engineering teams, and autonomous AI agents. It combines a desktop **Execution Cockpit** with live telemetry, a **6-column Kanban board with collapsible project swimlanes**, **dual-date scheduling** (Action Dates vs. Deadlines), an **interactive Month & Week calendar**, a **thumb-friendly responsive mobile app**, a **deterministic Telegram bot companion**, and a **first-class Model Context Protocol (MCP) server** that lets autonomous AI agents manage your tasks in real time over Streamable HTTP and stdio.
+
+Kaj runs as an always-on background daemon consuming only **~56–95 MB RSS**, utilizing Node 26 native `node:sqlite` in Write-Ahead Logging (WAL) mode without heavy bundled browsers or database server dependencies.
+
+---
+
+## Key Capabilities
+
+### ⚡ Desktop Execution Cockpit (`v2.5.0`)
+- **Split 2-Column Command Deck**:
+  - **Today Focus Plate**: Accented chamber highlighting tasks actively committed for today, complete with 1-click completion and quick-add controls.
+  - **Upcoming Horizons**: Visible queue for *This Week* and *This Month* commitments with 1-click promotion to Today.
+  - **Tracking & Blockers**: Dedicated container for items waiting on external dependencies, colleagues, or delivery tracking numbers.
+- **Real-Time Telemetry & Performance Engine**:
+  - **Weekly Velocity Chart**: Visual bar chart tracking completed task throughput across the last 6 ISO weeks.
+  - **Project Distribution Donut**: Live radial breakdown illustrating workload distribution across project swimlanes.
+  - **Creator-Segmented Stacked Velocity Graph**: Horizontal stacked graph attributing completed work to its creator (`created_by`) across weekly intervals.
+- **Top Command Bar Switcher**: Instant navigation between **Cockpit**, **Kanban Board**, and **Calendar**.
+
+### 📋 Bento Kanban Board & Project Swimlanes
+- **6-Column Structured Workflow**:
+  - `Triage` → `Todo` → `In Progress` (`Today`, `This Week`, `This Month`) → `Tracking`.
+- **Project Swimlane Pods**:
+  - First-class Project entities with custom color tokens and collapsible pod headers.
+  - Vertical swimlane reordering (`↑` / `↓`) and top-level `Unassigned / Quick Triage` inbox for zero-friction capture.
+- **Intra-Column Drag-and-Drop Reordering**: Persists card order with instant visual drop target indicators.
+- **Card Density Modes**:
+  - **Compact Mode** (Default, ~65px): Streamlined layout with priority chips, single-line titles, inline dates, and blocker badges.
+  - **Minimal Mode** (~36px, >75% height reduction): Ultra-dense single-line row designed to keep massive backlogs visible on a single display without vertical scrolling.
+
+### 📱 Responsive Mobile App (< 768px)
+- **Sticky 4-Tab Navigation Dock**: ⚡ Cockpit, 📋 Pods, 📅 7-Day, and 📥 Triage.
+- **Touch Swipe-to-Complete**: Swipe cards right with emerald feedback to complete tasks on touch devices.
+- **One-Thumb Action Sheet**: Bottom modal sheet replacing desktop drag-and-drop on mobile viewports for rapid column switching, project pod reassignment, and archiving.
+
+### 📅 Dual-Date Scheduling & Interactive Calendar
+- **Decoupled Scheduling**:
+  - **Action Date (`▶`)**: When you plan to execute or work on the task.
+  - **Due Date (`⚑`)**: Hard commitment deadline.
   - Tasks can have an action date, a due date, both, or neither.
-- **Interactive Calendar View (Month & Week)**:
-  - Toggle between **Month view** (multi-week high-level grid) and **Week view** (focused 7-day schedule).
-  - Distinct visual badges for Action Dates (`▶`) and Due Dates (`⚑`) with filter toggles.
-  - **Unscheduled Tasks sidebar** for drag-to-schedule date assignment.
-- **Spawn-on-Complete Recurrence**:
-  - Repeating tasks (`weekly`, `monthly`, `yearly`) keep a single active card on the board.
-  - Marking a recurring task `done` archives the finished occurrence and automatically spawns the next occurrence in `todo` with dates shifted forward (including leap year and end-of-month clamping, e.g. Jan 31 → Feb 28).
-  - Future occurrences project virtual preview indicators onto the Calendar without database ghost rows.
-- **Standard Model Context Protocol (MCP) Daemon**:
-  - Dual-transport support: **Streamable HTTP** (`POST /mcp` on `127.0.0.1:4820`) and **stdio** CLI (`dist/mcp/stdio.js`).
-  - Full CRUD and filtered queries for tasks and projects.
-  - Real-time Server-Sent Events (SSE) push updates connected browser tabs in `< 20ms` when agents mutate tasks.
-- **Low Memory Footprint (~75–95 MB RSS under traffic)**:
-  - Built on Node 26 using built-in `node:sqlite` in WAL mode (`PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;`).
-  - Pre-compiled static single-page app (Preact + Vite + CSS design tokens) served directly by `Hono` — zero bundled Chromium or Electron bloat in the background daemon.
-- **Card Density Modes & Intra-Column Reordering**:
-  - Reorder tasks inside any column via drag-and-drop with instant persistence and visual drop targets.
-  - Two focused card density modes to control board vertical height (persisted in `localStorage`):
-    - **Compact** (Default, ~65px): Streamlined card with priority chip, single-line title, inline dates, and blocker indicator (hides bulky status dropdowns).
-    - **Minimum** (~36px, >75% height reduction): Ultra-dense single-line row with priority dot indicator, completion button, title, and compact due badge — keeps massive backlogs visible on a single screen without vertical scrolling.
-- **Bento × Chronos Dark-Mode UI**:
-  - Full-width layout without left-sidebar clutter.
-  - Chronos dark palette: Deep Graphite canvas (`#0E1111`), elevated pods (`#121718`), Emerald execution accents (`#10B981`), and warm Gold Tracking accents (`#EAB308`).
-  - Accessible contrast ratios (>= 4.5:1 text, >= 3:1 component boundaries).
+- **Month & Week Grid Views**: Real-time projection with distinct visual date badges and type filters.
+- **Unscheduled Sidebar**: Slide-out tray for 1-click scheduling or dragging unscheduled tasks directly onto target dates.
+
+### 🔄 Spawn-on-Complete Recurrence Rollover
+- Supports `weekly`, `monthly`, and `yearly` recurrence rules with explicit day-of-week, day-of-month, and day-of-year anchors.
+- Marking a recurring task done automatically archives the finished instance and spawns the next occurrence directly into `triage` with dates shifted forward and an execution period tag appended (e.g. `[W45]`, `[11]`, `[2027]`).
+- Future occurrences project virtual previews onto the Calendar without database ghost rows.
+
+### 🤖 Model Context Protocol (MCP) Server
+- Dual-transport architecture: **Streamable HTTP** (`POST /mcp` on `127.0.0.1:4820`) and **stdio** CLI (`dist/mcp/stdio.js`).
+- Complete 11-tool suite declared with precise `Zod` schemas and tool annotations (`readOnlyHint`, `destructiveHint`).
+- Real-time Server-Sent Events (SSE) push updates to connected web clients in `< 20ms` when agents mutate state.
+
+### ✈️ Deterministic Telegram Bot Companion
+- Built-in long-polling Telegram bot service running inside the daemon with **~0 MB extra memory overhead** and **zero local LLM requirements**.
+- **Deterministic Shorthand Syntax**:
+  - `/add Implement OAuth #Auth !today @tomorrow due:2026-11-15 wait:DevOps`
+  - Quick commands: `/today`, `/search <query>`, `/add <text>`, `/help`.
+  - Inline buttons for instant 1-tap `✓ Done` completion and status changes.
+  - Automatic creator attribution (`created_by`) mapped to friendly user names via `telegram.config.json`.
 
 ---
 
-## Architecture Overview
+## Architecture
 
 ```mermaid
 flowchart LR
-  subgraph Clients["Local Clients"]
-    Browser["Browser / Dock Web App\nhttp://127.0.0.1:4820"]
-    AgentHTTP["MCP Agents (HTTP)\ne.g. Antigravity / Claude Code"]
-    AgentStdio["MCP Agents (stdio)\ne.g. Claude Desktop / Cursor"]
+  subgraph Clients["Clients & Agents"]
+    Browser["Web Dashboard\n(Desktop Cockpit, Kanban, Mobile)"]
+    AgentHTTP["MCP HTTP Agents\n(Antigravity, Claude Code, Custom)"]
+    AgentStdio["MCP Stdio Agents\n(Claude Desktop, Cursor)"]
+    Telegram["Telegram App\n(Mobile & Desktop)"]
   end
 
-  subgraph Daemon["Kaj Background Daemon (~75–95 MB RSS)"]
-    Hono["Hono Web Server\nStatic Assets + REST + SSE (/events)"]
-    MCPHttp["Streamable HTTP MCP Server\nPOST /mcp"]
-    Domain["Domain Repositories\nTasks, Projects, Recurrence, Calendar"]
+  subgraph Daemon["Kaj Background Daemon (~56–95 MB RSS)"]
+    Hono["Hono Web Engine\nStatic Client + REST API + SSE Stream"]
+    MCPHttp["Streamable HTTP MCP\nPOST /mcp"]
+    TGBot["Telegram Bot Engine\nLong-Polling Service"]
+    Domain["Domain Services\nTasks, Projects, Recurrence, Calendar"]
     Bus["In-Memory Event Bus\nLive SSE Broadcast"]
   end
 
@@ -74,12 +107,14 @@ flowchart LR
   AgentHTTP <-->|"JSON-RPC /mcp"| MCPHttp
   AgentStdio <-->|"stdio JSON-RPC"| StdioCLI
   StdioCLI <-->|"HTTP Proxy / WAL Fallback"| MCPHttp
+  Telegram <-->|"HTTPS Long Polling"| TGBot
 
   Hono --> Domain
   MCPHttp --> Domain
+  TGBot --> Domain
   Domain <--> SQLite
   Domain --> Bus
-  Bus -.->|"SSE Push"| Browser
+  Bus -.->|"SSE Push (<20ms)"| Browser
 ```
 
 ---
@@ -88,147 +123,96 @@ flowchart LR
 
 ### Prerequisites
 
-- **Node.js**: v26+ (recommended for built-in `node:sqlite`)
+- **Node.js**: v26+ (required for built-in `node:sqlite`)
 - **npm**: v11+
-- **macOS** (or any modern Unix environment)
+- **macOS** or **Linux**
 
 ### Installation
 
-Clone or navigate to the repository directory and install dependencies:
-
 ```bash
+# Clone the repository
+git clone https://github.com/your-username/kaj.git
+cd kaj
+
+# Install dependencies
 npm install
-```
 
-### Verification & Testing
-
-Kaj strictly adheres to **Test-Driven Development (TDD)** and **Spec-Driven Development (SDD)**:
-
-```bash
-# Run unit & integration tests (< 5s)
-npm run test:unit
-
-# Run all test suites
-npm test
-
-# Verify 100% active criteria coverage and 0 hash drift via Spec Guardian
-npm run audit:specs
-
-# Run automated live UI verification (headless Chromium)
-npm run test:ui
-```
-
-### Development & Build
-
-```bash
-# Start Vite development server
-npm run dev
-
-# Compile frontend assets and TypeScript server
+# Build client bundle and server
 npm run build
+```
 
-# Run in foreground (binds to 0.0.0.0:4820)
+### Running the App
+
+```bash
+# Foreground execution (binds to 0.0.0.0:4820)
 npm start
+
+# Development mode with hot-reloading
+npm run dev
 ```
 
-### Daemon Management & Auto-Start on Laptop Boot
+Visit **`http://localhost:4820`** in your browser.
 
-Kaj includes a built-in background daemon manager (`scripts/daemon-ctl.sh`) that integrates directly with macOS `launchd` LaunchAgents, allowing the daemon to run silently in the background and automatically start whenever your laptop boots or logs in:
+---
 
-| Action                 | NPM Script                 | CLI Equivalent                      | Description                                                                 |
-| :--------------------- | :------------------------- | :---------------------------------- | :-------------------------------------------------------------------------- |
-| **Start Daemon**       | `npm run daemon:start`     | `./scripts/daemon-ctl.sh start`     | Starts Kaj in background (~75–95 MB RSS)                                    |
-| **Stop Daemon**        | `npm run daemon:stop`      | `./scripts/daemon-ctl.sh stop`      | Gracefully stops the running daemon                                         |
-| **Restart Daemon**     | `npm run daemon:restart`   | `./scripts/daemon-ctl.sh restart`   | Restarts daemon and reloads compiled code                                   |
-| **Check Status**       | `npm run daemon:status`    | `./scripts/daemon-ctl.sh status`    | Displays PID, memory usage, and endpoints                                   |
-| **View Live Logs**     | `npm run daemon:logs`      | `./scripts/daemon-ctl.sh logs`      | Tails live daemon logs (`~/.local/share/kaj/daemon.log`)                    |
-| **Enable Auto-Start**  | `npm run daemon:install`   | `./scripts/daemon-ctl.sh install`   | Registers macOS LaunchAgent (`~/Library/LaunchAgents/com.kaj.daemon.plist`) |
-| **Disable Auto-Start** | `npm run daemon:uninstall` | `./scripts/daemon-ctl.sh uninstall` | Unloads and removes the LaunchAgent                                         |
+## Background Daemon & Auto-Start on Boot
 
-#### Setup Auto-Start on Boot (One-Time Setup)
+Kaj includes a daemon management script (`scripts/daemon-ctl.sh`) that integrates with macOS `launchd` LaunchAgents, allowing Kaj to run quietly in the background and auto-start on system boot:
+
+| Action | NPM Script | CLI Command | Description |
+| :--- | :--- | :--- | :--- |
+| **Start Daemon** | `npm run daemon:start` | `./scripts/daemon-ctl.sh start` | Starts Kaj in background (~56–95 MB RSS) |
+| **Stop Daemon** | `npm run daemon:stop` | `./scripts/daemon-ctl.sh stop` | Gracefully stops the background daemon |
+| **Restart Daemon** | `npm run daemon:restart` | `./scripts/daemon-ctl.sh restart` | Restarts daemon and reloads compiled code |
+| **Check Status** | `npm run daemon:status` | `./scripts/daemon-ctl.sh status` | Displays PID, memory usage, and health |
+| **View Logs** | `npm run daemon:logs` | `./scripts/daemon-ctl.sh logs` | Tails live log output (`~/.local/share/kaj/daemon.log`) |
+| **Install Auto-Start** | `npm run daemon:install` | `./scripts/daemon-ctl.sh install` | Registers macOS LaunchAgent (`~/Library/LaunchAgents/com.kaj.daemon.plist`) |
+| **Uninstall Auto-Start** | `npm run daemon:uninstall` | `./scripts/daemon-ctl.sh uninstall` | Unregisters and deletes the LaunchAgent |
 
 ```bash
-# 1. Build latest code
+# Setup auto-start on macOS login (one-time setup)
 npm run build
-
-# 2. Register LaunchAgent with macOS
 npm run daemon:install
 ```
 
-Once installed, macOS manages Kaj automatically—rebooting or logging in will start the server and MCP endpoints with zero user interaction.
+---
 
-### Telegram Bot Integration (Zero-LLM, Ultra-Low Footprint)
+## Telegram Bot Setup (Optional)
 
-Kaj includes a built-in, deterministic Telegram bot service (`src/server/telegram.ts`) that runs inside the existing daemon with **~0 MB extra memory overhead** and **no local LLM required**. It lets you capture tasks, search tasks, and trigger inline actions from your phone anywhere in the world.
-
-#### 1. Configuration File (`telegram.config.json`)
-
-Credentials and feature settings are stored in `telegram.config.json` in the project root (git-ignored so your token is never committed; see `telegram.config.example.json` for the template):
-
-```json
-{
-  "enabled": false,
-  "bot_token": "YOUR_TELEGRAM_BOT_TOKEN",
-  "allowed_user_ids": [123456789],
-  "default_status": "triage",
-  "poll_interval_ms": 2000
-}
-```
-
-- **How to get a `bot_token`**: Message `@BotFather` on Telegram → `/newbot` → copy the HTTP API token into `telegram.config.json`.
-- **How to lock to your account (`allowed_user_ids`)**: Leave `allowed_user_ids` as `[]` initially, turn on the bot, and send `/start` to your bot. It will reply with `Your Telegram User ID: <number>`. Add that number to `allowed_user_ids` so only you can access or mutate your tasks.
-
-#### 2. Switching the Feature Flag On & Off
-
-You can toggle the Telegram bot on or off at any time without restarting your laptop:
-
-| Action                   | NPM Script                | CLI Equivalent                            | Description                                                                 |
-| :----------------------- | :------------------------ | :---------------------------------------- | :-------------------------------------------------------------------------- |
-| **Enable Telegram Bot**  | `npm run telegram:on`     | `./scripts/daemon-ctl.sh telegram-on`     | Sets `"enabled": true` in `telegram.config.json` and activates live polling |
-| **Disable Telegram Bot** | `npm run telegram:off`    | `./scripts/daemon-ctl.sh telegram-off`    | Sets `"enabled": false` and stops all Telegram network polling immediately  |
-| **Check Bot Status**     | `npm run telegram:status` | `./scripts/daemon-ctl.sh telegram-status` | Shows config state, token presence, and live daemon polling status          |
-
-_(You can also override the flag via environment variable `KAJ_TELEGRAM_ENABLED=true|false` or `POST /api/telegram/toggle` with `{"enabled": true}`)._
-
-#### 3. Bot Commands & Shorthand Syntax
-
-- **Add a Task** (just send any plain text message or `/add <text>`):
-  - `Buy coffee beans` → creates task in `triage`
-  - `Fix auth bug #Backend !today @tomorrow due:2026-11-05 wait:Alice`
-    - `#ProjectName` — matches your project by name (case-insensitive)
-    - `!today`, `!week`, `!month`, `!todo`, `!triage`, `!track` — sets target column & priority
-    - `@today`, `@tomorrow`, `@YYYY-MM-DD` — sets Action Date
-    - `due:today`, `due:tomorrow`, `due:YYYY-MM-DD` — sets Due Date
-    - `wait:<note>` — sets Waiting On note
-- **Search Tasks** (`/search <query>`, `/s <query>`, or `? <query>`):
-  - Searches task titles, descriptions, and waiting notes, returning matching tasks with interactive **inline buttons** (`✓ Done`, `⚡ Today`, `📅 Week`, `Todo`).
-- **Today's Tasks** (`/today`):
-  - Lists all active tasks in `Today` with one-tap `✓ Done` and status move buttons.
+1. Copy the example configuration:
+   ```bash
+   cp telegram.config.example.json telegram.config.json
+   ```
+2. Message `@BotFather` on Telegram to create a bot and get an API token.
+3. Edit `telegram.config.json`:
+   ```json
+   {
+     "enabled": true,
+     "bot_token": "YOUR_TELEGRAM_BOT_TOKEN",
+     "allowed_user_ids": [123456789],
+     "user_names": {
+       "123456789": "Alex"
+     },
+     "default_status": "triage",
+     "poll_interval_ms": 2000
+   }
+   ```
+4. Control the bot via CLI:
+   ```bash
+   npm run telegram:on      # Enable bot
+   npm run telegram:off     # Disable bot
+   npm run telegram:status  # Check bot status
+   ```
 
 ---
 
-### Multi-Device & WiFi Access (`jarvis.local`)
+## Connecting Model Context Protocol (MCP) Clients
 
-Kaj binds by default to `0.0.0.0:4820`, making it immediately accessible across your local WiFi/LAN network without reverse proxies or port configuration:
+Kaj supports both **Streamable HTTP** and **stdio** MCP connections.
 
-- **Local Machine**: `http://localhost:4820`
-- **Other Devices on WiFi (Phones, Tablets, Laptops)**: `http://jarvis.local:4820` (or your machine's LAN IP, e.g. `http://192.168.1.146:4820`)
+### 1. Streamable HTTP (Recommended for Background Daemon)
 
-**Security & Origin Isolation**:
-Kaj implements a dual **Host Header** and **Origin** guard against DNS rebinding and cross-site request forgery (CSRF):
-
-- Requests from loopback (`localhost`, `127.0.0.1`), mDNS domains (`*.local`), and RFC 1918 private LAN IP blocks are authenticated and permitted.
-- Cross-origin requests from arbitrary external websites (e.g. `evil.com`) attempting to probe or mutate tasks across your intranet are strictly rejected with `403 Forbidden`.
-
----
-
-## Connecting MCP Clients
-
-Kaj exposes its MCP server over both **Streamable HTTP** (`http://127.0.0.1:4820/mcp`) and **stdio** (`dist/mcp/stdio.js`).
-
-### 1. Streamable HTTP (Recommended for Running Daemon)
-
-Add to your agent or client configuration (e.g. Claude Code, Antigravity, or custom agent):
+Add Kaj to your agent configuration (e.g., Claude Code, Google Antigravity):
 
 ```json
 {
@@ -242,14 +226,14 @@ Add to your agent or client configuration (e.g. Claude Code, Antigravity, or cus
 
 ### 2. Stdio Transport (For Desktop Tools)
 
-Add to `claude_desktop_config.json` or Cursor MCP settings:
+Add Kaj to `claude_desktop_config.json` or Cursor settings:
 
 ```json
 {
   "mcpServers": {
     "kaj": {
       "command": "node",
-      "args": ["<path-to-repo>/dist/mcp/stdio.js"]
+      "args": ["/absolute/path/to/kaj/dist/mcp/stdio.js"]
     }
   }
 }
@@ -257,19 +241,39 @@ Add to `claude_desktop_config.json` or Cursor MCP settings:
 
 ### MCP Tools Catalog
 
-| Tool                | Access        | Description                                                                                                            |
-| :------------------ | :------------ | :--------------------------------------------------------------------------------------------------------------------- |
-| `query_tasks`       | `readOnly`    | Query tasks with filters (`status[]`, `project_id`, `priority[]`, `action_date` range, `due_date` range, text search). |
-| `get_task`          | `readOnly`    | Retrieve full details of a task by ID.                                                                                 |
-| `get_board_summary` | `readOnly`    | Compact snapshot of task counts per column and swimlane + active Tracking items.                                       |
-| `create_task`       | Write         | Create a task with title, status, project, priority, action/due dates, repeat rule, waiting note, and details.         |
-| `update_task`       | Write         | Partially update any attribute of an existing task.                                                                    |
-| `move_task`         | Write         | Move a task across columns or project swimlanes with optional waiting notes.                                           |
-| `complete_task`     | Write         | Mark a task as completed (triggers spawn-on-complete rollover if repeating).                                           |
-| `delete_task`       | `destructive` | Soft-delete a task (sets `deleted_at`).                                                                                |
-| `restore_task`      | Write         | Recover a soft-deleted task.                                                                                           |
-| `list_projects`     | `readOnly`    | List all projects with task counts and sort order.                                                                     |
-| `save_project`      | Write         | Create or update a project (name, color, sort order, archive status).                                                  |
+| Tool | Access | Description |
+| :--- | :--- | :--- |
+| `query_tasks` | `readOnly` | Query tasks with filters (`status[]`, `project_id`, `priority[]`, `action_date`, `due_date`, text search). |
+| `get_task` | `readOnly` | Retrieve full details of an individual task by ID. |
+| `get_board_summary` | `readOnly` | Compact snapshot of task counts per column, swimlane distribution, and active tracking blockers. |
+| `create_task` | Write | Create a task with title, status, project, priority, dates, recurrence, waiting note, and details. |
+| `update_task` | Write | Partially update attributes of an existing task. |
+| `move_task` | Write | Move a task across columns or project swimlanes. |
+| `complete_task` | Write | Mark a task as completed (triggers spawn-on-complete rollover if recurring). |
+| `delete_task` | `destructive` | Soft-delete a task (`deleted_at` timestamp). |
+| `restore_task` | Write | Recover a soft-deleted task. |
+| `list_projects` | `readOnly` | List all projects with active task counts and sort orders. |
+| `save_project` | Write | Create or update a project entity (name, color, sort order, archive status). |
+
+---
+
+## Verification & Testing
+
+Kaj enforces strict **Test-Driven Development (TDD)** and **Spec-Driven Development (SDD)**:
+
+```bash
+# Run unit tests (< 1s)
+npm run test:unit
+
+# Run full Vitest test suite (unit + integration)
+npm test
+
+# Run Playwright live browser UI verification
+npm run test:ui
+
+# Verify 100% active requirement coverage and zero hash drift via Spec Guardian
+npm run audit:specs
+```
 
 ---
 
@@ -277,44 +281,68 @@ Add to `claude_desktop_config.json` or Cursor MCP settings:
 
 ```text
 .
-├── .agents/
-│   └── skills/
-│       └── kaj-test-protocol/   # Mandatory local test protocol for release governance
-├── specs/                       # Formal EARS specifications (fingerprinted by Spec Guardian)
-│   ├── tasks.md                 # TASK-001..005: Workflow, validation, recurrence, calendar
-│   ├── projects.md              # PROJ-001..002: Projects, swimlane reordering, unassigned lane
-│   ├── mcp.md                   # MCP-001..003: Tools, dual transport, safety annotations
-│   ├── ui.md                    # UI-001..004: Bento layout, Chronos palette, calendar, modals
-│   └── traceability.json        # Auto-compiled Spec Guardian traceability manifest
+├── specs/                          # Formal EARS requirements (cryptographically fingerprinted)
+│   ├── tasks.md                    # TASK-001..006: Workflow, validation, recurrence, ordering
+│   ├── projects.md                 # PROJ-001..002: Project entities, swimlanes, inbox
+│   ├── mcp.md                      # MCP-001..003: Tools, transports, safety annotations
+│   ├── telegram.md                 # TG-001: Telegram bot integration & token parsing
+│   ├── ui.md                       # UI-001..009: Bento, Chronos, Calendar, Mobile, Cockpit
+│   └── traceability.json           # Automated Spec Guardian verification manifest
 ├── src/
-│   ├── shared/                  # Domain types and Zod validation schemas
+│   ├── shared/                     # Domain schemas and TypeScript types
 │   │   └── types.ts
-│   ├── server/                  # Backend daemon
-│   │   ├── db.ts                # node:sqlite WAL initialization and migrations
-│   │   ├── repository.ts        # Task & Project repositories, recurrence engine, calendar
-│   │   └── index.ts             # Daemon entrypoint
-│   └── client/                  # Preact + Vite frontend (Bento × Chronos UI)
+│   ├── server/                     # Backend daemon
+│   │   ├── db.ts                   # node:sqlite WAL initialization and schema migrations
+│   │   ├── recurrence.ts           # Pure recurrence calculation and period tagging engine
+│   │   ├── repository.ts           # Task and Project SQLite repositories
+│   │   ├── events.ts               # In-memory SSE event bus
+│   │   ├── app.ts                  # Hono REST endpoints and route handlers
+│   │   ├── telegram/               # Telegram parser, HTTP transport, config, and formatters
+│   │   │   ├── config.ts
+│   │   │   ├── formatters.ts
+│   │   │   ├── parser.ts
+│   │   │   ├── transport.ts
+│   │   │   └── types.ts
+│   │   └── index.ts                # Server entrypoint
+│   ├── client/                     # Preact + Tailwind CSS frontend
+│   │   ├── components/
+│   │   │   ├── cockpit/            # Desktop Cockpit execution and telemetry subcomponents
+│   │   │   ├── mobile/             # Responsive mobile tabs, cards, and action sheets
+│   │   │   ├── task-modal/         # Task modal emoji palette, markdown toolbar, recurrence
+│   │   │   ├── CalendarView.tsx    # Interactive Month & Week calendar
+│   │   │   ├── SwimlaneBoard.tsx   # Bento 6-column Kanban board
+│   │   │   ├── DesktopCockpit.tsx  # Desktop Cockpit container
+│   │   │   └── TopBar.tsx          # Top navigation bar and density switcher
+│   │   └── App.tsx                 # Client application state orchestrator
+│   └── mcp/                        # Model Context Protocol implementation
+│       ├── server.ts               # Streamable HTTP MCP server handler
+│       └── stdio.ts                # Stdio CLI adapter
 ├── tests/
-│   ├── unit/                    # Fast deterministic unit tests (< 5s)
-│   ├── integration/             # Database and HTTP integration tests
-│   └── e2e/                     # Playwright live UI verification tests
-├── AGENTS.md                    # Operating guidelines and Prime Directives for AI agents
-├── release.md                   # 6-Gate Release pipeline and version roadmap
-├── package.json                 # Project manifest and scripts
-└── tsconfig.json                # TypeScript configuration
+│   ├── unit/                       # Deterministic unit tests (tasks, calendar, recurrence, telegram)
+│   ├── integration/                # SQLite integration and MCP protocol tests
+│   └── e2e/                        # Playwright automated browser verification
+├── tools/
+│   └── guardian.py                 # Self-contained zero-dependency EARS specification auditor
+├── scripts/
+│   └── daemon-ctl.sh               # Background daemon manager & LaunchAgent installer
+├── ADR.md                          # Architecture Decision Records
+├── AGENTS.md                       # Operating guidelines and verification protocols for AI agents
+├── release.md                      # 6-Gate release roadmap and version history
+├── package.json                    # Project metadata and dependencies
+└── tsconfig.json                   # TypeScript configuration
 ```
 
 ---
 
-## Engineering Standards
+## Contributing & Engineering Standards
 
-- **Spec-First Rule**: No code or tests are written without an approved EARS requirement in `specs/`. Code is annotated with `// [spec: REQ-ID]` and tests with `// [verifies: REQ-ID/AC-ID]`.
-- **Strict TDD**: All logic is developed through the `Red → Green → Refactor` cycle.
-- **Mandatory Live UI Verification**: Any UI change must be verified against the live app via automated headless browser tests and visual DOM review before completion.
-- **Zero Drift Auditing**: Spec Guardian (`npm run audit:specs`) guarantees 100% active criteria coverage and cryptographic block hash integrity.
+- **Spec-First Rule**: Every new feature or behavioral change begins with an approved EARS requirement in `specs/`. Code must include `// [spec: REQ-ID]` and tests must include `// [verifies: REQ-ID/AC-ID]`.
+- **Strict TDD**: Follow the Red → Green → Refactor development cycle.
+- **Spec Guardian Strict Audit**: Run `npm run audit:specs` to ensure 100% active criteria coverage and zero requirement hash drift before committing.
+- **Low Memory Architecture**: The daemon must remain low-footprint (~56–95 MB RSS under traffic).
 
 ---
 
 ## License
 
-MIT
+This project is open-source software licensed under the [MIT License](LICENSE).
