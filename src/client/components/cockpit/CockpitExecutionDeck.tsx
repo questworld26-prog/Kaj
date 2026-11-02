@@ -140,11 +140,10 @@ export function CockpitExecutionDeck({
               >
                 <div className="flex items-center gap-2 truncate">
                   <span
-                    className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-bold border ${
-                      task.status === "in_progress_week"
+                    className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-bold border ${task.status === "in_progress_week"
                         ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
                         : "bg-sky-500/10 text-sky-400 border-sky-500/30"
-                    }`}
+                      }`}
                   >
                     {task.status === "in_progress_week" ? "Week" : "Month"}
                   </span>

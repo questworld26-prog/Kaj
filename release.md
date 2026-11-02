@@ -11,6 +11,19 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v2.5.0`: Desktop Cockpit Execution Screen, Performance Telemetry & Codebase Modularization
+
+- **Status**: ✅ RELEASED
+- **Focus**: Adds dedicated Desktop Cockpit execution view with real-time performance telemetry charts (Weekly Velocity bars, Project Distribution Donut, and Creator-segmented horizontal stacked completion graph), view navigation switcher in the desktop top command bar, reordered Execution Deck with Upcoming Horizons above Tracking, and extensive senior engineering modularization of core monolithic files across client and server.
+- **Deliverables**:
+  - [x] **UI-009 / AC-UI-009.1**: Desktop navigation switcher in top command bar seamlessly toggling between Cockpit, Kanban Board, and Calendar.
+  - [x] **UI-009 / AC-UI-009.2**: Split 2-column Desktop Cockpit layout featuring Today Focus Plate, Upcoming Horizons (This Week & This Month), and Tracking & Blockers containers.
+  - [x] **UI-009 / AC-UI-009.3**: ISO weekly velocity bar chart visualizing tasks completed across the last 6 weeks with current week accenting.
+  - [x] **UI-009 / AC-UI-009.4**: SVG donut chart illustrating distribution of completed tasks across project swimlanes with color tokens.
+  - [x] **UI-009 / AC-UI-009.5**: Horizontal stacked creator bar chart attributing completed tasks to their respective authors (`created_by`) across weekly intervals.
+  - [x] **Core Modularization**: Decomposed monolithic files (`MobileViews.tsx` reduced from 1,228 to 227 lines, `TaskModal.tsx` reduced from 930 to 573 lines, `DesktopCockpit.tsx` to 83 lines, `telegram.ts` to 424 lines, and extracted pure recurrence logic into `recurrence.ts`).
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (97/97), 43 unit tests + 27 integration tests + 37 Playwright E2E tests passing, clean working tree, version bumped to `2.5.0`.
+
 ### Release `v2.3.0`: Telegram Creator Attribution, Notes Formatting Toolbar & Task Creator Editing
 
 - **Status**: ✅ RELEASED
