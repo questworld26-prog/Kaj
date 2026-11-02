@@ -4,6 +4,7 @@
 // [spec: UI-004]
 // [spec: UI-006]
 // [spec: UI-007]
+// [spec: UI-009]
 import { h } from "preact";
 import { useState, useEffect, useCallback, useMemo } from "preact/hooks";
 import type {
@@ -17,6 +18,7 @@ import * as api from "./api.js";
 import { TopBar, type CardDensity } from "./components/TopBar.js";
 import { SwimlaneBoard } from "./components/SwimlaneBoard.js";
 import { CalendarView } from "./components/CalendarView.js";
+import { DesktopCockpit } from "./components/DesktopCockpit.js";
 import { MobileViews, type MobileTab } from "./components/MobileViews.js";
 import { TaskModal } from "./components/TaskModal.js";
 import { CompletedDrawer } from "./components/CompletedDrawer.js";
@@ -30,7 +32,7 @@ function formatDateToYMD(d: Date): string {
 }
 
 export function App() {
-  const [currentView, setCurrentView] = useState<"board" | "calendar">("board");
+  const [currentView, setCurrentView] = useState<"cockpit" | "board" | "calendar">("board");
   const [mobileTab, setMobileTab] = useState<MobileTab>("cockpit");
   const [searchQuery, setSearchQuery] = useState("");
   const [cardDensity, setCardDensity] = useState<CardDensity>(() => {
@@ -426,9 +428,19 @@ export function App() {
           onCreateTaskInColumn={handleCreateTaskInColumn}
         />
 
-        {/* Desktop Layout (>= md) - 100% untouched */}
+        {/* Desktop Layout (>= md) */}
         <div className="hidden md:flex flex-1 flex-col w-full">
-          {currentView === "board" ? (
+          {currentView === "cockpit" ? (
+            <DesktopCockpit
+              tasks={filteredTasks}
+              projects={projects}
+              completedTasks={filteredCompletedTasks}
+              onSelectTask={handleSelectTask}
+              onCompleteTask={handleCompleteTask}
+              onUpdateTaskStatus={handleUpdateTaskStatus}
+              onAddTask={() => setIsTaskModalOpen(true)}
+            />
+          ) : currentView === "board" ? (
             <SwimlaneBoard
               swimlanes={filteredSwimlanes}
               density={cardDensity}

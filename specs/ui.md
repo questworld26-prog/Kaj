@@ -99,6 +99,20 @@ Acceptance Criteria:
 - AC-UI-008.2: In the task modal dialog, an explicit "✓ Mark Complete" button shall be provided for existing active tasks, marking the task complete and closing the dialog upon click.
 - AC-UI-008.3: On mobile viewports, swiping a task card to the right past the completion threshold shall trigger task completion and archiving.
 
+---
+
+## UI-009: Desktop Cockpit Execution Screen with Performance Telemetry Charts
+
+The system shall provide a dedicated Cockpit view for desktop viewports (>= 768px) accessible via the top navigation switcher, featuring a split layout with execution focus on the left and live telemetry charts on the right.
+
+Acceptance Criteria:
+- AC-UI-009.1: The desktop top command bar navigation switcher shall provide Cockpit, Kanban Board, and Calendar options, persisting view changes and navigating to the Desktop Cockpit.
+- AC-UI-009.2: The Desktop Cockpit shall render a 2-column split layout with execution focus on the left (featuring an accented Today Focus Plate, dashed Tracking & Waiting On container, and upcoming horizon tasks) and a telemetry analytics column on the right.
+- AC-UI-009.3: The Desktop Cockpit telemetry section shall render a weekly completion velocity chart displaying completed tasks grouped across the recent 6 weeks.
+- AC-UI-009.4: The Desktop Cockpit telemetry section shall render a project distribution chart displaying completed tasks proportioned across projects.
+- AC-UI-009.5: The Desktop Cockpit telemetry section shall render a horizontal stacked bar chart showing completed tasks segmented by creator (`created_by`) across weeks.
+
+
 
 
 

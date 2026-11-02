@@ -1,8 +1,8 @@
 {
-  "last_audited_at": "2026-11-02T05:36:37.012000+00:00",
-  "total_requirements": 20,
-  "total_criteria": 92,
-  "verified_criteria_count": 92,
+  "last_audited_at": "2026-11-02T05:44:55.135634+00:00",
+  "total_requirements": 21,
+  "total_criteria": 97,
+  "verified_criteria_count": 97,
   "status": "PASS",
   "requirements": [
     {
@@ -497,8 +497,8 @@
       "requirement_id": "UI-008",
       "title": "Multi-Modal Task Completion Interactions",
       "spec_file": "specs/ui.md",
-      "sha256": "f52d4591040c2913039ae7bd40019f0c10980aa04aef9bffb1f118d6abee5588",
-      "verified_sha256": "f52d4591040c2913039ae7bd40019f0c10980aa04aef9bffb1f118d6abee5588",
+      "sha256": "38f76382f8353b8124e793c011b5e9c1a7e3a2619c0779c64511ace6179e60c7",
+      "verified_sha256": "38f76382f8353b8124e793c011b5e9c1a7e3a2619c0779c64511ace6179e60c7",
       "acceptance_criteria": [
         "AC-UI-008.1",
         "AC-UI-008.2",
@@ -512,6 +512,33 @@
       "implementation_files": [
         "src/client/components/MobileViews.tsx",
         "src/client/components/TaskModal.tsx"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "UI-009",
+      "title": "Desktop Cockpit Execution Screen with Performance Telemetry Charts",
+      "spec_file": "specs/ui.md",
+      "sha256": "cb367acdeb71fb7e1653c27b3f48ed3f35e23d4279edbdc65b0cb98a939e500d",
+      "verified_sha256": "cb367acdeb71fb7e1653c27b3f48ed3f35e23d4279edbdc65b0cb98a939e500d",
+      "acceptance_criteria": [
+        "AC-UI-009.1",
+        "AC-UI-009.2",
+        "AC-UI-009.3",
+        "AC-UI-009.4",
+        "AC-UI-009.5"
+      ],
+      "verified_criteria": [
+        "AC-UI-009.1",
+        "AC-UI-009.2",
+        "AC-UI-009.3",
+        "AC-UI-009.4",
+        "AC-UI-009.5"
+      ],
+      "implementation_files": [
+        "src/client/App.tsx",
+        "src/client/components/DesktopCockpit.tsx",
+        "src/client/components/TopBar.tsx"
       ],
       "status": "VERIFIED"
     }

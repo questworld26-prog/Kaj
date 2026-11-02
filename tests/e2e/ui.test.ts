@@ -1106,4 +1106,90 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     const firstTextAfter = await cardsAfterReload.first().innerText();
     expect(firstTextAfter).toContain("Card Order Beta");
   });
+
+  // [verifies: UI-009/AC-UI-009.1]
+  // [verifies: UI-009/AC-UI-009.2]
+  // [verifies: UI-009/AC-UI-009.3]
+  // [verifies: UI-009/AC-UI-009.4]
+  // [verifies: UI-009/AC-UI-009.5]
+  test("desktop cockpit view renders 2-column split layout with execution focus and live telemetry charts", async ({
+    page,
+  }) => {
+    // Seed test tasks with projects, statuses, and creator attribution
+    const prjRes = await page.request.post("/api/projects", {
+      data: { name: "Cockpit Platform", color: "#10B981" },
+    });
+    const prj = (await prjRes.json()) as { id: string };
+
+    // Active today task
+    await page.request.post("/api/tasks", {
+      data: {
+        title: "Cockpit Focus Task Alpha",
+        status: "in_progress_today",
+        priority: "today",
+        project_id: prj.id,
+        created_by: "Prithi",
+      },
+    });
+
+    // Tracking task
+    await page.request.post("/api/tasks", {
+      data: {
+        title: "Cockpit Blocked Task Beta",
+        status: "tracking",
+        priority: "week",
+        project_id: prj.id,
+        waiting_on: "Waiting on vendor shipment",
+        created_by: "Alex",
+      },
+    });
+
+    // Completed task
+    const compRes = await page.request.post("/api/tasks", {
+      data: {
+        title: "Cockpit Done Task Gamma",
+        status: "todo",
+        priority: "week",
+        project_id: prj.id,
+        created_by: "Sarah",
+      },
+    });
+    const compTask = (await compRes.json()) as { id: string };
+    await page.request.post(`/api/tasks/${compTask.id}/complete`);
+
+    await page.goto("/");
+    await expect(page.locator("#app-root")).toBeVisible();
+
+    // Verify Cockpit navigation tab exists in TopBar on desktop
+    const cockpitNavBtn = page.locator('[data-testid="nav-cockpit-btn"]');
+    await expect(cockpitNavBtn).toBeVisible();
+
+    // Click to navigate to Desktop Cockpit
+    await cockpitNavBtn.click();
+
+    const cockpitView = page.locator('[data-testid="desktop-cockpit-view"]');
+    await expect(cockpitView).toBeVisible();
+
+    // AC-UI-009.2: Left execution focus column
+    const todayPlate = cockpitView.locator('[data-testid="cockpit-today-focus-plate"]');
+    await expect(todayPlate).toBeVisible();
+    await expect(todayPlate).toContainText("Cockpit Focus Task Alpha");
+
+    const trackingBox = cockpitView.locator('[data-testid="cockpit-tracking-container"]');
+    await expect(trackingBox).toBeVisible();
+    await expect(trackingBox).toContainText("Cockpit Blocked Task Beta");
+    await expect(trackingBox).toContainText("Waiting on vendor shipment");
+
+    // AC-UI-009.3: Weekly completed velocity chart
+    const weeklyChart = cockpitView.locator('[data-testid="cockpit-weekly-velocity-chart"]');
+    await expect(weeklyChart).toBeVisible();
+
+    // AC-UI-009.4: Project completed distribution chart
+    const projectChart = cockpitView.locator('[data-testid="cockpit-project-distribution-chart"]');
+    await expect(projectChart).toBeVisible();
+
+    // AC-UI-009.5: Stacked creator completed chart
+    const creatorChart = cockpitView.locator('[data-testid="cockpit-creator-stacked-chart"]');
+    await expect(creatorChart).toBeVisible();
+  });
 });

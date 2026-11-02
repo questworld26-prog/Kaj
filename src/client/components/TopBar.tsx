@@ -3,13 +3,14 @@
 // [spec: UI-005]
 // [spec: UI-006]
 // [spec: UI-007]
+// [spec: UI-009]
 import { h } from "preact";
 
 export type CardDensity = "compact" | "minimal";
 
 interface TopBarProps {
-  currentView: "board" | "calendar";
-  onViewChange: (view: "board" | "calendar") => void;
+  currentView: "cockpit" | "board" | "calendar";
+  onViewChange: (view: "cockpit" | "board" | "calendar") => void;
   density: CardDensity;
   onDensityChange: (density: CardDensity) => void;
   onAddTask: () => void;
@@ -139,11 +140,36 @@ export function TopBar({
           </div>
         </div>
 
-        {/* View Switcher: Board vs Calendar */}
+        {/* View Switcher: Cockpit vs Board vs Calendar */}
         <nav
           aria-label="Main Navigation"
           className="flex items-center bg-[#0E1111] p-1 rounded-xl border border-[#2A3235]"
         >
+          <button
+            type="button"
+            data-testid="nav-cockpit-btn"
+            onClick={() => onViewChange("cockpit")}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              currentView === "cockpit"
+                ? "bg-[#1C2224] text-emerald-400 shadow-sm border border-[#2A3235]"
+                : "text-gray-400 hover:text-gray-200"
+            }`}
+          >
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 14a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1v-5zM14 14a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1h-4a1 1 0 01-1-1v-5z"
+              />
+            </svg>
+            Cockpit
+          </button>
           <button
             type="button"
             data-testid="nav-board-btn"
