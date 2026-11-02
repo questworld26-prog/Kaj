@@ -217,6 +217,26 @@ describe("Tasks Core Workflow & Attributes (TASK-001, TASK-002, TASK-003)", () =
     expect(noDates.due_date).toBeNull();
   });
 
+  // [verifies: TASK-002/AC-TASK-002.6]
+  it("supports optional created_by attribute and preserves it on updates", () => {
+    const task = taskRepo.createTask({
+      title: "Task with creator attribution",
+      created_by: "Alice",
+    });
+    expect(task.created_by).toBe("Alice");
+
+    const retrieved = taskRepo.getTaskById(task.id);
+    expect(retrieved?.created_by).toBe("Alice");
+
+    // Preserved on title/status update when not passed
+    const updated = taskRepo.updateTask(task.id, { title: "Updated Title" });
+    expect(updated?.created_by).toBe("Alice");
+
+    // Allows updating created_by explicitly
+    const updatedCreator = taskRepo.updateTask(task.id, { created_by: "Bob" });
+    expect(updatedCreator?.created_by).toBe("Bob");
+  });
+
   // [verifies: TASK-003/AC-TASK-003.1]
   it("keeps priority intact as quarter or year when task is moved to in_progress_today", () => {
     const taskQuarter = taskRepo.createTask({

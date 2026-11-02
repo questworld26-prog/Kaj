@@ -68,6 +68,7 @@ export const CreateTaskInputSchema = z.object({
   repeat_day_of_month: RepeatDayOfMonthSchema.optional().default(null),
   repeat_day_of_year: RepeatDayOfYearSchema.optional().default(null),
   waiting_on: z.string().default(""),
+  created_by: z.string().nullable().optional().default(null),
   sort_order: z.number().optional(),
 });
 
@@ -90,6 +91,7 @@ export const UpdateTaskInputSchema = z.object({
   repeat_day_of_month: RepeatDayOfMonthSchema.optional(),
   repeat_day_of_year: RepeatDayOfYearSchema.optional(),
   waiting_on: z.string().optional(),
+  created_by: z.string().nullable().optional(),
   sort_order: z.number().optional(),
 });
 
@@ -113,6 +115,7 @@ export interface Task {
   completed_at: string | null;
   deleted_at: string | null;
   parent_recurring_id: string | null;
+  created_by?: string | null;
   created_at: string;
   updated_at: string;
 }

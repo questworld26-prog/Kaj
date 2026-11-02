@@ -284,6 +284,15 @@ export function MobileViews({
           >
             {task.title}
           </button>
+          {task.created_by && (
+            <span
+              data-testid="creator-badge"
+              className="text-[10px] px-1.5 py-0.2 rounded bg-[#121718] text-stone-300 border border-[#2A3235] truncate shrink-0"
+              title={`Created by: ${task.created_by}`}
+            >
+              👤 {task.created_by}
+            </span>
+          )}
           {task.status === "tracking" && task.waiting_on && (
             <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 truncate shrink-0">
               ⏳ {task.waiting_on}
@@ -366,6 +375,15 @@ export function MobileViews({
           )}
           {task.due_date && (
             <span className="text-rose-400 font-medium">⚑ {task.due_date}</span>
+          )}
+          {task.created_by && (
+            <span
+              data-testid="creator-badge"
+              className="text-[10px] px-1.5 py-0.2 rounded bg-[#121718] text-stone-300 border border-[#2A3235] truncate shrink-0"
+              title={`Created by: ${task.created_by}`}
+            >
+              👤 {task.created_by}
+            </span>
           )}
           {task.status === "tracking" && task.waiting_on && (
             <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">

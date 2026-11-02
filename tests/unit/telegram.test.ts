@@ -355,4 +355,110 @@ describe("Telegram Bot Integration (TG-001)", () => {
     expect(updated?.status).toBe("done");
     expect(callbackAnswers[0]).toContain("Completed");
   });
+
+  // [verifies: TG-001/AC-TG-001.7]
+  it("supports user_names mapping and sets created_by on new tasks and in format summaries", async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "kaj-tg-names-"));
+    const cfgPath = path.join(tmpDir, "telegram.config.json");
+
+    fs.writeFileSync(
+      cfgPath,
+      JSON.stringify({
+        enabled: true,
+        bot_token: "123456:ABC",
+        allowed_user_ids: [847921997, 928147325],
+        user_names: {
+          "847921997": "Prithi",
+          "928147325": "Alex",
+        },
+        default_status: "triage",
+        poll_interval_ms: 2000,
+      }),
+      "utf-8",
+    );
+
+    const cfg = loadTelegramConfig(cfgPath);
+    expect(cfg.user_names).toEqual({
+      "847921997": "Prithi",
+      "928147325": "Alex",
+    });
+
+    const sentMessages: Array<{ chatId: number; text: string }> = [];
+    const bot = new TelegramBotService({
+      config: cfg,
+      taskRepo,
+      projectRepo,
+      eventBus,
+      transport: {
+        getUpdates: async () => [],
+        sendMessage: async (chatId, text) => {
+          sentMessages.push({ chatId, text });
+        },
+        answerCallbackQuery: async () => {},
+      },
+    });
+
+    // 1. Task created by 847921997 maps to "Prithi"
+    await bot.handleUpdate({
+      update_id: 10,
+      message: {
+        message_id: 20,
+        from: { id: 847921997, first_name: "IgnoredFirstName" },
+        chat: { id: 847921997 },
+        text: "Review quarterly report !today",
+      },
+    });
+
+    const tasks = taskRepo.listTasks(false);
+    const createdTask = tasks.find((t) => t.title.includes("Review quarterly report"));
+    expect(createdTask).toBeDefined();
+    expect(createdTask?.created_by).toBe("Prithi");
+    expect(sentMessages[0].text).toContain("Prithi");
+
+    // 2. Task created by user with no user_names entry falls back to first_name
+    await bot.handleUpdate({
+      update_id: 11,
+      message: {
+        message_id: 21,
+        from: { id: 999999, first_name: "GuestUser" },
+        chat: { id: 999999 },
+        text: "External guest task",
+      },
+    });
+    // (Note: 999999 is not in allowed_user_ids, so it's rejected)
+    expect(sentMessages[1].text).toContain("Unauthorized user ID");
+
+    // Now test with user in allowed_user_ids but without explicit mapping in user_names
+    const cfgWithGuest = {
+      ...cfg,
+      allowed_user_ids: [847921997, 555555],
+    };
+    const botWithGuest = new TelegramBotService({
+      config: cfgWithGuest,
+      taskRepo,
+      projectRepo,
+      eventBus,
+      transport: {
+        getUpdates: async () => [],
+        sendMessage: async (chatId, text) => {
+          sentMessages.push({ chatId, text });
+        },
+        answerCallbackQuery: async () => {},
+      },
+    });
+
+    await botWithGuest.handleUpdate({
+      update_id: 12,
+      message: {
+        message_id: 22,
+        from: { id: 555555, first_name: "Sarah" },
+        chat: { id: 555555 },
+        text: "Prepare launch deck",
+      },
+    });
+
+    const sarahTask = taskRepo.listTasks(false).find((t) => t.title.includes("Prepare launch deck"));
+    expect(sarahTask).toBeDefined();
+    expect(sarahTask?.created_by).toBe("Sarah");
+  });
 });

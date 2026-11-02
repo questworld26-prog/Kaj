@@ -176,7 +176,7 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
     expect(res.completed_task.status).toBe("done");
     expect(res.completed_task.completed_at).not.toBeNull();
     expect(res.spawned_task).not.toBeNull();
-    expect(res.spawned_task.status).toBe("todo");
+    expect(res.spawned_task.status).toBe("triage");
     expect(res.spawned_task.action_date).toBe("2026-11-04"); // +7d
   });
 

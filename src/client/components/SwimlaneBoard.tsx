@@ -331,6 +331,15 @@ export function SwimlaneBoard({
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0 text-[10px]">
+                    {task.created_by && (
+                      <span
+                        data-testid="creator-badge"
+                        className="text-stone-400 font-normal truncate max-w-[80px]"
+                        title={`Created by: ${task.created_by}`}
+                      >
+                        👤 {task.created_by}
+                      </span>
+                    )}
                     {task.repeat_rule !== "none" && (
                       <span
                         className="text-emerald-400"
@@ -419,6 +428,15 @@ export function SwimlaneBoard({
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
+                    {task.created_by && (
+                      <span
+                        data-testid="creator-badge"
+                        title={`Created by: ${task.created_by}`}
+                        className="text-[9px] px-1 py-0.2 rounded bg-[#161B1C] text-stone-300 border border-[#2A3235] truncate max-w-[90px]"
+                      >
+                        👤 {task.created_by}
+                      </span>
+                    )}
                     {task.repeat_rule !== "none" && (
                       <span
                         title={`Recurring: ${task.repeat_rule}`}

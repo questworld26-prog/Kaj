@@ -26,6 +26,7 @@ Acceptance Criteria:
 - AC-TASK-002.3: Repeat rule values shall be strictly validated against `none`, `weekly`, `monthly`, and `yearly`. Include an option when it repeats. Day of the week for the weekly tasks, Day of the month for the monthly tasks, Day of the year for the yearly tasks.
 - AC-TASK-002.4: Action date and due date values shall be strictly validated as ISO-8601 calendar date strings in `DD-MM-YYYY` format or null.
 - AC-TASK-002.5: The system shall allow creating tasks without an action date or without a due date.
+- AC-TASK-002.6: The task schema shall support an optional `created_by` string attribute, defaulting to null, preserved across updates, and surfaced in task representations.
 
 ---
 

@@ -54,6 +54,7 @@ export function initSchema(db: DatabaseSync): void {
       completed_at TEXT,
       deleted_at TEXT,
       parent_recurring_id TEXT,
+      created_by TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -80,6 +81,9 @@ export function initSchema(db: DatabaseSync): void {
     }
     if (!colNames.has("repeat_day_of_year")) {
       db.exec("ALTER TABLE tasks ADD COLUMN repeat_day_of_year TEXT;");
+    }
+    if (!colNames.has("created_by")) {
+      db.exec("ALTER TABLE tasks ADD COLUMN created_by TEXT;");
     }
   } catch {}
 }

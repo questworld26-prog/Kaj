@@ -50,9 +50,10 @@ The system shall provide a native light-dismiss modal dialog for task creation a
 
 Acceptance Criteria:
 - AC-UI-004.1: The task modal shall use `<dialog closedby="any">` with backdrop blur, supporting dismissal via Esc key or outside backdrop click.
-- AC-UI-004.2: The task modal shall expose inputs for name, status, project, independent priority, action date, due date, repeat rule, waiting note, and details.
+- AC-UI-004.2: The task modal shall expose inputs for name, status, project, independent priority, action date, due date, repeat rule, waiting note, creator (created_by), and details.
 - AC-UI-004.3: The completed archive drawer shall list tasks with status `done` and provide one-click restoration back to active board status.
 - AC-UI-004.4: The task modal shall provide an emoji prefix button beside the task title input that opens a palette of quick work emojis and updates or prepends the chosen emoji into the task title.
+- AC-UI-004.5: The task modal shall provide a toggle button to reveal a formatting toolbar for Task Details & Notes (defaulting to hidden/off) supporting bold, italic, underline, bullet list, and numbered list formatting.
 
 ---
 

@@ -11,6 +11,16 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v2.3.0`: Telegram Creator Attribution, Notes Formatting Toolbar & Task Creator Editing
+
+- **Status**: ✅ RELEASED
+- **Focus**: Adds native creator attribution tracking (`created_by`), user name mapping in `telegram.config.json` for deterministic Telegram bot task creation, inline text formatting toolbar for task details & notes, and direct creator editing inside the Task Modal.
+- **Deliverables**:
+  - [x] **TG-001 / AC-TG-001.7**: User name mapping dictionary (`user_names`) in `telegram.config.json` mapping numeric Telegram user IDs to friendly names, recording creator attribution in `created_by`, and surfacing creator in Telegram summaries.
+  - [x] **TASK-002 / AC-TASK-002.6**: Schema and SQLite database column migration for `created_by` attribute, preserved across task updates and surfaced on board cards and mobile views.
+  - [x] **UI-004 / AC-UI-004.2 & AC-UI-004.5**: Collapsible text formatting toolbar in Task Details & Notes (bold, italic, underline, bullet list, numbered list) and dedicated `created_by` input in task editor dialog.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (92/92), 43 unit tests + 27 integration tests + 36 Playwright E2E tests passing, clean working tree, version bumped to `2.3.0`.
+
 ### Release `v2.2.0`: Triage Recurrence Rollover, Period Indicator Tags, Quick Click-to-Create & Emoji Prefix Picker
 
 - **Status**: ✅ RELEASED

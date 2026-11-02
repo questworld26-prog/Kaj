@@ -275,9 +275,9 @@ export class TaskRepository {
         `INSERT INTO tasks (
           id, title, status, details, project_id, priority, action_date, due_date,
           repeat_rule, repeat_day_of_week, repeat_day_of_month, repeat_day_of_year,
-          waiting_on, sort_order, completed_at, deleted_at,
+          waiting_on, created_by, sort_order, completed_at, deleted_at,
           parent_recurring_id, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL, ?, ?)`,
       )
       .run(
         id,
@@ -293,6 +293,7 @@ export class TaskRepository {
         validated.repeat_day_of_month ?? null,
         validated.repeat_day_of_year ?? null,
         validated.waiting_on,
+        validated.created_by ?? null,
         sortOrder,
         now,
         now,
@@ -366,6 +367,10 @@ export class TaskRepository {
       validated.waiting_on !== undefined
         ? validated.waiting_on
         : existing.waiting_on;
+    const createdBy =
+      validated.created_by !== undefined
+        ? validated.created_by
+        : existing.created_by;
     const sortOrder =
       validated.sort_order !== undefined
         ? validated.sort_order
@@ -379,7 +384,7 @@ export class TaskRepository {
            SET title = ?, details = ?, project_id = ?, priority = ?,
                action_date = ?, due_date = ?, repeat_rule = ?,
                repeat_day_of_week = ?, repeat_day_of_month = ?, repeat_day_of_year = ?,
-               waiting_on = ?, sort_order = ?, updated_at = ?
+               waiting_on = ?, created_by = ?, sort_order = ?, updated_at = ?
            WHERE id = ?`,
         )
         .run(
@@ -394,6 +399,7 @@ export class TaskRepository {
           repeatDayOfMonth ?? null,
           repeatDayOfYear ?? null,
           waitingOn,
+          createdBy ?? null,
           sortOrder,
           now,
           id,
@@ -417,7 +423,7 @@ export class TaskRepository {
          SET title = ?, status = ?, details = ?, project_id = ?, priority = ?,
              action_date = ?, due_date = ?, repeat_rule = ?,
              repeat_day_of_week = ?, repeat_day_of_month = ?, repeat_day_of_year = ?,
-             waiting_on = ?, sort_order = ?, completed_at = ?, updated_at = ?
+             waiting_on = ?, created_by = ?, sort_order = ?, completed_at = ?, updated_at = ?
          WHERE id = ?`,
       )
       .run(
@@ -433,6 +439,7 @@ export class TaskRepository {
         repeatDayOfMonth ?? null,
         repeatDayOfYear ?? null,
         waitingOn,
+        createdBy ?? null,
         sortOrder,
         completedAt,
         now,

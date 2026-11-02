@@ -1,8 +1,8 @@
 {
-  "last_audited_at": "2026-10-30T06:20:10.342490+00:00",
+  "last_audited_at": "2026-11-02T05:36:37.012000+00:00",
   "total_requirements": 20,
-  "total_criteria": 89,
-  "verified_criteria_count": 89,
+  "total_criteria": 92,
+  "verified_criteria_count": 92,
   "status": "PASS",
   "requirements": [
     {
@@ -153,21 +153,23 @@
       "requirement_id": "TASK-002",
       "title": "Task Data Attributes and Schema Validation",
       "spec_file": "specs/tasks.md",
-      "sha256": "000cd04d1086a0af741f9bf40b05f5174127f225117a09a901b3e5c75473f582",
-      "verified_sha256": "000cd04d1086a0af741f9bf40b05f5174127f225117a09a901b3e5c75473f582",
+      "sha256": "2e4b6b95c774350d6cd825748368acbd69a223cad0a7394804c82236f443f588",
+      "verified_sha256": "2e4b6b95c774350d6cd825748368acbd69a223cad0a7394804c82236f443f588",
       "acceptance_criteria": [
         "AC-TASK-002.1",
         "AC-TASK-002.2",
         "AC-TASK-002.3",
         "AC-TASK-002.4",
-        "AC-TASK-002.5"
+        "AC-TASK-002.5",
+        "AC-TASK-002.6"
       ],
       "verified_criteria": [
         "AC-TASK-002.1",
         "AC-TASK-002.2",
         "AC-TASK-002.3",
         "AC-TASK-002.4",
-        "AC-TASK-002.5"
+        "AC-TASK-002.5",
+        "AC-TASK-002.6"
       ],
       "implementation_files": [
         "src/server/repository.ts"
@@ -272,15 +274,16 @@
       "requirement_id": "TG-001",
       "title": "Configurable Deterministic Telegram Bot for Task Creation, Search, and Quick Actions",
       "spec_file": "specs/telegram.md",
-      "sha256": "c904a1cb14de6f3f85149e282c17140c19dbc8b67f24320951119e8314a5179d",
-      "verified_sha256": "c904a1cb14de6f3f85149e282c17140c19dbc8b67f24320951119e8314a5179d",
+      "sha256": "e1e96d4d3b05ec0dd7de99242e927606238416f908540ccaabb55d330760c533",
+      "verified_sha256": "e1e96d4d3b05ec0dd7de99242e927606238416f908540ccaabb55d330760c533",
       "acceptance_criteria": [
         "AC-TG-001.1",
         "AC-TG-001.2",
         "AC-TG-001.3",
         "AC-TG-001.4",
         "AC-TG-001.5",
-        "AC-TG-001.6"
+        "AC-TG-001.6",
+        "AC-TG-001.7"
       ],
       "verified_criteria": [
         "AC-TG-001.1",
@@ -288,7 +291,8 @@
         "AC-TG-001.3",
         "AC-TG-001.4",
         "AC-TG-001.5",
-        "AC-TG-001.6"
+        "AC-TG-001.6",
+        "AC-TG-001.7"
       ],
       "implementation_files": [
         "src/server/app.ts",
@@ -386,19 +390,21 @@
       "requirement_id": "UI-004",
       "title": "Light-Dismiss Task Editor Dialog and Completed Archive Drawer",
       "spec_file": "specs/ui.md",
-      "sha256": "ff172f84d32c8fdcbae724f0382083ab0543cf57a65e61eafd3d2816020d040c",
-      "verified_sha256": "ff172f84d32c8fdcbae724f0382083ab0543cf57a65e61eafd3d2816020d040c",
+      "sha256": "a42ce441d6b7daef71b7b0396e5efaa0622150c53f30a36ad0d7b136e9914509",
+      "verified_sha256": "a42ce441d6b7daef71b7b0396e5efaa0622150c53f30a36ad0d7b136e9914509",
       "acceptance_criteria": [
         "AC-UI-004.1",
         "AC-UI-004.2",
         "AC-UI-004.3",
-        "AC-UI-004.4"
+        "AC-UI-004.4",
+        "AC-UI-004.5"
       ],
       "verified_criteria": [
         "AC-UI-004.1",
         "AC-UI-004.2",
         "AC-UI-004.3",
-        "AC-UI-004.4"
+        "AC-UI-004.4",
+        "AC-UI-004.5"
       ],
       "implementation_files": [
         "src/client/App.tsx",

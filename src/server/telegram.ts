@@ -15,6 +15,7 @@ export interface TelegramConfig {
   enabled: boolean;
   bot_token: string;
   allowed_user_ids: number[];
+  user_names?: Record<string, string>;
   default_status: TaskStatus;
   poll_interval_ms: number;
 }
@@ -99,6 +100,19 @@ export function loadTelegramConfig(
       ? fileData.default_status
       : DEFAULT_CONFIG.default_status;
 
+  const userNames: Record<string, string> = {};
+  if (
+    fileData.user_names &&
+    typeof fileData.user_names === "object" &&
+    !Array.isArray(fileData.user_names)
+  ) {
+    for (const [k, v] of Object.entries(fileData.user_names)) {
+      if (typeof v === "string" && v.trim()) {
+        userNames[String(k).trim()] = v.trim();
+      }
+    }
+  }
+
   const config: TelegramConfig = {
     enabled:
       typeof fileData.enabled === "boolean"
@@ -113,6 +127,7 @@ export function loadTelegramConfig(
           .map((n) => Number(n))
           .filter((n) => Number.isFinite(n))
       : [...DEFAULT_CONFIG.allowed_user_ids],
+    user_names: Object.keys(userNames).length > 0 ? userNames : undefined,
     default_status: defaultStatus,
     poll_interval_ms:
       typeof fileData.poll_interval_ms === "number" &&
@@ -404,6 +419,7 @@ function formatTaskSummary(task: Task, projects: Project[]): string {
     : null;
   const parts = [`• ${task.title} [${task.status}]`];
   if (proj) parts.push(`#${proj}`);
+  if (task.created_by) parts.push(`👤 ${task.created_by}`);
   if (task.action_date) parts.push(`@${task.action_date}`);
   if (task.due_date) parts.push(`due:${task.due_date}`);
   if (task.waiting_on) parts.push(`wait:${task.waiting_on}`);
@@ -526,6 +542,32 @@ export class TelegramBotService {
     if (this.config.allowed_user_ids.length === 0) return true;
     if (userId === undefined) return false;
     return this.config.allowed_user_ids.includes(userId);
+  }
+
+  private resolveCreatorName(
+    userId?: number,
+    from?: { id: number; first_name?: string; username?: string },
+  ): string {
+    const userNames = this.config.user_names || {};
+    if (userId !== undefined) {
+      const idKey = String(userId);
+      if (userNames[idKey]) return userNames[idKey];
+    }
+    if (from?.username) {
+      const unameKey = from.username.toLowerCase();
+      for (const [k, v] of Object.entries(userNames)) {
+        if (k.toLowerCase().replace(/^@/, "") === unameKey) {
+          return v;
+        }
+      }
+    }
+    if (from?.first_name && from.first_name.trim()) {
+      return from.first_name.trim();
+    }
+    if (from?.username && from.username.trim()) {
+      return from.username.trim();
+    }
+    return userId !== undefined ? `Telegram User ${userId}` : "Telegram User";
   }
 
   public async handleUpdate(update: TelegramUpdate): Promise<void> {
@@ -722,6 +764,8 @@ export class TelegramBotService {
       return;
     }
 
+    const creatorName = this.resolveCreatorName(userId, msg.from);
+
     const created = this.taskRepo.createTask({
       title: parsed.title,
       details: "",
@@ -732,6 +776,7 @@ export class TelegramBotService {
       due_date: parsed.due_date,
       repeat_rule: "none",
       waiting_on: parsed.waiting_on,
+      created_by: creatorName,
     });
 
     this.eventBus.broadcast({

@@ -55,7 +55,9 @@ export function TaskModal({
   onComplete,
 }: TaskModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const detailsTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [isEmojiPaletteOpen, setIsEmojiPaletteOpen] = useState(false);
+  const [showFormatToolbar, setShowFormatToolbar] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("Work & Tech");
   const [customEmojiInput, setCustomEmojiInput] = useState<string>("");
 
@@ -71,12 +73,14 @@ export function TaskModal({
     repeat_day_of_month: null,
     repeat_day_of_year: null,
     waiting_on: "",
+    created_by: "",
     details: "",
   });
 
   // Sync state when task prop changes
   useEffect(() => {
     setIsEmojiPaletteOpen(false);
+    setShowFormatToolbar(false);
     setCustomEmojiInput("");
     if (task) {
       setFormData({
@@ -91,6 +95,7 @@ export function TaskModal({
         repeat_day_of_month: task.repeat_day_of_month ?? null,
         repeat_day_of_year: task.repeat_day_of_year ?? null,
         waiting_on: task.waiting_on || "",
+        created_by: task.created_by || "",
         details: task.details || "",
       });
     } else {
@@ -106,6 +111,7 @@ export function TaskModal({
         repeat_day_of_month: null,
         repeat_day_of_year: null,
         waiting_on: "",
+        created_by: "",
         details: "",
       });
     }
@@ -138,8 +144,73 @@ export function TaskModal({
       action_date: formData.action_date || null,
       due_date: formData.due_date || null,
       waiting_on: formData.waiting_on || "",
+      created_by: formData.created_by?.trim() ? formData.created_by.trim() : null,
       details: formData.details || "",
     });
+  };
+
+  const applyWrapFormatting = (prefix: string, suffix: string) => {
+    const textarea = detailsTextareaRef.current;
+    if (!textarea) return;
+
+    const currentVal = textarea.value || "";
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? 0;
+    const selectedText = currentVal.substring(start, end);
+
+    const replacement = `${prefix}${selectedText || "text"}${suffix}`;
+    const nextVal = currentVal.substring(0, start) + replacement + currentVal.substring(end);
+
+    setFormData({
+      ...formData,
+      details: nextVal,
+    });
+
+    const newCursorStart = start + prefix.length;
+    const newCursorEnd = newCursorStart + (selectedText ? selectedText.length : 4);
+    textarea.value = nextVal;
+    textarea.focus();
+    textarea.setSelectionRange(newCursorStart, newCursorEnd);
+  };
+
+  const applyListFormatting = (type: "bullet" | "number") => {
+    const textarea = detailsTextareaRef.current;
+    if (!textarea) return;
+
+    const currentVal = textarea.value || "";
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? 0;
+
+    // Find the line boundaries of current selection
+    const beforeSelection = currentVal.substring(0, start);
+    const lineStart = beforeSelection.lastIndexOf("\n") + 1;
+    let lineEnd = currentVal.indexOf("\n", end);
+    if (lineEnd === -1) lineEnd = currentVal.length;
+
+    const linesBlock = currentVal.substring(lineStart, lineEnd);
+    const lines = linesBlock.split("\n");
+
+    const formattedLines = lines.map((line, idx) => {
+      // Strip any existing list markers
+      const cleanLine = line.replace(/^(\s*(?:[-*+]|\d+\.)\s*)/, "");
+      if (type === "bullet") {
+        return `- ${cleanLine || "item"}`;
+      } else {
+        return `${idx + 1}. ${cleanLine || "item"}`;
+      }
+    });
+
+    const replacedBlock = formattedLines.join("\n");
+    const nextVal = currentVal.substring(0, lineStart) + replacedBlock + currentVal.substring(lineEnd);
+
+    setFormData({
+      ...formData,
+      details: nextVal,
+    });
+
+    textarea.value = nextVal;
+    textarea.focus();
+    textarea.setSelectionRange(lineStart, lineStart + replacedBlock.length);
   };
 
   const handleBackdropClick = (e: MouseEvent) => {
@@ -165,9 +236,20 @@ export function TaskModal({
       <form onSubmit={handleSubmit} className="flex flex-col">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#2A3235] bg-[#121718]">
-          <h3 className="text-base font-bold text-white">
-            {task ? "Edit Task" : "New Task"}
-          </h3>
+          <div className="flex items-center gap-2.5">
+            <h3 className="text-base font-bold text-white">
+              {task ? "Edit Task" : "New Task"}
+            </h3>
+            {task?.created_by && (
+              <span
+                data-testid="modal-creator-badge"
+                className="text-[11px] px-2 py-0.5 rounded-full bg-[#1C2224] text-stone-300 border border-[#2A3235] flex items-center gap-1 font-normal"
+                title={`Created by: ${task.created_by}`}
+              >
+                👤 {task.created_by}
+              </span>
+            )}
+          </div>
           <button
             type="button"
             data-testid="close-task-modal-btn"
@@ -638,12 +720,151 @@ export function TaskModal({
             />
           </div>
 
+          {/* Created By / Origin Attribution */}
+          <div>
+            <label className="block text-xs font-semibold text-stone-300 mb-1.5 flex items-center gap-1.5">
+              <span>Created By / Origin</span>
+              <span className="text-[10px] text-gray-400 font-normal">
+                (Telegram user, team member, or system)
+              </span>
+            </label>
+            <input
+              type="text"
+              name="created_by"
+              placeholder="e.g. Prithi, Alex, or Telegram User"
+              value={formData.created_by || ""}
+              onInput={(e) =>
+                setFormData({
+                  ...formData,
+                  created_by: (e.target as HTMLInputElement).value,
+                })
+              }
+              className="w-full px-3 py-2 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none"
+            />
+          </div>
+
           {/* Details / Description */}
           <div>
-            <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-              Task Details & Notes
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-gray-300">
+                Task Details & Notes
+              </label>
+              <button
+                type="button"
+                data-testid="details-format-toggle-btn"
+                onClick={() => setShowFormatToolbar(!showFormatToolbar)}
+                title={showFormatToolbar ? "Hide formatting menu" : "Show formatting menu"}
+                aria-label="Toggle text formatting menu"
+                aria-pressed={showFormatToolbar}
+                className={`px-2 py-0.5 rounded text-[11px] font-medium flex items-center gap-1 border transition-colors ${
+                  showFormatToolbar
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
+                    : "bg-[#1C2224] text-gray-400 border-[#2A3235] hover:text-gray-200 hover:border-gray-600"
+                }`}
+              >
+                <span className="font-serif font-bold text-xs leading-none">Format</span>
+                <span className="text-[10px] leading-none opacity-80">{showFormatToolbar ? "▲" : "▼"}</span>
+              </button>
+            </div>
+
+            {/* Formatting Toolbar */}
+            {showFormatToolbar && (
+              <div
+                data-testid="details-format-toolbar"
+                className="flex items-center gap-1 p-1 mb-2 rounded-lg bg-[#161B1C] border border-[#2A3235] shadow-sm select-none"
+              >
+                {/* Bold */}
+                <button
+                  type="button"
+                  data-testid="format-bold-btn"
+                  title="Bold (Ctrl/Cmd+B)"
+                  onClick={() => applyWrapFormatting("**", "**")}
+                  className="w-7 h-7 flex items-center justify-center rounded text-gray-200 hover:bg-[#252D30] hover:text-white transition-colors"
+                >
+                  <span className="font-bold font-serif text-sm">B</span>
+                </button>
+
+                {/* Italic */}
+                <button
+                  type="button"
+                  data-testid="format-italic-btn"
+                  title="Italic (Ctrl/Cmd+I)"
+                  onClick={() => applyWrapFormatting("*", "*")}
+                  className="w-7 h-7 flex items-center justify-center rounded text-gray-200 hover:bg-[#252D30] hover:text-white transition-colors"
+                >
+                  <span className="italic font-serif text-sm">I</span>
+                </button>
+
+                {/* Underline */}
+                <button
+                  type="button"
+                  data-testid="format-underline-btn"
+                  title="Underline (Ctrl/Cmd+U)"
+                  onClick={() => applyWrapFormatting("<u>", "</u>")}
+                  className="w-7 h-7 flex items-center justify-center rounded text-gray-200 hover:bg-[#252D30] hover:text-white transition-colors"
+                >
+                  <span className="underline font-serif text-sm">U</span>
+                </button>
+
+                <div className="w-[1px] h-4 bg-[#2A3235] mx-1" />
+
+                {/* Bullet list */}
+                <button
+                  type="button"
+                  data-testid="format-bullet-list-btn"
+                  title="Bulleted List"
+                  onClick={() => applyListFormatting("bullet")}
+                  className="w-7 h-7 flex items-center justify-center rounded text-gray-200 hover:bg-[#252D30] hover:text-white transition-colors"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="8" y1="6" x2="21" y2="6" />
+                    <line x1="8" y1="12" x2="21" y2="12" />
+                    <line x1="8" y1="18" x2="21" y2="18" />
+                    <circle cx="3.5" cy="6" r="1.5" fill="currentColor" />
+                    <circle cx="3.5" cy="12" r="1.5" fill="currentColor" />
+                    <circle cx="3.5" cy="18" r="1.5" fill="currentColor" />
+                  </svg>
+                </button>
+
+                {/* Numbered list */}
+                <button
+                  type="button"
+                  data-testid="format-number-list-btn"
+                  title="Numbered List"
+                  onClick={() => applyListFormatting("number")}
+                  className="w-7 h-7 flex items-center justify-center rounded text-gray-200 hover:bg-[#252D30] hover:text-white transition-colors"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="10" y1="6" x2="21" y2="6" />
+                    <line x1="10" y1="12" x2="21" y2="12" />
+                    <line x1="10" y1="18" x2="21" y2="18" />
+                    <path d="M4 6h1v4M3 10h3" strokeWidth="2" />
+                    <path d="M3.5 14a1.5 1.5 0 0 1 2.5 1c0 1-1.5 2-2.5 3h3" strokeWidth="2" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
             <textarea
+              ref={detailsTextareaRef}
               name="details"
               rows={3}
               placeholder="Full markdown notes, links, acceptance criteria..."

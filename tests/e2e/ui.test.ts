@@ -663,6 +663,7 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     await expect(dialog.locator('input[name="due_date"]')).toBeVisible();
     await expect(dialog.locator('select[name="repeat_rule"]')).toBeVisible();
     await expect(dialog.locator('input[name="waiting_on"]')).toBeVisible();
+    await expect(dialog.locator('input[name="created_by"]')).toBeVisible();
     await expect(dialog.locator('textarea[name="details"]')).toBeVisible();
 
     // Fill form and create task
@@ -755,6 +756,143 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
         hasText: "⚡ Launch Project Nova",
       }),
     ).toBeVisible();
+  });
+
+  // [verifies: UI-004/AC-UI-004.5]
+  test("task modal details formatting menu is toggled via button and applies formatting to selected text", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // Open task dialog via Add Task button
+    await page.locator('[data-testid="add-task-btn"]').click();
+    const dialog = page.locator("dialog#task-dialog");
+    await expect(dialog).toBeVisible();
+
+    const detailsTextarea = dialog.locator('textarea[name="details"]');
+    await expect(detailsTextarea).toBeVisible();
+
+    // Verify format toolbar is hidden by default
+    const formatToolbar = dialog.locator('[data-testid="details-format-toolbar"]');
+    await expect(formatToolbar).not.toBeVisible();
+
+    // Verify format menu toggle button exists
+    const formatToggleBtn = dialog.locator('[data-testid="details-format-toggle-btn"]');
+    await expect(formatToggleBtn).toBeVisible();
+
+    // Click toggle button to show format toolbar
+    await formatToggleBtn.click();
+    await expect(formatToolbar).toBeVisible();
+
+    // Verify format buttons exist
+    const boldBtn = formatToolbar.locator('[data-testid="format-bold-btn"]');
+    const italicBtn = formatToolbar.locator('[data-testid="format-italic-btn"]');
+    const underlineBtn = formatToolbar.locator('[data-testid="format-underline-btn"]');
+    const bulletListBtn = formatToolbar.locator('[data-testid="format-bullet-list-btn"]');
+    const numberListBtn = formatToolbar.locator('[data-testid="format-number-list-btn"]');
+
+    await expect(boldBtn).toBeVisible();
+    await expect(italicBtn).toBeVisible();
+    await expect(underlineBtn).toBeVisible();
+    await expect(bulletListBtn).toBeVisible();
+    await expect(numberListBtn).toBeVisible();
+
+    // Fill details textarea with sample text
+    await detailsTextarea.fill("Important Task Note");
+
+    // Select "Task"
+    await detailsTextarea.evaluate((el: HTMLTextAreaElement) => {
+      el.focus();
+      el.setSelectionRange(10, 14);
+    });
+
+    // Click bold button
+    await boldBtn.click();
+    await expect(detailsTextarea).toHaveValue("Important **Task** Note");
+
+    // Select "**Task**" and apply italic
+    await detailsTextarea.evaluate((el: HTMLTextAreaElement) => {
+      el.focus();
+      el.setSelectionRange(10, 18);
+    });
+    await italicBtn.click();
+    await expect(detailsTextarea).toHaveValue("Important ***Task*** Note");
+
+    // Select "Note" and test underline (HTML <u> tag)
+    await detailsTextarea.evaluate((el: HTMLTextAreaElement) => {
+      el.focus();
+      el.setSelectionRange(21, 25);
+    });
+    await underlineBtn.click();
+    await expect(detailsTextarea).toHaveValue("Important ***Task*** <u>Note</u>");
+
+    // Test list formatting on new line
+    await detailsTextarea.fill("Item 1\nItem 2");
+    await detailsTextarea.evaluate((el: HTMLTextAreaElement) => {
+      el.focus();
+      el.setSelectionRange(0, 13);
+    });
+    await bulletListBtn.click();
+    await expect(detailsTextarea).toHaveValue("- Item 1\n- Item 2");
+
+    // Click toggle button again to hide toolbar
+    await formatToggleBtn.click();
+    await expect(formatToolbar).not.toBeVisible();
+  });
+
+  // [verifies: TASK-002/AC-TASK-002.6]
+  test("displays creator attribution badge on board card and in task modal", async ({
+    page,
+  }) => {
+    // Create task with created_by attribute
+    const createRes = await page.request.post("/api/tasks", {
+      data: {
+        title: "Task Authored by Telegram User",
+        status: "todo",
+        priority: "week",
+        created_by: "Prithi",
+      },
+    });
+    const task = (await createRes.json()) as { id: string };
+
+    await page.goto("/");
+    const card = page.locator(`[data-task-id="${task.id}"]`);
+    await expect(card).toBeVisible();
+
+    // Verify creator badge on card
+    const badge = card.locator('[data-testid="creator-badge"]');
+    await expect(badge).toBeVisible();
+    await expect(badge).toContainText("Prithi");
+
+    // Click card to open modal and verify modal creator badge and input
+    await card.click();
+    const dialog = page.locator("dialog#task-dialog");
+    await expect(dialog).toBeVisible();
+
+    const modalBadge = dialog.locator('[data-testid="modal-creator-badge"]');
+    await expect(modalBadge).toBeVisible();
+    await expect(modalBadge).toContainText("Prithi");
+
+    const createdByInput = dialog.locator('input[name="created_by"]');
+    await expect(createdByInput).toBeVisible();
+    await expect(createdByInput).toHaveValue("Prithi");
+
+    // Modify creator to "Sarah" and save
+    await createdByInput.fill("Sarah");
+    await dialog.locator('button[type="submit"]').click();
+    await expect(dialog).toBeHidden();
+
+    // Verify updated creator badge on card
+    await expect(badge).toContainText("Sarah");
+
+    // Reopen modal and confirm value persisted
+    await card.click();
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator('input[name="created_by"]')).toHaveValue("Sarah");
+    await expect(dialog.locator('[data-testid="modal-creator-badge"]')).toContainText("Sarah");
+
+    await dialog.locator('[data-testid="close-task-modal-btn"]').click();
+    await expect(dialog).toBeHidden();
   });
 
   // [verifies: UI-004/AC-UI-004.3]

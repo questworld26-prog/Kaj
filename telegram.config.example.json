@@ -2,6 +2,10 @@
   "enabled": false,
   "bot_token": "YOUR_TELEGRAM_BOT_TOKEN",
   "allowed_user_ids": [],
+  "user_names": {
+    "123456789": "Alice",
+    "987654321": "Bob"
+  },
   "default_status": "triage",
   "poll_interval_ms": 2000
 }
