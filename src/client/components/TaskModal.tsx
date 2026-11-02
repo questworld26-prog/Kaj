@@ -9,25 +9,12 @@ import type {
   PriorityHorizon,
   RecurrenceRule,
 } from "../../shared/types.js";
-
-const EMOJI_CATEGORIES: Record<string, string[]> = {
-  "Work & Tech": [
-    "🚀", "🐛", "📝", "⚡", "🎯", "📦", "🔍", "💡", "📅", "🔔", "🎨", "🧪",
-    "🔐", "⚙️", "🔥", "✅", "🛠️", "💬", "✨", "📊", "🌐", "💻", "🧹", "📌",
-    "📁", "📂", "📈", "📉", "📱", "🖥️", "⌨️", "📧", "📫", "🏷️", "💳", "💰"
-  ],
-  "Status & Focus": [
-    "🔴", "🟡", "🟢", "⭐", "🏆", "⏳", "🛑", "⚠️", "🚨", "🚩", "❓", "❗",
-    "💤", "💎", "💥", "🚧", "💯", "🔝", "🆗", "🆕", "🔒", "🔑", "📎", "📖"
-  ],
-  "Team & Life": [
-    "😀", "😎", "🤔", "🙌", "👍", "👎", "🤝", "💪", "👀", "🧠", "🧑‍💻", "🕵️",
-    "🎉", "☕", "🍕", "🌱", "🧘", "🚲", "✈️", "🏠", "☀️", "🌙", "🎵", "❤️"
-  ],
-};
-
-// Regex matching common unicode emojis at start of string
-const EMOJI_PREFIX_REGEX = /^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)\s*/u;
+import {
+  EmojiPickerPopover,
+  EMOJI_PREFIX_REGEX,
+} from "./task-modal/EmojiPickerPopover.js";
+import { FormatToolbar } from "./task-modal/FormatToolbar.js";
+import { RecurrenceFields } from "./task-modal/RecurrenceFields.js";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -58,8 +45,6 @@ export function TaskModal({
   const detailsTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [isEmojiPaletteOpen, setIsEmojiPaletteOpen] = useState(false);
   const [showFormatToolbar, setShowFormatToolbar] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<string>("Work & Tech");
-  const [customEmojiInput, setCustomEmojiInput] = useState<string>("");
 
   const [formData, setFormData] = useState<Partial<Task>>({
     title: "",
@@ -81,7 +66,6 @@ export function TaskModal({
   useEffect(() => {
     setIsEmojiPaletteOpen(false);
     setShowFormatToolbar(false);
-    setCustomEmojiInput("");
     if (task) {
       setFormData({
         title: task.title,
@@ -144,73 +128,25 @@ export function TaskModal({
       action_date: formData.action_date || null,
       due_date: formData.due_date || null,
       waiting_on: formData.waiting_on || "",
-      created_by: formData.created_by?.trim() ? formData.created_by.trim() : null,
+      created_by: formData.created_by?.trim()
+        ? formData.created_by.trim()
+        : null,
       details: formData.details || "",
     });
   };
 
-  const applyWrapFormatting = (prefix: string, suffix: string) => {
-    const textarea = detailsTextareaRef.current;
-    if (!textarea) return;
-
-    const currentVal = textarea.value || "";
-    const start = textarea.selectionStart ?? 0;
-    const end = textarea.selectionEnd ?? 0;
-    const selectedText = currentVal.substring(start, end);
-
-    const replacement = `${prefix}${selectedText || "text"}${suffix}`;
-    const nextVal = currentVal.substring(0, start) + replacement + currentVal.substring(end);
-
-    setFormData({
-      ...formData,
-      details: nextVal,
-    });
-
-    const newCursorStart = start + prefix.length;
-    const newCursorEnd = newCursorStart + (selectedText ? selectedText.length : 4);
-    textarea.value = nextVal;
-    textarea.focus();
-    textarea.setSelectionRange(newCursorStart, newCursorEnd);
-  };
-
-  const applyListFormatting = (type: "bullet" | "number") => {
-    const textarea = detailsTextareaRef.current;
-    if (!textarea) return;
-
-    const currentVal = textarea.value || "";
-    const start = textarea.selectionStart ?? 0;
-    const end = textarea.selectionEnd ?? 0;
-
-    // Find the line boundaries of current selection
-    const beforeSelection = currentVal.substring(0, start);
-    const lineStart = beforeSelection.lastIndexOf("\n") + 1;
-    let lineEnd = currentVal.indexOf("\n", end);
-    if (lineEnd === -1) lineEnd = currentVal.length;
-
-    const linesBlock = currentVal.substring(lineStart, lineEnd);
-    const lines = linesBlock.split("\n");
-
-    const formattedLines = lines.map((line, idx) => {
-      // Strip any existing list markers
-      const cleanLine = line.replace(/^(\s*(?:[-*+]|\d+\.)\s*)/, "");
-      if (type === "bullet") {
-        return `- ${cleanLine || "item"}`;
-      } else {
-        return `${idx + 1}. ${cleanLine || "item"}`;
-      }
-    });
-
-    const replacedBlock = formattedLines.join("\n");
-    const nextVal = currentVal.substring(0, lineStart) + replacedBlock + currentVal.substring(lineEnd);
-
-    setFormData({
-      ...formData,
-      details: nextVal,
-    });
-
-    textarea.value = nextVal;
-    textarea.focus();
-    textarea.setSelectionRange(lineStart, lineStart + replacedBlock.length);
+  const handleSelectEmoji = (emoji: string) => {
+    const currentTitle = formData.title || "";
+    const match = currentTitle.match(EMOJI_PREFIX_REGEX);
+    let nextTitle: string;
+    if (match) {
+      nextTitle = currentTitle.replace(EMOJI_PREFIX_REGEX, `${emoji} `);
+    } else {
+      nextTitle = currentTitle.trim()
+        ? `${emoji} ${currentTitle.trim()}`
+        : `${emoji} `;
+    }
+    setFormData({ ...formData, title: nextTitle });
   };
 
   const handleBackdropClick = (e: MouseEvent) => {
@@ -274,13 +210,12 @@ export function TaskModal({
 
         {/* Modal Body */}
         <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-          {/* Title */}
+          {/* Title with Emoji Picker */}
           <div>
             <label className="block text-xs font-semibold text-gray-300 mb-1.5">
               Task Title <span className="text-rose-400">*</span>
             </label>
             <div className="flex items-center gap-2 relative">
-              {/* Option B: Emoji Prefix Trigger */}
               <button
                 type="button"
                 data-testid="task-emoji-prefix-btn"
@@ -310,101 +245,11 @@ export function TaskModal({
                 className="flex-1 px-3 py-2 rounded-xl bg-[#1C2224] border border-[#2A3235] text-sm text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none"
               />
 
-              {/* Categorized Emoji Palette Popover */}
-              {isEmojiPaletteOpen && (
-                <div
-                  data-testid="task-emoji-palette"
-                  className="absolute left-0 top-12 z-30 p-3.5 rounded-2xl bg-[#121718] border border-[#2A3235] shadow-2xl shadow-black/90 w-80 backdrop-blur-md space-y-2.5"
-                >
-                  <div className="flex items-center justify-between text-xs text-gray-400 pb-1.5 border-b border-[#2A3235]">
-                    <span className="font-semibold text-emerald-400">Choose Icon</span>
-                    <button
-                      type="button"
-                      onClick={() => setIsEmojiPaletteOpen(false)}
-                      className="text-gray-400 hover:text-white text-xs px-1"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  {/* Category Filter Tabs */}
-                  <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-0.5">
-                    {Object.keys(EMOJI_CATEGORIES).map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => setActiveCategory(cat)}
-                        className={`px-2 py-1 rounded-lg text-[11px] whitespace-nowrap transition-colors ${
-                          activeCategory === cat
-                            ? "bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40"
-                            : "bg-[#1C2224] text-gray-400 hover:text-gray-200 border border-[#2A3235]"
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Emoji Grid */}
-                  <div className="grid grid-cols-6 gap-1.5 text-center text-lg max-h-48 overflow-y-auto py-1">
-                    {(EMOJI_CATEGORIES[activeCategory] || []).map((emoji) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        data-emoji={emoji}
-                        onClick={() => {
-                          const currentTitle = formData.title || "";
-                          const match = currentTitle.match(EMOJI_PREFIX_REGEX);
-                          let nextTitle: string;
-                          if (match) {
-                            nextTitle = currentTitle.replace(EMOJI_PREFIX_REGEX, `${emoji} `);
-                          } else {
-                            nextTitle = currentTitle.trim() ? `${emoji} ${currentTitle.trim()}` : `${emoji} `;
-                          }
-                          setFormData({ ...formData, title: nextTitle });
-                          setIsEmojiPaletteOpen(false);
-                        }}
-                        className="p-1.5 rounded-lg hover:bg-[#1C2224] hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Custom Emoji / Unicode Paste Input */}
-                  <div className="pt-2 border-t border-[#2A3235] flex items-center gap-2">
-                    <input
-                      type="text"
-                      placeholder="Paste any emoji..."
-                      value={customEmojiInput}
-                      onInput={(e) => setCustomEmojiInput((e.target as HTMLInputElement).value)}
-                      className="flex-1 px-2.5 py-1.5 rounded-lg bg-[#0E1111] border border-[#2A3235] text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
-                    />
-                    <button
-                      type="button"
-                      disabled={!customEmojiInput.trim()}
-                      onClick={() => {
-                        const trimmed = customEmojiInput.trim();
-                        if (!trimmed) return;
-                        const currentTitle = formData.title || "";
-                        const match = currentTitle.match(EMOJI_PREFIX_REGEX);
-                        let nextTitle: string;
-                        if (match) {
-                          nextTitle = currentTitle.replace(EMOJI_PREFIX_REGEX, `${trimmed} `);
-                        } else {
-                          nextTitle = currentTitle.trim() ? `${trimmed} ${currentTitle.trim()}` : `${trimmed} `;
-                        }
-                        setFormData({ ...formData, title: nextTitle });
-                        setCustomEmojiInput("");
-                        setIsEmojiPaletteOpen(false);
-                      }}
-                      className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              )}
+              <EmojiPickerPopover
+                isOpen={isEmojiPaletteOpen}
+                onClose={() => setIsEmojiPaletteOpen(false)}
+                onSelectEmoji={handleSelectEmoji}
+              />
             </div>
           </div>
 
@@ -489,174 +334,50 @@ export function TaskModal({
               </select>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                Recurrence Rule
-              </label>
-              <select
-                name="repeat_rule"
-                value={formData.repeat_rule}
-                onChange={(e) => {
-                  const val = (e.target as HTMLSelectElement)
-                    .value as RecurrenceRule;
-                  setFormData({
-                    ...formData,
-                    repeat_rule: val,
-                    repeat_day_of_week:
-                      val === "weekly"
-                        ? (formData.repeat_day_of_week ??
-                          (formData.action_date
-                            ? new Date(formData.action_date).getUTCDay()
-                            : 1))
-                        : null,
-                    repeat_day_of_month:
-                      val === "monthly"
-                        ? (formData.repeat_day_of_month ??
-                          (formData.action_date
-                            ? Number(formData.action_date.split("-")[2])
-                            : 1))
-                        : null,
-                    repeat_day_of_year:
-                      val === "yearly"
-                        ? (formData.repeat_day_of_year ??
-                          (formData.action_date
-                            ? formData.action_date.slice(5)
-                            : "01-01"))
-                        : null,
-                  });
-                }}
-                className="w-full px-3 py-2 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white focus:border-emerald-500 focus:outline-none"
-              >
-                <option value="none">No Repeat</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-              </select>
-            </div>
+            <RecurrenceFields
+              repeatRule={formData.repeat_rule || "none"}
+              repeatDayOfWeek={formData.repeat_day_of_week ?? null}
+              repeatDayOfMonth={formData.repeat_day_of_month ?? null}
+              repeatDayOfYear={formData.repeat_day_of_year ?? null}
+              actionDate={formData.action_date || null}
+              onChangeRule={(val) => {
+                setFormData({
+                  ...formData,
+                  repeat_rule: val,
+                  repeat_day_of_week:
+                    val === "weekly"
+                      ? (formData.repeat_day_of_week ??
+                        (formData.action_date
+                          ? new Date(formData.action_date).getUTCDay()
+                          : 1))
+                      : null,
+                  repeat_day_of_month:
+                    val === "monthly"
+                      ? (formData.repeat_day_of_month ??
+                        (formData.action_date
+                          ? Number(formData.action_date.split("-")[2])
+                          : 1))
+                      : null,
+                  repeat_day_of_year:
+                    val === "yearly"
+                      ? (formData.repeat_day_of_year ??
+                        (formData.action_date
+                          ? formData.action_date.slice(5)
+                          : "01-01"))
+                      : null,
+                });
+              }}
+              onChangeDayOfWeek={(day) =>
+                setFormData({ ...formData, repeat_day_of_week: day })
+              }
+              onChangeDayOfMonth={(dom) =>
+                setFormData({ ...formData, repeat_day_of_month: dom })
+              }
+              onChangeDayOfYear={(doy) =>
+                setFormData({ ...formData, repeat_day_of_year: doy })
+              }
+            />
           </div>
-
-          {/* Conditional Recurrence Day Option (AC-TASK-002.3) */}
-          {formData.repeat_rule === "weekly" && (
-            <div className="p-3 rounded-xl bg-[#181E20] border border-[#2A3235]">
-              <label className="block text-xs font-semibold text-emerald-400 mb-1.5">
-                Repeat on Day of the Week
-              </label>
-              <div className="grid grid-cols-7 gap-1">
-                {[
-                  { label: "Sun", day: 0 },
-                  { label: "Mon", day: 1 },
-                  { label: "Tue", day: 2 },
-                  { label: "Wed", day: 3 },
-                  { label: "Thu", day: 4 },
-                  { label: "Fri", day: 5 },
-                  { label: "Sat", day: 6 },
-                ].map(({ label, day }) => {
-                  const isSelected =
-                    formData.repeat_day_of_week === day ||
-                    (formData.repeat_day_of_week === null &&
-                      formData.action_date &&
-                      new Date(formData.action_date).getUTCDay() === day);
-                  return (
-                    <button
-                      key={day}
-                      type="button"
-                      data-testid={`repeat-dow-${day}`}
-                      onClick={() =>
-                        setFormData({
-                          ...formData,
-                          repeat_day_of_week: day,
-                        })
-                      }
-                      className={`py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                        isSelected
-                          ? "bg-emerald-500 text-black font-bold"
-                          : "bg-[#1C2224] text-gray-300 hover:text-white hover:bg-[#252D30]"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {formData.repeat_rule === "monthly" && (
-            <div className="p-3 rounded-xl bg-[#181E20] border border-[#2A3235]">
-              <label className="block text-xs font-semibold text-emerald-400 mb-1.5">
-                Repeat on Day of the Month (1 – 31)
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="1"
-                  max="31"
-                  name="repeat_day_of_month"
-                  data-testid="repeat-dom-input"
-                  value={formData.repeat_day_of_month ?? ""}
-                  placeholder={
-                    formData.action_date
-                      ? formData.action_date.split("-")[2]
-                      : "1"
-                  }
-                  onChange={(e) => {
-                    const val = parseInt(
-                      (e.target as HTMLInputElement).value,
-                      10,
-                    );
-                    setFormData({
-                      ...formData,
-                      repeat_day_of_month:
-                        isNaN(val) || val < 1 || val > 31 ? null : val,
-                    });
-                  }}
-                  className="w-24 px-3 py-1.5 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white focus:border-emerald-500 focus:outline-none"
-                />
-                <span className="text-xs text-gray-400">
-                  Day of every month (e.g. 1st, 15th, 31st with month-end
-                  clamping)
-                </span>
-              </div>
-            </div>
-          )}
-
-          {formData.repeat_rule === "yearly" && (
-            <div className="p-3 rounded-xl bg-[#181E20] border border-[#2A3235]">
-              <label className="block text-xs font-semibold text-emerald-400 mb-1.5">
-                Repeat on Day of the Year
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  name="repeat_day_of_year_picker"
-                  data-testid="repeat-doy-picker"
-                  value={
-                    formData.repeat_day_of_year
-                      ? `2026-${formData.repeat_day_of_year}`
-                      : formData.action_date || "2026-01-01"
-                  }
-                  onChange={(e) => {
-                    const val = (e.target as HTMLInputElement).value;
-                    if (val && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
-                      setFormData({
-                        ...formData,
-                        repeat_day_of_year: val.slice(5),
-                      });
-                    }
-                  }}
-                  className="w-40 px-3 py-1.5 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white focus:border-emerald-500 focus:outline-none"
-                />
-                <span className="text-xs text-gray-400">
-                  Recurs annually on this month and day (
-                  {formData.repeat_day_of_year ||
-                    (formData.action_date
-                      ? formData.action_date.slice(5)
-                      : "MM-DD")}
-                  )
-                </span>
-              </div>
-            </div>
-          )}
 
           {/* Dual Date Scheduling */}
           <div className="grid grid-cols-2 gap-4">
@@ -743,7 +464,7 @@ export function TaskModal({
             />
           </div>
 
-          {/* Details / Description */}
+          {/* Details / Description with Format Toolbar */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="block text-xs font-semibold text-gray-300">
@@ -753,7 +474,11 @@ export function TaskModal({
                 type="button"
                 data-testid="details-format-toggle-btn"
                 onClick={() => setShowFormatToolbar(!showFormatToolbar)}
-                title={showFormatToolbar ? "Hide formatting menu" : "Show formatting menu"}
+                title={
+                  showFormatToolbar
+                    ? "Hide formatting menu"
+                    : "Show formatting menu"
+                }
                 aria-label="Toggle text formatting menu"
                 aria-pressed={showFormatToolbar}
                 className={`px-2 py-0.5 rounded text-[11px] font-medium flex items-center gap-1 border transition-colors ${
@@ -762,105 +487,23 @@ export function TaskModal({
                     : "bg-[#1C2224] text-gray-400 border-[#2A3235] hover:text-gray-200 hover:border-gray-600"
                 }`}
               >
-                <span className="font-serif font-bold text-xs leading-none">Format</span>
-                <span className="text-[10px] leading-none opacity-80">{showFormatToolbar ? "▲" : "▼"}</span>
+                <span className="font-serif font-bold text-xs leading-none">
+                  Format
+                </span>
+                <span className="text-[10px] leading-none opacity-80">
+                  {showFormatToolbar ? "▲" : "▼"}
+                </span>
               </button>
             </div>
 
-            {/* Formatting Toolbar */}
             {showFormatToolbar && (
-              <div
-                data-testid="details-format-toolbar"
-                className="flex items-center gap-1 p-1 mb-2 rounded-lg bg-[#161B1C] border border-[#2A3235] shadow-sm select-none"
-              >
-                {/* Bold */}
-                <button
-                  type="button"
-                  data-testid="format-bold-btn"
-                  title="Bold (Ctrl/Cmd+B)"
-                  onClick={() => applyWrapFormatting("**", "**")}
-                  className="w-7 h-7 flex items-center justify-center rounded text-gray-200 hover:bg-[#252D30] hover:text-white transition-colors"
-                >
-                  <span className="font-bold font-serif text-sm">B</span>
-                </button>
-
-                {/* Italic */}
-                <button
-                  type="button"
-                  data-testid="format-italic-btn"
-                  title="Italic (Ctrl/Cmd+I)"
-                  onClick={() => applyWrapFormatting("*", "*")}
-                  className="w-7 h-7 flex items-center justify-center rounded text-gray-200 hover:bg-[#252D30] hover:text-white transition-colors"
-                >
-                  <span className="italic font-serif text-sm">I</span>
-                </button>
-
-                {/* Underline */}
-                <button
-                  type="button"
-                  data-testid="format-underline-btn"
-                  title="Underline (Ctrl/Cmd+U)"
-                  onClick={() => applyWrapFormatting("<u>", "</u>")}
-                  className="w-7 h-7 flex items-center justify-center rounded text-gray-200 hover:bg-[#252D30] hover:text-white transition-colors"
-                >
-                  <span className="underline font-serif text-sm">U</span>
-                </button>
-
-                <div className="w-[1px] h-4 bg-[#2A3235] mx-1" />
-
-                {/* Bullet list */}
-                <button
-                  type="button"
-                  data-testid="format-bullet-list-btn"
-                  title="Bulleted List"
-                  onClick={() => applyListFormatting("bullet")}
-                  className="w-7 h-7 flex items-center justify-center rounded text-gray-200 hover:bg-[#252D30] hover:text-white transition-colors"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="8" y1="6" x2="21" y2="6" />
-                    <line x1="8" y1="12" x2="21" y2="12" />
-                    <line x1="8" y1="18" x2="21" y2="18" />
-                    <circle cx="3.5" cy="6" r="1.5" fill="currentColor" />
-                    <circle cx="3.5" cy="12" r="1.5" fill="currentColor" />
-                    <circle cx="3.5" cy="18" r="1.5" fill="currentColor" />
-                  </svg>
-                </button>
-
-                {/* Numbered list */}
-                <button
-                  type="button"
-                  data-testid="format-number-list-btn"
-                  title="Numbered List"
-                  onClick={() => applyListFormatting("number")}
-                  className="w-7 h-7 flex items-center justify-center rounded text-gray-200 hover:bg-[#252D30] hover:text-white transition-colors"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="10" y1="6" x2="21" y2="6" />
-                    <line x1="10" y1="12" x2="21" y2="12" />
-                    <line x1="10" y1="18" x2="21" y2="18" />
-                    <path d="M4 6h1v4M3 10h3" strokeWidth="2" />
-                    <path d="M3.5 14a1.5 1.5 0 0 1 2.5 1c0 1-1.5 2-2.5 3h3" strokeWidth="2" />
-                  </svg>
-                </button>
-              </div>
+              <FormatToolbar
+                textareaRef={detailsTextareaRef}
+                details={formData.details || ""}
+                onDetailsChange={(nextDetails) =>
+                  setFormData({ ...formData, details: nextDetails })
+                }
+              />
             )}
 
             <textarea

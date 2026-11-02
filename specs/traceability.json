@@ -1,5 +1,5 @@
 {
-  "last_audited_at": "2026-11-02T05:44:55.135634+00:00",
+  "last_audited_at": "2026-11-02T05:56:48.602923+00:00",
   "total_requirements": 21,
   "total_criteria": 97,
   "verified_criteria_count": 97,
@@ -218,6 +218,7 @@
         "AC-TASK-004.5"
       ],
       "implementation_files": [
+        "src/server/recurrence.ts",
         "src/server/repository.ts"
       ],
       "status": "VERIFIED"
@@ -297,7 +298,12 @@
       "implementation_files": [
         "src/server/app.ts",
         "src/server/index.ts",
-        "src/server/telegram.ts"
+        "src/server/telegram.ts",
+        "src/server/telegram/config.ts",
+        "src/server/telegram/formatters.ts",
+        "src/server/telegram/parser.ts",
+        "src/server/telegram/transport.ts",
+        "src/server/telegram/types.ts"
       ],
       "status": "VERIFIED"
     },
@@ -409,7 +415,10 @@
       "implementation_files": [
         "src/client/App.tsx",
         "src/client/components/CompletedDrawer.tsx",
-        "src/client/components/TaskModal.tsx"
+        "src/client/components/TaskModal.tsx",
+        "src/client/components/task-modal/EmojiPickerPopover.tsx",
+        "src/client/components/task-modal/FormatToolbar.tsx",
+        "src/client/components/task-modal/RecurrenceFields.tsx"
       ],
       "status": "VERIFIED"
     },
@@ -463,7 +472,15 @@
       "implementation_files": [
         "src/client/App.tsx",
         "src/client/components/MobileViews.tsx",
-        "src/client/components/TopBar.tsx"
+        "src/client/components/TopBar.tsx",
+        "src/client/components/mobile/MobileActionSheet.tsx",
+        "src/client/components/mobile/MobileBottomDock.tsx",
+        "src/client/components/mobile/MobileCalendarTab.tsx",
+        "src/client/components/mobile/MobileCockpitTab.tsx",
+        "src/client/components/mobile/MobilePodsTab.tsx",
+        "src/client/components/mobile/MobileTaskCard.tsx",
+        "src/client/components/mobile/MobileTriageTab.tsx",
+        "src/client/components/mobile/types.ts"
       ],
       "status": "VERIFIED"
     },
@@ -511,7 +528,13 @@
       ],
       "implementation_files": [
         "src/client/components/MobileViews.tsx",
-        "src/client/components/TaskModal.tsx"
+        "src/client/components/TaskModal.tsx",
+        "src/client/components/mobile/MobileCalendarTab.tsx",
+        "src/client/components/mobile/MobileCockpitTab.tsx",
+        "src/client/components/mobile/MobilePodsTab.tsx",
+        "src/client/components/mobile/MobileTaskCard.tsx",
+        "src/client/components/mobile/MobileTriageTab.tsx",
+        "src/client/components/mobile/types.ts"
       ],
       "status": "VERIFIED"
     },
@@ -538,7 +561,10 @@
       "implementation_files": [
         "src/client/App.tsx",
         "src/client/components/DesktopCockpit.tsx",
-        "src/client/components/TopBar.tsx"
+        "src/client/components/TopBar.tsx",
+        "src/client/components/cockpit/CockpitExecutionDeck.tsx",
+        "src/client/components/cockpit/CockpitTelemetryDeck.tsx",
+        "src/client/components/cockpit/types.ts"
       ],
       "status": "VERIFIED"
     }

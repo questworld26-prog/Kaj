@@ -1,6 +1,4 @@
 // [spec: TG-001]
-import fs from "node:fs";
-import path from "node:path";
 import {
   Project,
   Task,
@@ -10,421 +8,50 @@ import {
 } from "../shared/types.js";
 import { TaskRepository, ProjectRepository } from "./repository.js";
 import { EventBus } from "./events.js";
+import type {
+  TelegramConfig,
+  TelegramInlineButton,
+  TelegramInlineKeyboardMarkup,
+  TelegramUpdate,
+  TelegramApiTransport,
+  ParsedTelegramTask,
+  TelegramBotServiceOptions,
+} from "./telegram/types.js";
+import {
+  DEFAULT_CONFIG,
+  resolveTelegramConfigPath,
+  loadTelegramConfig,
+  saveTelegramConfig,
+} from "./telegram/config.js";
+import {
+  formatDateYMD,
+  resolveDateToken,
+  parseTelegramTaskInput,
+} from "./telegram/parser.js";
+import { createFetchTelegramTransport } from "./telegram/transport.js";
+import {
+  buildTaskActionKeyboard,
+  buildNewTaskActionKeyboard,
+  formatTaskSummary,
+} from "./telegram/formatters.js";
 
-export interface TelegramConfig {
-  enabled: boolean;
-  bot_token: string;
-  allowed_user_ids: number[];
-  user_names?: Record<string, string>;
-  default_status: TaskStatus;
-  poll_interval_ms: number;
-}
-
-export interface TelegramInlineButton {
-  text: string;
-  callback_data: string;
-}
-
-export interface TelegramInlineKeyboardMarkup {
-  inline_keyboard: TelegramInlineButton[][];
-}
-
-export interface TelegramUpdate {
-  update_id: number;
-  message?: {
-    message_id: number;
-    from?: { id: number; first_name?: string; username?: string };
-    chat: { id: number };
-    text?: string;
-  };
-  callback_query?: {
-    id: string;
-    from: { id: number; first_name?: string; username?: string };
-    message?: { chat: { id: number }; message_id: number };
-    data?: string;
-  };
-}
-
-export interface TelegramApiTransport {
-  getUpdates(offset: number, timeoutSec: number): Promise<TelegramUpdate[]>;
-  sendMessage(
-    chatId: number,
-    text: string,
-    replyMarkup?: TelegramInlineKeyboardMarkup,
-  ): Promise<void>;
-  answerCallbackQuery(callbackQueryId: string, text?: string): Promise<void>;
-  setMyCommands?(
-    commands: Array<{ command: string; description: string }>,
-    scope?: unknown,
-  ): Promise<void>;
-}
-
-const DEFAULT_CONFIG: TelegramConfig = {
-  enabled: false,
-  bot_token: "",
-  allowed_user_ids: [],
-  default_status: "triage",
-  poll_interval_ms: 2000,
+// Re-export for seamless backward compatibility
+export type {
+  TelegramConfig,
+  TelegramInlineButton,
+  TelegramInlineKeyboardMarkup,
+  TelegramUpdate,
+  TelegramApiTransport,
+  ParsedTelegramTask,
+  TelegramBotServiceOptions,
 };
-
-// [spec: TG-001]
-export function resolveTelegramConfigPath(
-  configPath?: string,
-  env: NodeJS.ProcessEnv = process.env,
-): string {
-  if (configPath) return path.resolve(configPath);
-  if (env.KAJ_TELEGRAM_CONFIG) return path.resolve(env.KAJ_TELEGRAM_CONFIG);
-  return path.resolve("./telegram.config.json");
-}
-
-// [spec: TG-001]
-export function loadTelegramConfig(
-  configPath?: string,
-  env: NodeJS.ProcessEnv = process.env,
-): TelegramConfig {
-  const resolvedPath = resolveTelegramConfigPath(configPath, env);
-  let fileData: Partial<TelegramConfig> = {};
-
-  if (fs.existsSync(resolvedPath)) {
-    try {
-      const raw = fs.readFileSync(resolvedPath, "utf-8");
-      fileData = JSON.parse(raw) as Partial<TelegramConfig>;
-    } catch {
-      // Ignore malformed JSON and fall back to defaults
-    }
-  }
-
-  const defaultStatus =
-    fileData.default_status &&
-    (TASK_STATUSES as readonly string[]).includes(fileData.default_status)
-      ? fileData.default_status
-      : DEFAULT_CONFIG.default_status;
-
-  const userNames: Record<string, string> = {};
-  if (
-    fileData.user_names &&
-    typeof fileData.user_names === "object" &&
-    !Array.isArray(fileData.user_names)
-  ) {
-    for (const [k, v] of Object.entries(fileData.user_names)) {
-      if (typeof v === "string" && v.trim()) {
-        userNames[String(k).trim()] = v.trim();
-      }
-    }
-  }
-
-  const config: TelegramConfig = {
-    enabled:
-      typeof fileData.enabled === "boolean"
-        ? fileData.enabled
-        : DEFAULT_CONFIG.enabled,
-    bot_token:
-      typeof fileData.bot_token === "string"
-        ? fileData.bot_token.trim()
-        : DEFAULT_CONFIG.bot_token,
-    allowed_user_ids: Array.isArray(fileData.allowed_user_ids)
-      ? fileData.allowed_user_ids
-          .map((n) => Number(n))
-          .filter((n) => Number.isFinite(n))
-      : [...DEFAULT_CONFIG.allowed_user_ids],
-    user_names: Object.keys(userNames).length > 0 ? userNames : undefined,
-    default_status: defaultStatus,
-    poll_interval_ms:
-      typeof fileData.poll_interval_ms === "number" &&
-      fileData.poll_interval_ms >= 50
-        ? fileData.poll_interval_ms
-        : DEFAULT_CONFIG.poll_interval_ms,
-  };
-
-  if (env.KAJ_TELEGRAM_ENABLED !== undefined) {
-    const val = env.KAJ_TELEGRAM_ENABLED.trim().toLowerCase();
-    if (val === "true" || val === "1" || val === "on") {
-      config.enabled = true;
-    } else if (val === "false" || val === "0" || val === "off") {
-      config.enabled = false;
-    }
-  }
-
-  if (env.KAJ_TELEGRAM_BOT_TOKEN) {
-    config.bot_token = env.KAJ_TELEGRAM_BOT_TOKEN.trim();
-  }
-
-  return config;
-}
-
-// [spec: TG-001]
-export function saveTelegramConfig(
-  updates: Partial<TelegramConfig>,
-  configPath?: string,
-  env: NodeJS.ProcessEnv = process.env,
-): TelegramConfig {
-  const resolvedPath = resolveTelegramConfigPath(configPath, env);
-  const current = loadTelegramConfig(resolvedPath, {});
-  const next: TelegramConfig = {
-    ...current,
-    ...updates,
-  };
-  fs.writeFileSync(resolvedPath, JSON.stringify(next, null, 2) + "\n", "utf-8");
-  return loadTelegramConfig(resolvedPath, env);
-}
-
-function formatDateYMD(dt: Date): string {
-  const y = dt.getUTCFullYear();
-  const m = String(dt.getUTCMonth() + 1).padStart(2, "0");
-  const d = String(dt.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-function resolveDateToken(token: string, now: Date): string | null {
-  const lower = token.toLowerCase();
-  if (lower === "today") {
-    return formatDateYMD(now);
-  }
-  if (lower === "tomorrow" || lower === "tmrw") {
-    const next = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    return formatDateYMD(next);
-  }
-  if (/^\d{4}-\d{2}-\d{2}$/.test(token)) {
-    return token;
-  }
-  return null;
-}
-
-export interface ParsedTelegramTask {
-  title: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  project_id: string | null;
-  action_date: string | null;
-  due_date: string | null;
-  waiting_on: string;
-}
-
-// [spec: TG-001]
-export function parseTelegramTaskInput(
-  rawText: string,
-  projects: Project[],
-  defaultStatus: TaskStatus = "triage",
-  now: Date = new Date(),
-): ParsedTelegramTask {
-  let text = rawText.trim();
-  if (/^\/(add|new)\b/i.test(text)) {
-    text = text.replace(/^\/(add|new)\s*/i, "");
-  }
-
-  let status: TaskStatus = defaultStatus;
-  let priority: TaskPriority = "week";
-  let projectId: string | null = null;
-  let actionDate: string | null = null;
-  let dueDate: string | null = null;
-  let waitingOn = "";
-
-  const tokens = text.split(/\s+/);
-  const titleWords: string[] = [];
-
-  for (const token of tokens) {
-    if (!token) continue;
-
-    // 1. Project tag: #ProjectName
-    if (token.startsWith("#") && token.length > 1) {
-      const projName = token.slice(1).toLowerCase();
-      const matched = projects.find(
-        (p) =>
-          p.name.toLowerCase() === projName ||
-          p.name.toLowerCase().replace(/\s+/g, "-") === projName ||
-          p.name.toLowerCase().replace(/\s+/g, "") === projName,
-      );
-      if (matched) {
-        projectId = matched.id;
-        continue;
-      }
-    }
-
-    // 2. Status / Priority token: !today, !week, !month, !todo, !triage, !track
-    if (token.startsWith("!") && token.length > 1) {
-      const flag = token.slice(1).toLowerCase();
-      if (flag === "today") {
-        status = "in_progress_today";
-        priority = "today";
-        continue;
-      }
-      if (flag === "week") {
-        status = "in_progress_week";
-        priority = "week";
-        continue;
-      }
-      if (flag === "month") {
-        status = "in_progress_month";
-        priority = "month";
-        continue;
-      }
-      if (flag === "todo") {
-        status = "todo";
-        continue;
-      }
-      if (flag === "triage") {
-        status = "triage";
-        continue;
-      }
-      if (flag === "track" || flag === "tracking") {
-        status = "tracking";
-        continue;
-      }
-    }
-
-    // 3. Action date token: @today, @tomorrow, @YYYY-MM-DD
-    if (token.startsWith("@") && token.length > 1) {
-      const resolved = resolveDateToken(token.slice(1), now);
-      if (resolved) {
-        actionDate = resolved;
-        continue;
-      }
-    }
-
-    // 4. Due date token: due:today, due:tomorrow, due:YYYY-MM-DD
-    if (/^due:/i.test(token)) {
-      const resolved = resolveDateToken(token.slice(4), now);
-      if (resolved) {
-        dueDate = resolved;
-        continue;
-      }
-    }
-
-    // 5. Waiting on token: wait:<note>
-    if (/^wait:/i.test(token)) {
-      const note = token.slice(5).replace(/_/g, " ").trim();
-      if (note) {
-        waitingOn = note;
-        continue;
-      }
-    }
-
-    titleWords.push(token);
-  }
-
-  return {
-    title: titleWords.join(" ").trim(),
-    status,
-    priority,
-    project_id: projectId,
-    action_date: actionDate,
-    due_date: dueDate,
-    waiting_on: waitingOn,
-  };
-}
-
-export function createFetchTelegramTransport(
-  botToken: string,
-): TelegramApiTransport {
-  const baseUrl = `https://api.telegram.org/bot${botToken}`;
-
-  return {
-    async getUpdates(offset: number, timeoutSec: number) {
-      const res = await fetch(
-        `${baseUrl}/getUpdates?offset=${offset}&timeout=${timeoutSec}`,
-      );
-      if (!res.ok) return [];
-      const data = (await res.json()) as {
-        ok: boolean;
-        result?: TelegramUpdate[];
-      };
-      return data.ok && Array.isArray(data.result) ? data.result : [];
-    },
-
-    async sendMessage(chatId, text, replyMarkup) {
-      await fetch(`${baseUrl}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text,
-          ...(replyMarkup ? { reply_markup: replyMarkup } : {}),
-        }),
-      });
-    },
-
-    async answerCallbackQuery(callbackQueryId, text) {
-      await fetch(`${baseUrl}/answerCallbackQuery`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          callback_query_id: callbackQueryId,
-          ...(text ? { text } : {}),
-        }),
-      });
-    },
-
-    async setMyCommands(commands, scope) {
-      await fetch(`${baseUrl}/setMyCommands`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          commands,
-          ...(scope ? { scope } : {}),
-        }),
-      });
-    },
-  };
-}
-
-export interface TelegramBotServiceOptions {
-  config: TelegramConfig;
-  taskRepo: TaskRepository;
-  projectRepo: ProjectRepository;
-  eventBus: EventBus;
-  transport?: TelegramApiTransport;
-}
-
-function buildTaskActionKeyboard(taskId: string): TelegramInlineKeyboardMarkup {
-  return {
-    inline_keyboard: [
-      [
-        { text: "✓ Done", callback_data: `done:${taskId}` },
-        {
-          text: "⚡ Today",
-          callback_data: `status:${taskId}:in_progress_today`,
-        },
-        { text: "📅 Week", callback_data: `status:${taskId}:in_progress_week` },
-        {
-          text: "🗓 Month",
-          callback_data: `status:${taskId}:in_progress_month`,
-        },
-        { text: "Todo", callback_data: `status:${taskId}:todo` },
-      ],
-    ],
-  };
-}
-
-function buildNewTaskActionKeyboard(taskId: string): TelegramInlineKeyboardMarkup {
-  return {
-    inline_keyboard: [
-      [
-        {
-          text: "⚡ Today",
-          callback_data: `status:${taskId}:in_progress_today`,
-        },
-        { text: "📅 Week", callback_data: `status:${taskId}:in_progress_week` },
-        {
-          text: "🗓 Month",
-          callback_data: `status:${taskId}:in_progress_month`,
-        },
-      ],
-    ],
-  };
-}
-
-function formatTaskSummary(task: Task, projects: Project[]): string {
-  const proj = task.project_id
-    ? projects.find((p) => p.id === task.project_id)?.name
-    : null;
-  const parts = [`• ${task.title} [${task.status}]`];
-  if (proj) parts.push(`#${proj}`);
-  if (task.created_by) parts.push(`👤 ${task.created_by}`);
-  if (task.action_date) parts.push(`@${task.action_date}`);
-  if (task.due_date) parts.push(`due:${task.due_date}`);
-  if (task.waiting_on) parts.push(`wait:${task.waiting_on}`);
-  return parts.join(" ");
-}
+export {
+  resolveTelegramConfigPath,
+  loadTelegramConfig,
+  saveTelegramConfig,
+  parseTelegramTaskInput,
+  createFetchTelegramTransport,
+};
 
 // [spec: TG-001]
 export class TelegramBotService {
@@ -582,6 +209,7 @@ export class TelegramBotService {
             `⛔ Unauthorized user ID: ${userId ?? "unknown"}`,
           );
         }
+        await this.transport.answerCallbackQuery(cb.id, "Unauthorized");
         return;
       }
 
@@ -613,10 +241,11 @@ export class TelegramBotService {
       }
 
       if (data.startsWith("status:")) {
-        const [, taskId, rawStatus] = data.split(":");
+        const parts = data.split(":");
+        const taskId = parts[1];
+        const rawStatus = parts[2];
         if (
           taskId &&
-          rawStatus &&
           (TASK_STATUSES as readonly string[]).includes(rawStatus)
         ) {
           const updated = this.taskRepo.updateTask(taskId, {
