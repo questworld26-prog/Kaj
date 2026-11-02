@@ -115,6 +115,67 @@ export function CockpitExecutionDeck({
         </div>
       </section>
 
+      {/* Upcoming Horizons: This Week & Month */}
+      <section className="rounded-2xl bg-[#121718] border border-[#2A3235] p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#2A3235]">
+          <span className="text-xs font-bold text-gray-200 uppercase tracking-wider">
+            📅 UPCOMING HORIZONS (WEEK &amp; MONTH)
+          </span>
+          <span className="text-xs text-gray-400">
+            {upcomingTasks.length} queued
+          </span>
+        </div>
+
+        <div className="space-y-2">
+          {upcomingTasks.length === 0 ? (
+            <div className="text-xs text-gray-400 italic py-3 text-center">
+              No tasks currently scheduled in Week or Month horizons.
+            </div>
+          ) : (
+            upcomingTasks.slice(0, 6).map((task) => (
+              <div
+                key={task.id}
+                onClick={() => onSelectTask(task)}
+                className="rounded-xl bg-[#1C2224] border border-[#2A3235] hover:border-gray-500 p-2.5 flex items-center justify-between text-xs transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-bold border ${
+                      task.status === "in_progress_week"
+                        ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                        : "bg-sky-500/10 text-sky-400 border-sky-500/30"
+                    }`}
+                  >
+                    {task.status === "in_progress_week" ? "Week" : "Month"}
+                  </span>
+                  <span className="text-gray-200 truncate font-medium">
+                    {task.title}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {task.created_by && (
+                    <span className="text-stone-400">
+                      👤 {task.created_by}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUpdateTaskStatus(task.id, "in_progress_today");
+                    }}
+                    className="px-2 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold transition-colors"
+                    title="Promote to Today Focus Plate"
+                  >
+                    ⚡ Today
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
       {/* Tracking & Blockers Container */}
       <section
         data-testid="cockpit-tracking-container"
@@ -177,67 +238,7 @@ export function CockpitExecutionDeck({
           )}
         </div>
       </section>
-
-      {/* Upcoming Horizons: This Week & Month */}
-      <section className="rounded-2xl bg-[#121718] border border-[#2A3235] p-4 shadow-sm">
-        <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#2A3235]">
-          <span className="text-xs font-bold text-gray-200 uppercase tracking-wider">
-            📅 UPCOMING HORIZONS (WEEK &amp; MONTH)
-          </span>
-          <span className="text-xs text-gray-400">
-            {upcomingTasks.length} queued
-          </span>
-        </div>
-
-        <div className="space-y-2">
-          {upcomingTasks.length === 0 ? (
-            <div className="text-xs text-gray-400 italic py-3 text-center">
-              No tasks currently scheduled in Week or Month horizons.
-            </div>
-          ) : (
-            upcomingTasks.slice(0, 6).map((task) => (
-              <div
-                key={task.id}
-                onClick={() => onSelectTask(task)}
-                className="rounded-xl bg-[#1C2224] border border-[#2A3235] hover:border-gray-500 p-2.5 flex items-center justify-between text-xs transition-colors cursor-pointer"
-              >
-                <div className="flex items-center gap-2 truncate">
-                  <span
-                    className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-bold border ${
-                      task.status === "in_progress_week"
-                        ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
-                        : "bg-sky-500/10 text-sky-400 border-sky-500/30"
-                    }`}
-                  >
-                    {task.status === "in_progress_week" ? "Week" : "Month"}
-                  </span>
-                  <span className="text-gray-200 truncate font-medium">
-                    {task.title}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {task.created_by && (
-                    <span className="text-stone-400">
-                      👤 {task.created_by}
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onUpdateTaskStatus(task.id, "in_progress_today");
-                    }}
-                    className="px-2 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold transition-colors"
-                    title="Promote to Today Focus Plate"
-                  >
-                    ⚡ Today
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </section>
     </div>
   );
 }
+
