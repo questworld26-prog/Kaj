@@ -1,8 +1,5 @@
 // [spec: TG-001]
-import type {
-  TelegramApiTransport,
-  TelegramUpdate,
-} from "./types.js";
+import type { TelegramApiTransport, TelegramUpdate } from "./types.js";
 
 export function createFetchTelegramTransport(
   botToken: string,

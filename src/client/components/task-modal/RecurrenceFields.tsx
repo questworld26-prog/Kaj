@@ -104,7 +104,9 @@ export function RecurrenceFields({
               placeholder={actionDate ? actionDate.split("-")[2] : "1"}
               onChange={(e) => {
                 const val = parseInt((e.target as HTMLInputElement).value, 10);
-                onChangeDayOfMonth(isNaN(val) || val < 1 || val > 31 ? null : val);
+                onChangeDayOfMonth(
+                  isNaN(val) || val < 1 || val > 31 ? null : val,
+                );
               }}
               className="w-24 px-3 py-1.5 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white focus:border-emerald-500 focus:outline-none"
             />
@@ -139,7 +141,8 @@ export function RecurrenceFields({
               className="w-40 px-3 py-1.5 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white focus:border-emerald-500 focus:outline-none"
             />
             <span className="text-xs text-gray-400">
-              Recurs annually on this month and day ({repeatDayOfYear || (actionDate ? actionDate.slice(5) : "MM-DD")})
+              Recurs annually on this month and day (
+              {repeatDayOfYear || (actionDate ? actionDate.slice(5) : "MM-DD")})
             </span>
           </div>
         </div>

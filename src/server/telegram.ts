@@ -118,14 +118,25 @@ export class TelegramBotService {
     // Automatically sync official clean Kaj menu commands to Telegram (both default and chat-specific)
     if (this.transport.setMyCommands) {
       const kajCommands = [
-        { command: "today", description: "View today tasks with quick actions" },
-        { command: "search", description: "Search tasks by title, details, or notes" },
-        { command: "add", description: "Add a task: /add <title> [#project] [!today]" },
+        {
+          command: "today",
+          description: "View today tasks with quick actions",
+        },
+        {
+          command: "search",
+          description: "Search tasks by title, details, or notes",
+        },
+        {
+          command: "add",
+          description: "Add a task: /add <title> [#project] [!today]",
+        },
         { command: "help", description: "Show Kaj syntax guide and commands" },
       ];
       this.transport.setMyCommands(kajCommands).catch(() => {});
       for (const userId of this.config.allowed_user_ids) {
-        this.transport.setMyCommands(kajCommands, { type: "chat", chat_id: userId }).catch(() => {});
+        this.transport
+          .setMyCommands(kajCommands, { type: "chat", chat_id: userId })
+          .catch(() => {});
       }
     }
 

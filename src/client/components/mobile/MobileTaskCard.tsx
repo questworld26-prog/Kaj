@@ -144,9 +144,7 @@ export function MobileTaskCard({
             {project.name}
           </span>
         )}
-        <span
-          className={`px-1.5 py-0.2 rounded border text-xs ${prio.badge}`}
-        >
+        <span className={`px-1.5 py-0.2 rounded border text-xs ${prio.badge}`}>
           {prio.label}
         </span>
         {task.action_date && (

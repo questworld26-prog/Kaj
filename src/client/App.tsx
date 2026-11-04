@@ -32,7 +32,9 @@ function formatDateToYMD(d: Date): string {
 }
 
 export function App() {
-  const [currentView, setCurrentView] = useState<"cockpit" | "board" | "calendar">("board");
+  const [currentView, setCurrentView] = useState<
+    "cockpit" | "board" | "calendar"
+  >("board");
   const [mobileTab, setMobileTab] = useState<MobileTab>("cockpit");
   const [searchQuery, setSearchQuery] = useState("");
   const [cardDensity, setCardDensity] = useState<CardDensity>(() => {
@@ -63,7 +65,9 @@ export function App() {
   // Modal / Drawer visibility
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [defaultActionDate, setDefaultActionDate] = useState<string | null>(null);
+  const [defaultActionDate, setDefaultActionDate] = useState<string | null>(
+    null,
+  );
   const [defaultStatus, setDefaultStatus] = useState<TaskStatus | null>(null);
   const [defaultProjectId, setDefaultProjectId] = useState<string | null>(null);
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);

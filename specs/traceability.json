@@ -1,14 +1,27 @@
 {
-  "last_audited_at": "2026-11-02T07:42:15.199002+00:00",
+  "last_audited_at": "2026-11-04T08:39:41.905879+00:00",
   "total_requirements": 21,
-  "total_criteria": 97,
+  "active_requirements_count": 21,
+  "planned_requirements_count": 0,
+  "active_criteria_count": 97,
   "verified_criteria_count": 97,
+  "reverse_traceability": {
+    "untagged_files_count": 0,
+    "untagged_src_symbols_count": 0,
+    "untagged_tests_count": 0,
+    "orphan_tags_count": 0,
+    "stacked_test_tags_count": 0,
+    "cross_link_mismatches_count": 0,
+    "weak_test_assertions_count": 0,
+    "ac_anchor_mismatches_count": 0
+  },
   "status": "PASS",
   "requirements": [
     {
       "requirement_id": "MCP-001",
       "title": "Task and Project MCP Tool Suite",
       "spec_file": "specs/mcp.md",
+      "is_planned": false,
       "sha256": "7e391474e71c37b169c6689e146e9365bcb25641af8188dfb0645f9ba67f23df",
       "verified_sha256": "7e391474e71c37b169c6689e146e9365bcb25641af8188dfb0645f9ba67f23df",
       "acceptance_criteria": [
@@ -36,6 +49,7 @@
       "requirement_id": "MCP-002",
       "title": "Dual Transport Protocol Support",
       "spec_file": "specs/mcp.md",
+      "is_planned": false,
       "sha256": "3ccbb338a7a4f683b5389541ee3dd66843659051bb6368c0a24f1a12121e682e",
       "verified_sha256": "3ccbb338a7a4f683b5389541ee3dd66843659051bb6368c0a24f1a12121e682e",
       "acceptance_criteria": [
@@ -62,6 +76,7 @@
       "requirement_id": "MCP-003",
       "title": "Safety Annotations and Soft-Delete Protection",
       "spec_file": "specs/mcp.md",
+      "is_planned": false,
       "sha256": "2a34ac1ef7d18e74ed038e69f9c4ff4da176d7264c49c66132bc323bc13b0b51",
       "verified_sha256": "2a34ac1ef7d18e74ed038e69f9c4ff4da176d7264c49c66132bc323bc13b0b51",
       "acceptance_criteria": [
@@ -86,6 +101,7 @@
       "requirement_id": "PROJ-001",
       "title": "Project Entity Management and Swimlane Ordering",
       "spec_file": "specs/projects.md",
+      "is_planned": false,
       "sha256": "1092a99919e7631e0da5f19b1a618eba83168f9b2e0a86c5910dbf2feaf7da1e",
       "verified_sha256": "1092a99919e7631e0da5f19b1a618eba83168f9b2e0a86c5910dbf2feaf7da1e",
       "acceptance_criteria": [
@@ -101,7 +117,10 @@
         "AC-PROJ-001.4"
       ],
       "implementation_files": [
-        "src/server/repository.ts"
+        "src/server/db.ts",
+        "src/server/events.ts",
+        "src/server/repository.ts",
+        "src/shared/types.ts"
       ],
       "status": "VERIFIED"
     },
@@ -109,6 +128,7 @@
       "requirement_id": "PROJ-002",
       "title": "Default Unassigned Inbox Swimlane",
       "spec_file": "specs/projects.md",
+      "is_planned": false,
       "sha256": "382d429159d9655afcb2c572e644231b331674e79f25eafc2ff08f4b0be0bfa9",
       "verified_sha256": "382d429159d9655afcb2c572e644231b331674e79f25eafc2ff08f4b0be0bfa9",
       "acceptance_criteria": [
@@ -130,6 +150,7 @@
       "requirement_id": "TASK-001",
       "title": "Six-Column Kanban Workflow with In Progress Sub-Columns",
       "spec_file": "specs/tasks.md",
+      "is_planned": false,
       "sha256": "d3fd4bb43d13f912af33e78bfcf6d2a56763464f2013e9ad766d3f52f6cc58b9",
       "verified_sha256": "d3fd4bb43d13f912af33e78bfcf6d2a56763464f2013e9ad766d3f52f6cc58b9",
       "acceptance_criteria": [
@@ -153,6 +174,7 @@
       "requirement_id": "TASK-002",
       "title": "Task Data Attributes and Schema Validation",
       "spec_file": "specs/tasks.md",
+      "is_planned": false,
       "sha256": "2e4b6b95c774350d6cd825748368acbd69a223cad0a7394804c82236f443f588",
       "verified_sha256": "2e4b6b95c774350d6cd825748368acbd69a223cad0a7394804c82236f443f588",
       "acceptance_criteria": [
@@ -172,7 +194,9 @@
         "AC-TASK-002.6"
       ],
       "implementation_files": [
-        "src/server/repository.ts"
+        "src/server/db.ts",
+        "src/server/repository.ts",
+        "src/shared/types.ts"
       ],
       "status": "VERIFIED"
     },
@@ -180,6 +204,7 @@
       "requirement_id": "TASK-003",
       "title": "Independence of Status and Priority Horizons",
       "spec_file": "specs/tasks.md",
+      "is_planned": false,
       "sha256": "7e1b80cbb94f1666bc3f7c9c07684d619a38470c18293249b4ef2b37f292f0bc",
       "verified_sha256": "7e1b80cbb94f1666bc3f7c9c07684d619a38470c18293249b4ef2b37f292f0bc",
       "acceptance_criteria": [
@@ -201,6 +226,7 @@
       "requirement_id": "TASK-004",
       "title": "Spawn-on-Complete Recurrence Rollover",
       "spec_file": "specs/tasks.md",
+      "is_planned": false,
       "sha256": "6750c53fee8d4300061317768bc2afb7bf5a9a0ea2903af064c1be930b7b6a17",
       "verified_sha256": "6750c53fee8d4300061317768bc2afb7bf5a9a0ea2903af064c1be930b7b6a17",
       "acceptance_criteria": [
@@ -227,6 +253,7 @@
       "requirement_id": "TASK-005",
       "title": "Dual Date Scheduling and Calendar Projection",
       "spec_file": "specs/tasks.md",
+      "is_planned": false,
       "sha256": "3c9a266febe432bd95b08f4010531e3b9e95b9c0ab36974a891481a09ae40513",
       "verified_sha256": "3c9a266febe432bd95b08f4010531e3b9e95b9c0ab36974a891481a09ae40513",
       "acceptance_criteria": [
@@ -250,6 +277,7 @@
       "requirement_id": "TASK-006",
       "title": "Task Intra-Column Ordering and Reordering",
       "spec_file": "specs/tasks.md",
+      "is_planned": false,
       "sha256": "d6665aa838239e893e72316c79ba191f606f81fabd93ff2340e31bd6a400b9b5",
       "verified_sha256": "d6665aa838239e893e72316c79ba191f606f81fabd93ff2340e31bd6a400b9b5",
       "acceptance_criteria": [
@@ -275,6 +303,7 @@
       "requirement_id": "TG-001",
       "title": "Configurable Deterministic Telegram Bot for Task Creation, Search, and Quick Actions",
       "spec_file": "specs/telegram.md",
+      "is_planned": false,
       "sha256": "e1e96d4d3b05ec0dd7de99242e927606238416f908540ccaabb55d330760c533",
       "verified_sha256": "e1e96d4d3b05ec0dd7de99242e927606238416f908540ccaabb55d330760c533",
       "acceptance_criteria": [
@@ -311,6 +340,7 @@
       "requirement_id": "UI-001",
       "title": "Bento Full-Width Layout, Swimlane Pods, and Consolidated In-Progress Chamber",
       "spec_file": "specs/ui.md",
+      "is_planned": false,
       "sha256": "a085c92789d414eb825ddaba9fd4e576519da57a11b7e0020842d0e957e2c4ba",
       "verified_sha256": "a085c92789d414eb825ddaba9fd4e576519da57a11b7e0020842d0e957e2c4ba",
       "acceptance_criteria": [
@@ -336,7 +366,9 @@
         "src/client/components/ProjectReorderModal.tsx",
         "src/client/components/SwimlaneBoard.tsx",
         "src/client/components/TopBar.tsx",
-        "src/server/app.ts"
+        "src/client/main.tsx",
+        "src/server/app.ts",
+        "src/server/events.ts"
       ],
       "status": "VERIFIED"
     },
@@ -344,6 +376,7 @@
       "requirement_id": "UI-002",
       "title": "Chronos Dark-Mode Color Palette and Accessibility Tokens",
       "spec_file": "specs/ui.md",
+      "is_planned": false,
       "sha256": "ecea013727fd7e579f993e19b693410e6270831902f49f3753c7ee3b638798c0",
       "verified_sha256": "ecea013727fd7e579f993e19b693410e6270831902f49f3753c7ee3b638798c0",
       "acceptance_criteria": [
@@ -368,6 +401,7 @@
       "requirement_id": "UI-003",
       "title": "Interactive Calendar with Dual-Date Badges and Scheduling Sidebar",
       "spec_file": "specs/ui.md",
+      "is_planned": false,
       "sha256": "6c956354ba5e9979bcbab92addc781436129b30dbb3a621292baeab5ce6ff015",
       "verified_sha256": "6c956354ba5e9979bcbab92addc781436129b30dbb3a621292baeab5ce6ff015",
       "acceptance_criteria": [
@@ -396,6 +430,7 @@
       "requirement_id": "UI-004",
       "title": "Light-Dismiss Task Editor Dialog and Completed Archive Drawer",
       "spec_file": "specs/ui.md",
+      "is_planned": false,
       "sha256": "a42ce441d6b7daef71b7b0396e5efaa0622150c53f30a36ad0d7b136e9914509",
       "verified_sha256": "a42ce441d6b7daef71b7b0396e5efaa0622150c53f30a36ad0d7b136e9914509",
       "acceptance_criteria": [
@@ -426,6 +461,7 @@
       "requirement_id": "UI-005",
       "title": "Card Density Display Options and Intra-Column Drag Reordering",
       "spec_file": "specs/ui.md",
+      "is_planned": false,
       "sha256": "e9e88b86a35a0a925e544465d48bdfc7c54f551a801b74f1d958cc9c504877b2",
       "verified_sha256": "e9e88b86a35a0a925e544465d48bdfc7c54f551a801b74f1d958cc9c504877b2",
       "acceptance_criteria": [
@@ -453,6 +489,7 @@
       "requirement_id": "UI-006",
       "title": "Responsive Mobile Layout, Execution Cockpit, and Touch Action Sheets",
       "spec_file": "specs/ui.md",
+      "is_planned": false,
       "sha256": "8c67e454332424fb04fa94ef07f4f4065b54c05bc9b2176eab2e6bd6896ce172",
       "verified_sha256": "8c67e454332424fb04fa94ef07f4f4065b54c05bc9b2176eab2e6bd6896ce172",
       "acceptance_criteria": [
@@ -488,6 +525,7 @@
       "requirement_id": "UI-007",
       "title": "Omnipresent Top Search Filter and Mobile Minimal Density Default",
       "spec_file": "specs/ui.md",
+      "is_planned": false,
       "sha256": "421b7637b79b726af9ae6101979780164bee87f66b9a4eb2d7eb7f2bef9c4f51",
       "verified_sha256": "421b7637b79b726af9ae6101979780164bee87f66b9a4eb2d7eb7f2bef9c4f51",
       "acceptance_criteria": [
@@ -514,6 +552,7 @@
       "requirement_id": "UI-008",
       "title": "Multi-Modal Task Completion Interactions",
       "spec_file": "specs/ui.md",
+      "is_planned": false,
       "sha256": "38f76382f8353b8124e793c011b5e9c1a7e3a2619c0779c64511ace6179e60c7",
       "verified_sha256": "38f76382f8353b8124e793c011b5e9c1a7e3a2619c0779c64511ace6179e60c7",
       "acceptance_criteria": [
@@ -542,6 +581,7 @@
       "requirement_id": "UI-009",
       "title": "Desktop Cockpit Execution Screen with Performance Telemetry Charts",
       "spec_file": "specs/ui.md",
+      "is_planned": false,
       "sha256": "cb367acdeb71fb7e1653c27b3f48ed3f35e23d4279edbdc65b0cb98a939e500d",
       "verified_sha256": "cb367acdeb71fb7e1653c27b3f48ed3f35e23d4279edbdc65b0cb98a939e500d",
       "acceptance_criteria": [

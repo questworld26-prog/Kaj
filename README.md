@@ -10,7 +10,7 @@
 
 **A high-performance, low-footprint task management system and Model Context Protocol (MCP) server daemon.**
 
-*Pronounced /kadʒ/, Bengali for task or work — **কাজ**.*
+_Pronounced /kadʒ/, Bengali for task or work — **কাজ**._
 
 </div>
 
@@ -27,9 +27,10 @@ Kaj runs as an always-on background daemon consuming only **~56–95 MB RSS**, u
 ## Key Capabilities
 
 ### ⚡ Desktop Execution Cockpit (`v2.5.0`)
+
 - **Split 2-Column Command Deck**:
   - **Today Focus Plate**: Accented chamber highlighting tasks actively committed for today, complete with 1-click completion and quick-add controls.
-  - **Upcoming Horizons**: Visible queue for *This Week* and *This Month* commitments with 1-click promotion to Today.
+  - **Upcoming Horizons**: Visible queue for _This Week_ and _This Month_ commitments with 1-click promotion to Today.
   - **Tracking & Blockers**: Dedicated container for items waiting on external dependencies, colleagues, or delivery tracking numbers.
 - **Real-Time Telemetry & Performance Engine**:
   - **Weekly Velocity Chart**: Visual bar chart tracking completed task throughput across the last 6 ISO weeks.
@@ -38,6 +39,7 @@ Kaj runs as an always-on background daemon consuming only **~56–95 MB RSS**, u
 - **Top Command Bar Switcher**: Instant navigation between **Cockpit**, **Kanban Board**, and **Calendar**.
 
 ### 📋 Bento Kanban Board & Project Swimlanes
+
 - **6-Column Structured Workflow**:
   - `Triage` → `Todo` → `In Progress` (`Today`, `This Week`, `This Month`) → `Tracking`.
 - **Project Swimlane Pods**:
@@ -49,11 +51,13 @@ Kaj runs as an always-on background daemon consuming only **~56–95 MB RSS**, u
   - **Minimal Mode** (~36px, >75% height reduction): Ultra-dense single-line row designed to keep massive backlogs visible on a single display without vertical scrolling.
 
 ### 📱 Responsive Mobile App (< 768px)
+
 - **Sticky 4-Tab Navigation Dock**: ⚡ Cockpit, 📋 Pods, 📅 7-Day, and 📥 Triage.
 - **Touch Swipe-to-Complete**: Swipe cards right with emerald feedback to complete tasks on touch devices.
 - **One-Thumb Action Sheet**: Bottom modal sheet replacing desktop drag-and-drop on mobile viewports for rapid column switching, project pod reassignment, and archiving.
 
 ### 📅 Dual-Date Scheduling & Interactive Calendar
+
 - **Decoupled Scheduling**:
   - **Action Date (`▶`)**: When you plan to execute or work on the task.
   - **Due Date (`⚑`)**: Hard commitment deadline.
@@ -62,16 +66,19 @@ Kaj runs as an always-on background daemon consuming only **~56–95 MB RSS**, u
 - **Unscheduled Sidebar**: Slide-out tray for 1-click scheduling or dragging unscheduled tasks directly onto target dates.
 
 ### 🔄 Spawn-on-Complete Recurrence Rollover
+
 - Supports `weekly`, `monthly`, and `yearly` recurrence rules with explicit day-of-week, day-of-month, and day-of-year anchors.
 - Marking a recurring task done automatically archives the finished instance and spawns the next occurrence directly into `triage` with dates shifted forward and an execution period tag appended (e.g. `[W45]`, `[11]`, `[2027]`).
 - Future occurrences project virtual previews onto the Calendar without database ghost rows.
 
 ### 🤖 Model Context Protocol (MCP) Server
+
 - Dual-transport architecture: **Streamable HTTP** (`POST /mcp` on `127.0.0.1:4820`) and **stdio** CLI (`dist/mcp/stdio.js`).
 - Complete 11-tool suite declared with precise `Zod` schemas and tool annotations (`readOnlyHint`, `destructiveHint`).
 - Real-time Server-Sent Events (SSE) push updates to connected web clients in `< 20ms` when agents mutate state.
 
 ### ✈️ Deterministic Telegram Bot Companion
+
 - Built-in long-polling Telegram bot service running inside the daemon with **~0 MB extra memory overhead** and **zero local LLM requirements**.
 - **Deterministic Shorthand Syntax**:
   - `/add Implement OAuth #Auth !today @tomorrow due:2026-11-15 wait:DevOps`
@@ -159,15 +166,15 @@ Visit **`http://localhost:4820`** in your browser.
 
 Kaj includes a daemon management script (`scripts/daemon-ctl.sh`) that integrates with macOS `launchd` LaunchAgents, allowing Kaj to run quietly in the background and auto-start on system boot:
 
-| Action | NPM Script | CLI Command | Description |
-| :--- | :--- | :--- | :--- |
-| **Start Daemon** | `npm run daemon:start` | `./scripts/daemon-ctl.sh start` | Starts Kaj in background (~56–95 MB RSS) |
-| **Stop Daemon** | `npm run daemon:stop` | `./scripts/daemon-ctl.sh stop` | Gracefully stops the background daemon |
-| **Restart Daemon** | `npm run daemon:restart` | `./scripts/daemon-ctl.sh restart` | Restarts daemon and reloads compiled code |
-| **Check Status** | `npm run daemon:status` | `./scripts/daemon-ctl.sh status` | Displays PID, memory usage, and health |
-| **View Logs** | `npm run daemon:logs` | `./scripts/daemon-ctl.sh logs` | Tails live log output (`~/.local/share/kaj/daemon.log`) |
-| **Install Auto-Start** | `npm run daemon:install` | `./scripts/daemon-ctl.sh install` | Registers macOS LaunchAgent (`~/Library/LaunchAgents/com.kaj.daemon.plist`) |
-| **Uninstall Auto-Start** | `npm run daemon:uninstall` | `./scripts/daemon-ctl.sh uninstall` | Unregisters and deletes the LaunchAgent |
+| Action                   | NPM Script                 | CLI Command                         | Description                                                                 |
+| :----------------------- | :------------------------- | :---------------------------------- | :-------------------------------------------------------------------------- |
+| **Start Daemon**         | `npm run daemon:start`     | `./scripts/daemon-ctl.sh start`     | Starts Kaj in background (~56–95 MB RSS)                                    |
+| **Stop Daemon**          | `npm run daemon:stop`      | `./scripts/daemon-ctl.sh stop`      | Gracefully stops the background daemon                                      |
+| **Restart Daemon**       | `npm run daemon:restart`   | `./scripts/daemon-ctl.sh restart`   | Restarts daemon and reloads compiled code                                   |
+| **Check Status**         | `npm run daemon:status`    | `./scripts/daemon-ctl.sh status`    | Displays PID, memory usage, and health                                      |
+| **View Logs**            | `npm run daemon:logs`      | `./scripts/daemon-ctl.sh logs`      | Tails live log output (`~/.local/share/kaj/daemon.log`)                     |
+| **Install Auto-Start**   | `npm run daemon:install`   | `./scripts/daemon-ctl.sh install`   | Registers macOS LaunchAgent (`~/Library/LaunchAgents/com.kaj.daemon.plist`) |
+| **Uninstall Auto-Start** | `npm run daemon:uninstall` | `./scripts/daemon-ctl.sh uninstall` | Unregisters and deletes the LaunchAgent                                     |
 
 ```bash
 # Setup auto-start on macOS login (one-time setup)
@@ -241,19 +248,19 @@ Add Kaj to `claude_desktop_config.json` or Cursor settings:
 
 ### MCP Tools Catalog
 
-| Tool | Access | Description |
-| :--- | :--- | :--- |
-| `query_tasks` | `readOnly` | Query tasks with filters (`status[]`, `project_id`, `priority[]`, `action_date`, `due_date`, text search). |
-| `get_task` | `readOnly` | Retrieve full details of an individual task by ID. |
-| `get_board_summary` | `readOnly` | Compact snapshot of task counts per column, swimlane distribution, and active tracking blockers. |
-| `create_task` | Write | Create a task with title, status, project, priority, dates, recurrence, waiting note, and details. |
-| `update_task` | Write | Partially update attributes of an existing task. |
-| `move_task` | Write | Move a task across columns or project swimlanes. |
-| `complete_task` | Write | Mark a task as completed (triggers spawn-on-complete rollover if recurring). |
-| `delete_task` | `destructive` | Soft-delete a task (`deleted_at` timestamp). |
-| `restore_task` | Write | Recover a soft-deleted task. |
-| `list_projects` | `readOnly` | List all projects with active task counts and sort orders. |
-| `save_project` | Write | Create or update a project entity (name, color, sort order, archive status). |
+| Tool                | Access        | Description                                                                                                |
+| :------------------ | :------------ | :--------------------------------------------------------------------------------------------------------- |
+| `query_tasks`       | `readOnly`    | Query tasks with filters (`status[]`, `project_id`, `priority[]`, `action_date`, `due_date`, text search). |
+| `get_task`          | `readOnly`    | Retrieve full details of an individual task by ID.                                                         |
+| `get_board_summary` | `readOnly`    | Compact snapshot of task counts per column, swimlane distribution, and active tracking blockers.           |
+| `create_task`       | Write         | Create a task with title, status, project, priority, dates, recurrence, waiting note, and details.         |
+| `update_task`       | Write         | Partially update attributes of an existing task.                                                           |
+| `move_task`         | Write         | Move a task across columns or project swimlanes.                                                           |
+| `complete_task`     | Write         | Mark a task as completed (triggers spawn-on-complete rollover if recurring).                               |
+| `delete_task`       | `destructive` | Soft-delete a task (`deleted_at` timestamp).                                                               |
+| `restore_task`      | Write         | Recover a soft-deleted task.                                                                               |
+| `list_projects`     | `readOnly`    | List all projects with active task counts and sort orders.                                                 |
+| `save_project`      | Write         | Create or update a project entity (name, color, sort order, archive status).                               |
 
 ---
 

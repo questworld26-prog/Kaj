@@ -164,7 +164,10 @@ export function FormatToolbar({
           <line x1="10" y1="12" x2="21" y2="12" />
           <line x1="10" y1="18" x2="21" y2="18" />
           <path d="M4 6h1v4M3 10h3" strokeWidth="2" />
-          <path d="M3.5 14a1.5 1.5 0 0 1 2.5 1c0 1-1.5 2-2.5 3h3" strokeWidth="2" />
+          <path
+            d="M3.5 14a1.5 1.5 0 0 1 2.5 1c0 1-1.5 2-2.5 3h3"
+            strokeWidth="2"
+          />
         </svg>
       </button>
     </div>

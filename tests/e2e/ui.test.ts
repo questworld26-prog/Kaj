@@ -309,7 +309,9 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     await expect(modal).not.toBeVisible();
 
     // 3. Test In Progress: Today sub-column in Unassigned swimlane
-    const unassignedPod = page.locator('[data-testid="swimlane-pod-unassigned"]');
+    const unassignedPod = page.locator(
+      '[data-testid="swimlane-pod-unassigned"]',
+    );
     const todayCol = unassignedPod.locator('[data-col="in_progress_today"]');
     const todayAddBtn = todayCol.locator('[data-testid="col-add-task-btn"]');
     await todayAddBtn.click();
@@ -432,7 +434,9 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     const calendarRoot = page.locator('[data-testid="calendar-view"]');
     await expect(calendarRoot).toBeVisible();
 
-    const actionBadge = page.locator('[data-testid="badge-action-date"]').first();
+    const actionBadge = page
+      .locator('[data-testid="badge-action-date"]')
+      .first();
     const dueBadge = page.locator('[data-testid="badge-due-date"]').first();
     await expect(actionBadge).toContainText("▶");
     await expect(dueBadge).toContainText("⚑");
@@ -462,16 +466,26 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     const filterAllBtn = page.locator('[data-testid="filter-all-btn"]');
 
     await filterActionBtn.click();
-    await expect(page.locator('[data-testid="badge-action-date"]').first()).toBeVisible();
+    await expect(
+      page.locator('[data-testid="badge-action-date"]').first(),
+    ).toBeVisible();
     await expect(page.locator('[data-testid="badge-due-date"]')).toHaveCount(0);
 
     await filterDueBtn.click();
-    await expect(page.locator('[data-testid="badge-due-date"]').first()).toBeVisible();
-    await expect(page.locator('[data-testid="badge-action-date"]')).toHaveCount(0);
+    await expect(
+      page.locator('[data-testid="badge-due-date"]').first(),
+    ).toBeVisible();
+    await expect(page.locator('[data-testid="badge-action-date"]')).toHaveCount(
+      0,
+    );
 
     await filterAllBtn.click();
-    await expect(page.locator('[data-testid="badge-action-date"]').first()).toBeVisible();
-    await expect(page.locator('[data-testid="badge-due-date"]').first()).toBeVisible();
+    await expect(
+      page.locator('[data-testid="badge-action-date"]').first(),
+    ).toBeVisible();
+    await expect(
+      page.locator('[data-testid="badge-due-date"]').first(),
+    ).toBeVisible();
   });
 
   // [verifies: UI-003/AC-UI-003.3]
@@ -492,9 +506,13 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     await page.locator('[data-testid="nav-calendar-btn"]').click();
     const calendarRoot = page.locator('[data-testid="calendar-view"]');
 
-    const unscheduledSidebar = page.locator('[data-testid="unscheduled-sidebar"]');
+    const unscheduledSidebar = page.locator(
+      '[data-testid="unscheduled-sidebar"]',
+    );
     await expect(unscheduledSidebar).toBeVisible();
-    await expect(unscheduledSidebar).toContainText("Unscheduled Architecture Review");
+    await expect(unscheduledSidebar).toContainText(
+      "Unscheduled Architecture Review",
+    );
 
     const scheduleBtn = unscheduledSidebar.locator(
       `[data-task-id="${unschedTask.id}"] [data-testid="schedule-today-btn"]`,
@@ -522,8 +540,12 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
 
     // Toggle to Week view
     await weekViewBtn.click();
-    await expect(page.locator('[data-testid="calendar-week-grid"]')).toBeVisible();
-    await expect(page.locator('[data-testid="week-day-column"]')).toHaveCount(7);
+    await expect(
+      page.locator('[data-testid="calendar-week-grid"]'),
+    ).toBeVisible();
+    await expect(page.locator('[data-testid="week-day-column"]')).toHaveCount(
+      7,
+    );
   });
 
   // [verifies: UI-003/AC-UI-003.5]
@@ -606,7 +628,9 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     await expect(calendarRoot).toBeVisible();
 
     // 1. Month View: click on a day cell
-    const targetCell = page.locator('[data-testid="calendar-day-cell"]').nth(15);
+    const targetCell = page
+      .locator('[data-testid="calendar-day-cell"]')
+      .nth(15);
     const targetDate = await targetCell.getAttribute("data-date");
     expect(targetDate).toBeTruthy();
 
@@ -617,7 +641,9 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     await expect(modal).toBeVisible();
 
     // Verify action_date input is pre-populated with targetDate
-    const actionDateInput = page.locator('[data-testid="task-action-date-input"]');
+    const actionDateInput = page.locator(
+      '[data-testid="task-action-date-input"]',
+    );
     await expect(actionDateInput).toHaveValue(targetDate!);
 
     // Close modal
@@ -725,7 +751,9 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     await expect(dialog).toBeVisible();
 
     // Verify emoji prefix button exists
-    const emojiTrigger = dialog.locator('[data-testid="task-emoji-prefix-btn"]');
+    const emojiTrigger = dialog.locator(
+      '[data-testid="task-emoji-prefix-btn"]',
+    );
     await expect(emojiTrigger).toBeVisible();
 
     // Click emoji trigger to open popover palette
@@ -781,11 +809,15 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     await expect(detailsTextarea).toBeVisible();
 
     // Verify format toolbar is hidden by default
-    const formatToolbar = dialog.locator('[data-testid="details-format-toolbar"]');
+    const formatToolbar = dialog.locator(
+      '[data-testid="details-format-toolbar"]',
+    );
     await expect(formatToolbar).not.toBeVisible();
 
     // Verify format menu toggle button exists
-    const formatToggleBtn = dialog.locator('[data-testid="details-format-toggle-btn"]');
+    const formatToggleBtn = dialog.locator(
+      '[data-testid="details-format-toggle-btn"]',
+    );
     await expect(formatToggleBtn).toBeVisible();
 
     // Click toggle button to show format toolbar
@@ -794,10 +826,18 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
 
     // Verify format buttons exist
     const boldBtn = formatToolbar.locator('[data-testid="format-bold-btn"]');
-    const italicBtn = formatToolbar.locator('[data-testid="format-italic-btn"]');
-    const underlineBtn = formatToolbar.locator('[data-testid="format-underline-btn"]');
-    const bulletListBtn = formatToolbar.locator('[data-testid="format-bullet-list-btn"]');
-    const numberListBtn = formatToolbar.locator('[data-testid="format-number-list-btn"]');
+    const italicBtn = formatToolbar.locator(
+      '[data-testid="format-italic-btn"]',
+    );
+    const underlineBtn = formatToolbar.locator(
+      '[data-testid="format-underline-btn"]',
+    );
+    const bulletListBtn = formatToolbar.locator(
+      '[data-testid="format-bullet-list-btn"]',
+    );
+    const numberListBtn = formatToolbar.locator(
+      '[data-testid="format-number-list-btn"]',
+    );
 
     await expect(boldBtn).toBeVisible();
     await expect(italicBtn).toBeVisible();
@@ -832,7 +872,9 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
       el.setSelectionRange(21, 25);
     });
     await underlineBtn.click();
-    await expect(detailsTextarea).toHaveValue("Important ***Task*** <u>Note</u>");
+    await expect(detailsTextarea).toHaveValue(
+      "Important ***Task*** <u>Note</u>",
+    );
 
     // Test list formatting on new line
     await detailsTextarea.fill("Item 1\nItem 2");
@@ -896,8 +938,12 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     // Reopen modal and confirm value persisted
     await card.click();
     await expect(dialog).toBeVisible();
-    await expect(dialog.locator('input[name="created_by"]')).toHaveValue("Sarah");
-    await expect(dialog.locator('[data-testid="modal-creator-badge"]')).toContainText("Sarah");
+    await expect(dialog.locator('input[name="created_by"]')).toHaveValue(
+      "Sarah",
+    );
+    await expect(
+      dialog.locator('[data-testid="modal-creator-badge"]'),
+    ).toContainText("Sarah");
 
     await dialog.locator('[data-testid="close-task-modal-btn"]').click();
     await expect(dialog).toBeHidden();
@@ -1165,11 +1211,15 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     const cockpitView = page.locator('[data-testid="desktop-cockpit-view"]');
     await expect(cockpitView).toBeVisible();
 
-    const todayPlate = cockpitView.locator('[data-testid="cockpit-today-focus-plate"]');
+    const todayPlate = cockpitView.locator(
+      '[data-testid="cockpit-today-focus-plate"]',
+    );
     await expect(todayPlate).toBeVisible();
     await expect(todayPlate).toContainText("Cockpit Focus Task Alpha");
 
-    const trackingBox = cockpitView.locator('[data-testid="cockpit-tracking-container"]');
+    const trackingBox = cockpitView.locator(
+      '[data-testid="cockpit-tracking-container"]',
+    );
     await expect(trackingBox).toBeVisible();
     await expect(trackingBox).toContainText("Cockpit Blocked Task Beta");
     await expect(trackingBox).toContainText("Waiting on vendor shipment");
@@ -1182,7 +1232,9 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     await page.goto("/");
     await page.locator('[data-testid="nav-cockpit-btn"]').click();
     const cockpitView = page.locator('[data-testid="desktop-cockpit-view"]');
-    await expect(cockpitView.locator('[data-testid="cockpit-weekly-velocity-chart"]')).toBeVisible();
+    await expect(
+      cockpitView.locator('[data-testid="cockpit-weekly-velocity-chart"]'),
+    ).toBeVisible();
   });
 
   // [verifies: UI-009/AC-UI-009.4]
@@ -1192,7 +1244,9 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     await page.goto("/");
     await page.locator('[data-testid="nav-cockpit-btn"]').click();
     const cockpitView = page.locator('[data-testid="desktop-cockpit-view"]');
-    await expect(cockpitView.locator('[data-testid="cockpit-project-distribution-chart"]')).toBeVisible();
+    await expect(
+      cockpitView.locator('[data-testid="cockpit-project-distribution-chart"]'),
+    ).toBeVisible();
   });
 
   // [verifies: UI-009/AC-UI-009.5]
@@ -1202,6 +1256,8 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     await page.goto("/");
     await page.locator('[data-testid="nav-cockpit-btn"]').click();
     const cockpitView = page.locator('[data-testid="desktop-cockpit-view"]');
-    await expect(cockpitView.locator('[data-testid="cockpit-creator-stacked-chart"]')).toBeVisible();
+    await expect(
+      cockpitView.locator('[data-testid="cockpit-creator-stacked-chart"]'),
+    ).toBeVisible();
   });
 });

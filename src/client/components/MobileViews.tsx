@@ -218,10 +218,7 @@ export function MobileViews({
       />
 
       {/* STICKY BOTTOM NAVIGATION DOCK (4 TABS) */}
-      <MobileBottomDock
-        currentTab={currentTab}
-        onTabChange={onTabChange}
-      />
+      <MobileBottomDock currentTab={currentTab} onTabChange={onTabChange} />
     </div>
   );
 }

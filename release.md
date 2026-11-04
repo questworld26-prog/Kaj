@@ -11,6 +11,17 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v2.5.1`: Airtight Bi-Directional Spec Guardian & 1-Test-to-1-AC Anti-Stacking Governance
+
+- **Status**: ✅ RELEASED
+- **Focus**: Upgrades Spec Guardian to the airtight bi-directional Spec-Driven Development standard with full `[PLANNED]` roadmap lifecycle support, completes reverse codebase traceability across all source modules, enforces strict 1-Test-to-1-AC cardinality across the entire unit, integration, and Playwright E2E test suites (0 stacked tags), and formally aligns specification documentation.
+- **Deliverables**:
+  - [x] **Spec Guardian Engine (`tools/guardian.py`)**: Airtight bi-directional spec auditor supporting `[PLANNED]` lifecycle, premature implementation detection (`PREMATURE_IMPL`), reverse traceability (missing bindings in source and tests, orphan tags), Layer 1 anti-stacking (1-test-to-1-AC), Layer 4 AC backtick-identifier token verification, monotonic ratchet regression prevention, and aligned Markdown/terminal reports.
+  - [x] **Source Reverse Traceability (`src/`)**: Bound missing architectural source files (`src/client/main.tsx`, `src/server/db.ts`, `src/server/events.ts`, `src/shared/types.ts`) achieving 100% source module spec coverage.
+  - [x] **Test Traceability & Anti-Stacking (`tests/`)**: Bound missing integration tests in `api.test.ts` and decomposed stacked Playwright test cases (`tests/e2e/ui.test.ts`) across Calendar (`UI-003`), Task Modal (`UI-004`), and Desktop Cockpit (`UI-009`), achieving 100% 1-test-to-1-AC cardinality (0 stacked tags).
+  - [x] **Specification Documentation (`specs/README.md` & `AGENTS.md`)**: Documented the 5 EARS syntax patterns, roadmap lifecycle, bi-directional traceability, and 1-test-to-1-AC rules.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (97/97), 43 unit tests + 27 integration tests + 45 Playwright E2E tests passing, clean working tree, version bumped to `2.5.1`.
+
 ### Release `v2.5.0`: Desktop Cockpit Execution Screen, Performance Telemetry & Codebase Modularization
 
 - **Status**: ✅ RELEASED

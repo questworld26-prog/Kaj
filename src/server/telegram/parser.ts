@@ -1,9 +1,5 @@
 // [spec: TG-001]
-import type {
-  Project,
-  TaskPriority,
-  TaskStatus,
-} from "../../shared/types.js";
+import type { Project, TaskPriority, TaskStatus } from "../../shared/types.js";
 import type { ParsedTelegramTask } from "./types.js";
 
 export function formatDateYMD(dt: Date): string {

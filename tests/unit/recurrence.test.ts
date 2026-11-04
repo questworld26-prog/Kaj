@@ -120,7 +120,9 @@ describe("Spawn-on-Complete Recurrence Rollover (TASK-004)", () => {
     expect(res.spawned_task?.status).toBe("triage");
     expect(res.spawned_task?.action_date).toBe("2027-10-28");
     expect(res.spawned_task?.due_date).toBe("2027-11-15");
-    expect(res.spawned_task?.title).toBe("Annual Property Insurance Review [2027]");
+    expect(res.spawned_task?.title).toBe(
+      "Annual Property Insurance Review [2027]",
+    );
 
     // Yearly with custom repeat_day_of_year (e.g. "04-15" for tax day)
     const taxTask = taskRepo.createTask({

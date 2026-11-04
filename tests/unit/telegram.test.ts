@@ -410,7 +410,9 @@ describe("Telegram Bot Integration (TG-001)", () => {
     });
 
     const tasks = taskRepo.listTasks(false);
-    const createdTask = tasks.find((t) => t.title.includes("Review quarterly report"));
+    const createdTask = tasks.find((t) =>
+      t.title.includes("Review quarterly report"),
+    );
     expect(createdTask).toBeDefined();
     expect(createdTask?.created_by).toBe("Alex");
     expect(sentMessages[0].text).toContain("Alex");
@@ -457,7 +459,9 @@ describe("Telegram Bot Integration (TG-001)", () => {
       },
     });
 
-    const sarahTask = taskRepo.listTasks(false).find((t) => t.title.includes("Prepare launch deck"));
+    const sarahTask = taskRepo
+      .listTasks(false)
+      .find((t) => t.title.includes("Prepare launch deck"));
     expect(sarahTask).toBeDefined();
     expect(sarahTask?.created_by).toBe("Sarah");
   });

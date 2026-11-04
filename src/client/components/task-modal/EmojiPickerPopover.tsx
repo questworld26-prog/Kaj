@@ -4,22 +4,100 @@ import { useState } from "preact/hooks";
 
 export const EMOJI_CATEGORIES: Record<string, string[]> = {
   "Work & Tech": [
-    "🚀", "🐛", "📝", "⚡", "🎯", "📦", "🔍", "💡", "📅", "🔔", "🎨", "🧪",
-    "🔐", "⚙️", "🔥", "✅", "🛠️", "💬", "✨", "📊", "🌐", "💻", "🧹", "📌",
-    "📁", "📂", "📈", "📉", "📱", "🖥️", "⌨️", "📧", "📫", "🏷️", "💳", "💰"
+    "🚀",
+    "🐛",
+    "📝",
+    "⚡",
+    "🎯",
+    "📦",
+    "🔍",
+    "💡",
+    "📅",
+    "🔔",
+    "🎨",
+    "🧪",
+    "🔐",
+    "⚙️",
+    "🔥",
+    "✅",
+    "🛠️",
+    "💬",
+    "✨",
+    "📊",
+    "🌐",
+    "💻",
+    "🧹",
+    "📌",
+    "📁",
+    "📂",
+    "📈",
+    "📉",
+    "📱",
+    "🖥️",
+    "⌨️",
+    "📧",
+    "📫",
+    "🏷️",
+    "💳",
+    "💰",
   ],
   "Status & Focus": [
-    "🔴", "🟡", "🟢", "⭐", "🏆", "⏳", "🛑", "⚠️", "🚨", "🚩", "❓", "❗",
-    "💤", "💎", "💥", "🚧", "💯", "🔝", "🆗", "🆕", "🔒", "🔑", "📎", "📖"
+    "🔴",
+    "🟡",
+    "🟢",
+    "⭐",
+    "🏆",
+    "⏳",
+    "🛑",
+    "⚠️",
+    "🚨",
+    "🚩",
+    "❓",
+    "❗",
+    "💤",
+    "💎",
+    "💥",
+    "🚧",
+    "💯",
+    "🔝",
+    "🆗",
+    "🆕",
+    "🔒",
+    "🔑",
+    "📎",
+    "📖",
   ],
   "Team & Life": [
-    "😀", "😎", "🤔", "🙌", "👍", "👎", "🤝", "💪", "👀", "🧠", "🧑‍💻", "🕵️",
-    "🎉", "☕", "🍕", "🌱", "🧘", "🚲", "✈️", "🏠", "☀️", "🌙", "🎵", "❤️"
+    "😀",
+    "😎",
+    "🤔",
+    "🙌",
+    "👍",
+    "👎",
+    "🤝",
+    "💪",
+    "👀",
+    "🧠",
+    "🧑‍💻",
+    "🕵️",
+    "🎉",
+    "☕",
+    "🍕",
+    "🌱",
+    "🧘",
+    "🚲",
+    "✈️",
+    "🏠",
+    "☀️",
+    "🌙",
+    "🎵",
+    "❤️",
   ],
 };
 
 // Regex matching common unicode emojis at start of string
-export const EMOJI_PREFIX_REGEX = /^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)\s*/u;
+export const EMOJI_PREFIX_REGEX =
+  /^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)\s*/u;
 
 interface EmojiPickerPopoverProps {
   isOpen: boolean;
@@ -103,7 +181,9 @@ export function EmojiPickerPopover({
           type="text"
           placeholder="Paste any emoji..."
           value={customEmojiInput}
-          onInput={(e) => setCustomEmojiInput((e.target as HTMLInputElement).value)}
+          onInput={(e) =>
+            setCustomEmojiInput((e.target as HTMLInputElement).value)
+          }
           className="flex-1 px-2.5 py-1.5 rounded-lg bg-[#0E1111] border border-[#2A3235] text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
         />
         <button
