@@ -31,7 +31,7 @@ This document defines the rules of engagement, architectural constraints, and ve
 
 ## 2. Spec-Driven Development Annotations
 
-- **Source Code (`src/`)**: Annotate implementing functions/classes with:
+- **Source Code (`src/`)**: Annotate implementing files and functions/classes with:
   ```typescript
   // [spec: REQ-ID]
   ```
@@ -39,6 +39,8 @@ This document defines the rules of engagement, architectural constraints, and ve
   ```typescript
   // [verifies: REQ-ID/AC-ID]
   ```
+- **1-Test-to-1-AC Cardinality**: Every test case (`it` or `test` block) must verify at most 1 criterion (`len(attached_tags) == 1`). Never stack multiple `[verifies: ...]` tags on a single test.
+- **Roadmap Lifecycle (`[PLANNED]`)**: Author multi-phase roadmap requirements with `[PLANNED]` appended to the heading. Never write implementation code or tests for `[PLANNED]` requirements before `[PLANNED]` is removed.
 
 ---
 

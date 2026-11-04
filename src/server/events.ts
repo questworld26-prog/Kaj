@@ -1,3 +1,5 @@
+// [spec: PROJ-001]
+// [spec: UI-001]
 export interface MutationEvent {
   type: "task" | "project";
   action:

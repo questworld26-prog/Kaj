@@ -299,7 +299,6 @@ describe("Tasks Core Workflow & Attributes (TASK-001, TASK-002, TASK-003)", () =
     expect(updated?.status).toBe("in_progress_today");
   });
 
-  // [verifies: TASK-004/AC-TASK-004.1]
   // [verifies: TASK-004/AC-TASK-004.5]
   it("triggers recurrence rollover and sets completed_at when status is updated to done via updateTask", () => {
     const recurring = taskRepo.createTask({

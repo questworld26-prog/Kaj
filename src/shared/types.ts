@@ -1,3 +1,5 @@
+// [spec: TASK-002]
+// [spec: PROJ-001]
 import { z } from "zod";
 
 export const TASK_STATUSES = [

@@ -412,15 +412,73 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
   });
 
   // [verifies: UI-003/AC-UI-003.1]
-  // [verifies: UI-003/AC-UI-003.2]
-  // [verifies: UI-003/AC-UI-003.3]
-  // [verifies: UI-003/AC-UI-003.4]
-  test("calendar view renders Month and Week grids, dual-date badges, filter toggles, and unscheduled sidebar", async ({
+  test("calendar view displays Action Dates (▶) and Due Dates (⚑) with distinct visual badges", async ({
     page,
   }) => {
     await page.goto("/");
+    const today = new Date().toISOString().slice(0, 10);
+    await page.request.post("/api/tasks", {
+      data: {
+        title: "Distinct Badge Task",
+        status: "in_progress_today",
+        priority: "today",
+        action_date: today,
+        due_date: today,
+      },
+    });
 
-    // Create an unscheduled task
+    await page.reload();
+    await page.locator('[data-testid="nav-calendar-btn"]').click();
+    const calendarRoot = page.locator('[data-testid="calendar-view"]');
+    await expect(calendarRoot).toBeVisible();
+
+    const actionBadge = page.locator('[data-testid="badge-action-date"]').first();
+    const dueBadge = page.locator('[data-testid="badge-due-date"]').first();
+    await expect(actionBadge).toContainText("▶");
+    await expect(dueBadge).toContainText("⚑");
+  });
+
+  // [verifies: UI-003/AC-UI-003.2]
+  test("calendar filter toggle switches between Action Dates, Due Dates, and All", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const today = new Date().toISOString().slice(0, 10);
+    await page.request.post("/api/tasks", {
+      data: {
+        title: "Filter Toggle Task",
+        status: "in_progress_today",
+        priority: "today",
+        action_date: today,
+        due_date: today,
+      },
+    });
+
+    await page.reload();
+    await page.locator('[data-testid="nav-calendar-btn"]').click();
+
+    const filterActionBtn = page.locator('[data-testid="filter-action-btn"]');
+    const filterDueBtn = page.locator('[data-testid="filter-due-btn"]');
+    const filterAllBtn = page.locator('[data-testid="filter-all-btn"]');
+
+    await filterActionBtn.click();
+    await expect(page.locator('[data-testid="badge-action-date"]').first()).toBeVisible();
+    await expect(page.locator('[data-testid="badge-due-date"]')).toHaveCount(0);
+
+    await filterDueBtn.click();
+    await expect(page.locator('[data-testid="badge-due-date"]').first()).toBeVisible();
+    await expect(page.locator('[data-testid="badge-action-date"]')).toHaveCount(0);
+
+    await filterAllBtn.click();
+    await expect(page.locator('[data-testid="badge-action-date"]').first()).toBeVisible();
+    await expect(page.locator('[data-testid="badge-due-date"]').first()).toBeVisible();
+  });
+
+  // [verifies: UI-003/AC-UI-003.3]
+  test("calendar view provides Unscheduled sidebar and scheduling onto calendar", async ({
+    page,
+  }) => {
+    await page.goto("/");
     const unschedRes = await page.request.post("/api/tasks", {
       data: {
         title: "Unscheduled Architecture Review",
@@ -430,102 +488,44 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     });
     const unschedTask = (await unschedRes.json()) as { id: string };
 
-    // Create a scheduled task with both action_date and due_date
-    const today = new Date().toISOString().slice(0, 10);
-    await page.request.post("/api/tasks", {
-      data: {
-        title: "Scheduled Feature Launch",
-        status: "in_progress_today",
-        priority: "today",
-        action_date: today,
-        due_date: today,
-      },
-    });
-
-    // Reload page to ensure freshly created tasks are populated
     await page.reload();
-
-    // Switch to Calendar view
-    const calendarNavBtn = page.locator('[data-testid="nav-calendar-btn"]');
-    await calendarNavBtn.click();
-
-    // UI-003.4: Verify Month view default and Week view switcher
+    await page.locator('[data-testid="nav-calendar-btn"]').click();
     const calendarRoot = page.locator('[data-testid="calendar-view"]');
-    await expect(calendarRoot).toBeVisible();
+
+    const unscheduledSidebar = page.locator('[data-testid="unscheduled-sidebar"]');
+    await expect(unscheduledSidebar).toBeVisible();
+    await expect(unscheduledSidebar).toContainText("Unscheduled Architecture Review");
+
+    const scheduleBtn = unscheduledSidebar.locator(
+      `[data-task-id="${unschedTask.id}"] [data-testid="schedule-today-btn"]`,
+    );
+    await scheduleBtn.click();
+
+    await expect(
+      calendarRoot.locator('[data-testid="badge-action-date"]').filter({
+        hasText: "Unscheduled Architecture Review",
+      }),
+    ).toBeVisible();
+  });
+
+  // [verifies: UI-003/AC-UI-003.4]
+  test("calendar view toggles between Month and Week grids adapting layout", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.locator('[data-testid="nav-calendar-btn"]').click();
 
     const monthViewBtn = page.locator('[data-testid="view-month-btn"]');
     const weekViewBtn = page.locator('[data-testid="view-week-btn"]');
     await expect(monthViewBtn).toBeVisible();
     await expect(weekViewBtn).toBeVisible();
 
-    // UI-003.1: Verify distinct Action Date (▶) and Due Date (⚑) badges
-    const actionBadge = page
-      .locator('[data-testid="badge-action-date"]')
-      .first();
-    const dueBadge = page.locator('[data-testid="badge-due-date"]').first();
-    await expect(actionBadge).toContainText("▶");
-    await expect(dueBadge).toContainText("⚑");
-
-    // UI-003.2: Verify filter toggle: All, Action Dates only, Due Dates only
-    const filterActionBtn = page.locator('[data-testid="filter-action-btn"]');
-    const filterDueBtn = page.locator('[data-testid="filter-due-btn"]');
-    const filterAllBtn = page.locator('[data-testid="filter-all-btn"]');
-
-    await filterActionBtn.click();
-    await expect(
-      page.locator('[data-testid="badge-action-date"]').first(),
-    ).toBeVisible();
-    await expect(page.locator('[data-testid="badge-due-date"]')).toHaveCount(0);
-
-    await filterDueBtn.click();
-    await expect(
-      page.locator('[data-testid="badge-due-date"]').first(),
-    ).toBeVisible();
-    await expect(page.locator('[data-testid="badge-action-date"]')).toHaveCount(
-      0,
-    );
-
-    await filterAllBtn.click();
-    await expect(
-      page.locator('[data-testid="badge-action-date"]').first(),
-    ).toBeVisible();
-    await expect(
-      page.locator('[data-testid="badge-due-date"]').first(),
-    ).toBeVisible();
-
-    // UI-003.3: Verify Unscheduled sidebar and scheduling onto calendar
-    const unscheduledSidebar = page.locator(
-      '[data-testid="unscheduled-sidebar"]',
-    );
-    await expect(unscheduledSidebar).toBeVisible();
-    await expect(unscheduledSidebar).toContainText(
-      "Unscheduled Architecture Review",
-    );
-
-    // Click "Schedule Today" button for this specific task
-    const scheduleBtn = unscheduledSidebar.locator(
-      `[data-task-id="${unschedTask.id}"] [data-testid="schedule-today-btn"]`,
-    );
-    await scheduleBtn.click();
-
-    // Verify task moved from unscheduled list to the active calendar grid
-    await expect(
-      calendarRoot.locator('[data-testid="badge-action-date"]').filter({
-        hasText: "Unscheduled Architecture Review",
-      }),
-    ).toBeVisible();
-
-    // UI-003.4: Toggle to Week view
+    // Toggle to Week view
     await weekViewBtn.click();
-    await expect(
-      page.locator('[data-testid="calendar-week-grid"]'),
-    ).toBeVisible();
-    await expect(page.locator('[data-testid="week-day-column"]')).toHaveCount(
-      7,
-    );
+    await expect(page.locator('[data-testid="calendar-week-grid"]')).toBeVisible();
+    await expect(page.locator('[data-testid="week-day-column"]')).toHaveCount(7);
   });
 
-  // [verifies: UI-003/AC-UI-003.3]
   // [verifies: UI-003/AC-UI-003.5]
   test("allows dragging unscheduled tasks and scheduled tasks across calendar days", async ({
     page,
@@ -641,8 +641,22 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
   });
 
   // [verifies: UI-004/AC-UI-004.1]
+  test("native task editor dialog supports light-dismiss via Escape key", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const addBtn = page.locator('[data-testid="add-task-btn"]');
+    await addBtn.click();
+
+    const dialog = page.locator("dialog#task-dialog");
+    await expect(dialog).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+  });
+
   // [verifies: UI-004/AC-UI-004.2]
-  test("native task editor dialog exposes all inputs and supports light-dismiss", async ({
+  test("native task editor dialog exposes all inputs and recurrence options", async ({
     page,
   }) => {
     await page.goto("/");
@@ -697,12 +711,6 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
         hasText: "Comprehensive Dialog Verification Task",
       }),
     ).toBeVisible();
-
-    // UI-004.1: Test Light-dismiss via Escape key
-    await addBtn.click();
-    await expect(dialog).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(dialog).toBeHidden();
   });
 
   // [verifies: UI-004/AC-UI-004.4]
@@ -1108,20 +1116,29 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
   });
 
   // [verifies: UI-009/AC-UI-009.1]
-  // [verifies: UI-009/AC-UI-009.2]
-  // [verifies: UI-009/AC-UI-009.3]
-  // [verifies: UI-009/AC-UI-009.4]
-  // [verifies: UI-009/AC-UI-009.5]
-  test("desktop cockpit view renders 2-column split layout with execution focus and live telemetry charts", async ({
+  test("top command bar navigation switcher seamlessly toggles to Desktop Cockpit", async ({
     page,
   }) => {
-    // Seed test tasks with projects, statuses, and creator attribution
+    await page.goto("/");
+    await expect(page.locator("#app-root")).toBeVisible();
+
+    const cockpitNavBtn = page.locator('[data-testid="nav-cockpit-btn"]');
+    await expect(cockpitNavBtn).toBeVisible();
+
+    await cockpitNavBtn.click();
+    const cockpitView = page.locator('[data-testid="desktop-cockpit-view"]');
+    await expect(cockpitView).toBeVisible();
+  });
+
+  // [verifies: UI-009/AC-UI-009.2]
+  test("desktop cockpit renders 2-column layout with Today focus plate and Tracking container", async ({
+    page,
+  }) => {
     const prjRes = await page.request.post("/api/projects", {
       data: { name: "Cockpit Platform", color: "#10B981" },
     });
     const prj = (await prjRes.json()) as { id: string };
 
-    // Active today task
     await page.request.post("/api/tasks", {
       data: {
         title: "Cockpit Focus Task Alpha",
@@ -1132,7 +1149,6 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
       },
     });
 
-    // Tracking task
     await page.request.post("/api/tasks", {
       data: {
         title: "Cockpit Blocked Task Beta",
@@ -1144,33 +1160,11 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
       },
     });
 
-    // Completed task
-    const compRes = await page.request.post("/api/tasks", {
-      data: {
-        title: "Cockpit Done Task Gamma",
-        status: "todo",
-        priority: "week",
-        project_id: prj.id,
-        created_by: "Sarah",
-      },
-    });
-    const compTask = (await compRes.json()) as { id: string };
-    await page.request.post(`/api/tasks/${compTask.id}/complete`);
-
     await page.goto("/");
-    await expect(page.locator("#app-root")).toBeVisible();
-
-    // Verify Cockpit navigation tab exists in TopBar on desktop
-    const cockpitNavBtn = page.locator('[data-testid="nav-cockpit-btn"]');
-    await expect(cockpitNavBtn).toBeVisible();
-
-    // Click to navigate to Desktop Cockpit
-    await cockpitNavBtn.click();
-
+    await page.locator('[data-testid="nav-cockpit-btn"]').click();
     const cockpitView = page.locator('[data-testid="desktop-cockpit-view"]');
     await expect(cockpitView).toBeVisible();
 
-    // AC-UI-009.2: Left execution focus column
     const todayPlate = cockpitView.locator('[data-testid="cockpit-today-focus-plate"]');
     await expect(todayPlate).toBeVisible();
     await expect(todayPlate).toContainText("Cockpit Focus Task Alpha");
@@ -1179,17 +1173,35 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     await expect(trackingBox).toBeVisible();
     await expect(trackingBox).toContainText("Cockpit Blocked Task Beta");
     await expect(trackingBox).toContainText("Waiting on vendor shipment");
+  });
 
-    // AC-UI-009.3: Weekly completed velocity chart
-    const weeklyChart = cockpitView.locator('[data-testid="cockpit-weekly-velocity-chart"]');
-    await expect(weeklyChart).toBeVisible();
+  // [verifies: UI-009/AC-UI-009.3]
+  test("desktop cockpit renders weekly velocity telemetry bar chart", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.locator('[data-testid="nav-cockpit-btn"]').click();
+    const cockpitView = page.locator('[data-testid="desktop-cockpit-view"]');
+    await expect(cockpitView.locator('[data-testid="cockpit-weekly-velocity-chart"]')).toBeVisible();
+  });
 
-    // AC-UI-009.4: Project completed distribution chart
-    const projectChart = cockpitView.locator('[data-testid="cockpit-project-distribution-chart"]');
-    await expect(projectChart).toBeVisible();
+  // [verifies: UI-009/AC-UI-009.4]
+  test("desktop cockpit renders SVG donut chart for project completed distribution", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.locator('[data-testid="nav-cockpit-btn"]').click();
+    const cockpitView = page.locator('[data-testid="desktop-cockpit-view"]');
+    await expect(cockpitView.locator('[data-testid="cockpit-project-distribution-chart"]')).toBeVisible();
+  });
 
-    // AC-UI-009.5: Stacked creator completed chart
-    const creatorChart = cockpitView.locator('[data-testid="cockpit-creator-stacked-chart"]');
-    await expect(creatorChart).toBeVisible();
+  // [verifies: UI-009/AC-UI-009.5]
+  test("desktop cockpit renders horizontal stacked creator completed chart", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.locator('[data-testid="nav-cockpit-btn"]').click();
+    const cockpitView = page.locator('[data-testid="desktop-cockpit-view"]');
+    await expect(cockpitView.locator('[data-testid="cockpit-creator-stacked-chart"]')).toBeVisible();
   });
 });

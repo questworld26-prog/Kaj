@@ -1,3 +1,5 @@
+// [spec: PROJ-001]
+// [spec: TASK-002]
 import { DatabaseSync } from "node:sqlite";
 import path from "node:path";
 import fs from "node:fs";

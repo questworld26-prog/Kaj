@@ -16,6 +16,7 @@ describe("Hono REST API & SSE Live Sync", () => {
     app = createApp({ db, eventBus });
   });
 
+  // [verifies: MCP-002/AC-MCP-002.3]
   it("GET /api/health returns 200 OK with server status and uptime", async () => {
     const res = await app.request("/api/health");
     expect(res.status).toBe(200);
@@ -24,6 +25,7 @@ describe("Hono REST API & SSE Live Sync", () => {
     expect(body.service).toBe("kaj");
   });
 
+  // [verifies: PROJ-001/AC-PROJ-001.2]
   it("manages projects via REST CRUD and reordering", async () => {
     // Create project
     const createRes = await app.request("/api/projects", {
@@ -59,6 +61,7 @@ describe("Hono REST API & SSE Live Sync", () => {
     expect(list[1].id).toBe(p1.id);
   });
 
+  // [verifies: TASK-001/AC-TASK-001.1]
   it("manages tasks via REST CRUD and board swimlanes", async () => {
     // Create task
     const createRes = await app.request("/api/tasks", {
