@@ -465,4 +465,36 @@ describe("Telegram Bot Integration (TG-001)", () => {
     expect(sarahTask).toBeDefined();
     expect(sarahTask?.created_by).toBe("Sarah");
   });
+
+  // [verifies: TG-001/AC-TG-001.8]
+  it("supports designating VIP users via [VIP] indicator or object mapping and exposes them via getVipUsers", () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "kaj-tg-vip-"));
+    const cfgPath = path.join(tmpDir, "telegram.config.json");
+
+    fs.writeFileSync(
+      cfgPath,
+      JSON.stringify({
+        enabled: true,
+        bot_token: "123456:VIP-TEST",
+        allowed_user_ids: [111, 222, 333],
+        user_names: {
+          "111": "Oblix [VIP]",
+          "222": { name: "Asterix", vip: true },
+          "333": "Panoramix",
+        },
+      }),
+      "utf-8",
+    );
+
+    const cfg = loadTelegramConfig(cfgPath);
+    expect(cfg.user_names).toEqual({
+      "111": "Oblix",
+      "222": "Asterix",
+      "333": "Panoramix",
+    });
+    expect(cfg.vip_users).toEqual(
+      expect.arrayContaining(["Oblix", "Asterix", "111", "222"]),
+    );
+  });
 });
+

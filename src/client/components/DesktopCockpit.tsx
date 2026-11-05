@@ -9,6 +9,7 @@ interface DesktopCockpitProps {
   tasks: Task[];
   projects: Project[];
   completedTasks: Task[];
+  vipUsers?: string[];
   onSelectTask: (task: Task) => void;
   onCompleteTask: (taskId: string) => void;
   onUpdateTaskStatus: (taskId: string, newStatus: TaskStatus) => void;
@@ -19,12 +20,28 @@ export function DesktopCockpit({
   tasks,
   projects,
   completedTasks,
+  vipUsers = [],
   onSelectTask,
   onCompleteTask,
   onUpdateTaskStatus,
   onAddTask,
 }: DesktopCockpitProps) {
+  // VIP Triage tasks: unassigned triage tasks created by VIP users (UI-009 / AC-UI-009.6)
+  const vipTriageTasks = useMemo(() => {
+    const vipList = (vipUsers || []).map((u) => u.toLowerCase().trim());
+    return tasks.filter((t) => {
+      // Must be triage and without project (project_id == null)
+      if (t.status !== "triage") return false;
+      if (t.project_id !== null && t.project_id !== undefined && t.project_id !== "") return false;
+      if (!t.created_by || !t.created_by.trim()) return false;
+      const creator = t.created_by.trim();
+      if (/\[vip\]|\(vip\)|\bvip\b/i.test(creator)) return true;
+      return vipList.includes(creator.toLowerCase());
+    });
+  }, [tasks, vipUsers]);
+
   // Today Focus tasks
+
   const todayTasks = useMemo(
     () => tasks.filter((t) => t.status === "in_progress_today"),
     [tasks],
@@ -62,6 +79,7 @@ export function DesktopCockpit({
       <div className="grid grid-cols-12 gap-6 items-start">
         {/* LEFT 7 COLS: Action & Execution Focus Deck */}
         <CockpitExecutionDeck
+          vipTriageTasks={vipTriageTasks}
           todayTasks={todayTasks}
           trackingTasks={trackingTasks}
           upcomingTasks={upcomingTasks}
@@ -71,6 +89,7 @@ export function DesktopCockpit({
           onUpdateTaskStatus={onUpdateTaskStatus}
           onAddTask={onAddTask}
         />
+
 
         {/* RIGHT 5 COLS: Vertical Analytics & Telemetry Stack */}
         <CockpitTelemetryDeck

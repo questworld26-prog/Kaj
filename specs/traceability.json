@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-04T08:39:41.905879+00:00",
+  "last_audited_at": "2026-11-05T08:09:55.728912+00:00",
   "total_requirements": 21,
   "active_requirements_count": 21,
   "planned_requirements_count": 0,
-  "active_criteria_count": 97,
-  "verified_criteria_count": 97,
+  "active_criteria_count": 100,
+  "verified_criteria_count": 100,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -304,8 +304,8 @@
       "title": "Configurable Deterministic Telegram Bot for Task Creation, Search, and Quick Actions",
       "spec_file": "specs/telegram.md",
       "is_planned": false,
-      "sha256": "e1e96d4d3b05ec0dd7de99242e927606238416f908540ccaabb55d330760c533",
-      "verified_sha256": "e1e96d4d3b05ec0dd7de99242e927606238416f908540ccaabb55d330760c533",
+      "sha256": "495f04b506d33ce030ff1db2a32c62b085f83b749bee0f6b69a6974e53080847",
+      "verified_sha256": "495f04b506d33ce030ff1db2a32c62b085f83b749bee0f6b69a6974e53080847",
       "acceptance_criteria": [
         "AC-TG-001.1",
         "AC-TG-001.2",
@@ -313,7 +313,8 @@
         "AC-TG-001.4",
         "AC-TG-001.5",
         "AC-TG-001.6",
-        "AC-TG-001.7"
+        "AC-TG-001.7",
+        "AC-TG-001.8"
       ],
       "verified_criteria": [
         "AC-TG-001.1",
@@ -322,9 +323,11 @@
         "AC-TG-001.4",
         "AC-TG-001.5",
         "AC-TG-001.6",
-        "AC-TG-001.7"
+        "AC-TG-001.7",
+        "AC-TG-001.8"
       ],
       "implementation_files": [
+        "src/client/api.ts",
         "src/server/app.ts",
         "src/server/index.ts",
         "src/server/telegram.ts",
@@ -526,21 +529,23 @@
       "title": "Omnipresent Top Search Filter and Mobile Minimal Density Default",
       "spec_file": "specs/ui.md",
       "is_planned": false,
-      "sha256": "421b7637b79b726af9ae6101979780164bee87f66b9a4eb2d7eb7f2bef9c4f51",
-      "verified_sha256": "421b7637b79b726af9ae6101979780164bee87f66b9a4eb2d7eb7f2bef9c4f51",
+      "sha256": "2e625d6ffc03b558698650e4e0a5755ab4800360829d2cd163cea0a272b8f3e0",
+      "verified_sha256": "2e625d6ffc03b558698650e4e0a5755ab4800360829d2cd163cea0a272b8f3e0",
       "acceptance_criteria": [
         "AC-UI-007.1",
         "AC-UI-007.2",
         "AC-UI-007.3",
         "AC-UI-007.4",
-        "AC-UI-007.5"
+        "AC-UI-007.5",
+        "AC-UI-007.6"
       ],
       "verified_criteria": [
         "AC-UI-007.1",
         "AC-UI-007.2",
         "AC-UI-007.3",
         "AC-UI-007.4",
-        "AC-UI-007.5"
+        "AC-UI-007.5",
+        "AC-UI-007.6"
       ],
       "implementation_files": [
         "src/client/App.tsx",
@@ -582,21 +587,23 @@
       "title": "Desktop Cockpit Execution Screen with Performance Telemetry Charts",
       "spec_file": "specs/ui.md",
       "is_planned": false,
-      "sha256": "cb367acdeb71fb7e1653c27b3f48ed3f35e23d4279edbdc65b0cb98a939e500d",
-      "verified_sha256": "cb367acdeb71fb7e1653c27b3f48ed3f35e23d4279edbdc65b0cb98a939e500d",
+      "sha256": "0825a46e99bf074a91166982788a497c58ba0739f80b66f0396f498f4b23e5c8",
+      "verified_sha256": "0825a46e99bf074a91166982788a497c58ba0739f80b66f0396f498f4b23e5c8",
       "acceptance_criteria": [
         "AC-UI-009.1",
         "AC-UI-009.2",
         "AC-UI-009.3",
         "AC-UI-009.4",
-        "AC-UI-009.5"
+        "AC-UI-009.5",
+        "AC-UI-009.6"
       ],
       "verified_criteria": [
         "AC-UI-009.1",
         "AC-UI-009.2",
         "AC-UI-009.3",
         "AC-UI-009.4",
-        "AC-UI-009.5"
+        "AC-UI-009.5",
+        "AC-UI-009.6"
       ],
       "implementation_files": [
         "src/client/App.tsx",

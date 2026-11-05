@@ -227,10 +227,20 @@ export function createApp(options: AppOptions): Hono {
         cfg.bot_token && cfg.bot_token !== "YOUR_TELEGRAM_BOT_TOKEN",
       ),
       allowed_user_ids: cfg.allowed_user_ids,
+      vip_users: cfg.vip_users || [],
       default_status: cfg.default_status,
       poll_interval_ms: cfg.poll_interval_ms,
     });
   });
+
+  // REST: VIP users list (TG-001)
+  app.get("/api/vip-users", (c) => {
+    const cfg = telegramBot ? telegramBot.getConfig() : loadTelegramConfig();
+    return c.json({
+      vip_users: cfg.vip_users || [],
+    });
+  });
+
 
   app.post("/api/telegram/toggle", async (c) => {
     try {
@@ -339,9 +349,11 @@ export function createApp(options: AppOptions): Hono {
       }
     }
     if (search) {
-      sql += " AND (title LIKE ? OR details LIKE ? OR waiting_on LIKE ?)";
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+      sql +=
+        " AND (title LIKE ? OR details LIKE ? OR waiting_on LIKE ? OR created_by LIKE ?)";
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
     }
+
 
     sql += " ORDER BY sort_order ASC, created_at DESC";
     const tasks = db.prepare(sql).all(...params);

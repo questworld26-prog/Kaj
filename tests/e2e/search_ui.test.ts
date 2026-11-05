@@ -229,4 +229,38 @@ test.describe("Kaj (কাজ) Top Search & Mobile Density Default (UI-007)", ()
     await expect(densityToggle).toBeVisible();
     await expect(densityToggle).toContainText("Minimal");
   });
+
+  // [verifies: UI-007/AC-UI-007.6]
+  test("matches search query against task creator created_by attribute across views", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+
+    // Seed task with unique creator
+    await page.request.post("/api/tasks", {
+      data: {
+        title: "Security Architecture Blueprint",
+        details: "Infrastructure diagram",
+        status: "todo",
+        created_by: "GandalfTheGrey",
+      },
+    });
+
+    await page.goto("/");
+    const searchInput = page.locator(
+      '[data-testid="desktop-task-search-input"]',
+    );
+
+    // Search by creator name
+    await searchInput.fill("GandalfTheGrey");
+    await expect(
+      page
+        .locator('[data-testid="task-card"]')
+        .filter({ hasText: "Security Architecture Blueprint" }),
+    ).toBeVisible();
+
+    // Verify creator pill is visible
+    await expect(page.locator("text=👤 GandalfTheGrey")).toBeVisible();
+  });
 });
+

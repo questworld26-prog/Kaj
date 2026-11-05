@@ -44,14 +44,57 @@ export function loadTelegramConfig(
       : DEFAULT_CONFIG.default_status;
 
   const userNames: Record<string, string> = {};
+  const vipUsersSet = new Set<string>();
+
+  // Optional explicit vip_users or vip_user_names
+  const explicitVips = (fileData as { vip_users?: unknown[]; vip_user_names?: unknown[] }).vip_users ||
+    (fileData as { vip_users?: unknown[]; vip_user_names?: unknown[] }).vip_user_names;
+  if (Array.isArray(explicitVips)) {
+    for (const v of explicitVips) {
+      if (typeof v === "string" && v.trim()) vipUsersSet.add(v.trim());
+      else if (typeof v === "number") vipUsersSet.add(String(v));
+    }
+  }
+
   if (
     fileData.user_names &&
     typeof fileData.user_names === "object" &&
     !Array.isArray(fileData.user_names)
   ) {
     for (const [k, v] of Object.entries(fileData.user_names)) {
+      const keyStr = String(k).trim();
+      if (!keyStr) continue;
+
       if (typeof v === "string" && v.trim()) {
-        userNames[String(k).trim()] = v.trim();
+        const raw = v.trim();
+        const isVipString = /\[vip\]|\(vip\)|\bvip\b/i.test(raw);
+        if (isVipString) {
+          const clean = raw
+            .replace(/\[\s*vip\s*\]/gi, "")
+            .replace(/\(\s*vip\s*\)/gi, "")
+            .replace(/^vip[:\s-]+/gi, "")
+            .replace(/[\s-]+vip$/gi, "")
+            .trim();
+          userNames[keyStr] = clean || raw;
+          vipUsersSet.add(clean || raw);
+          vipUsersSet.add(keyStr);
+        } else {
+          userNames[keyStr] = raw;
+        }
+      } else if (
+        v &&
+        typeof v === "object" &&
+        !Array.isArray(v) &&
+        "name" in v &&
+        typeof (v as { name: unknown }).name === "string"
+      ) {
+        const obj = v as { name: string; vip?: boolean; is_vip?: boolean };
+        const cleanName = obj.name.trim();
+        userNames[keyStr] = cleanName;
+        if (obj.vip === true || obj.is_vip === true) {
+          vipUsersSet.add(cleanName);
+          vipUsersSet.add(keyStr);
+        }
       }
     }
   }
@@ -71,8 +114,10 @@ export function loadTelegramConfig(
           .filter((n) => Number.isFinite(n))
       : [...DEFAULT_CONFIG.allowed_user_ids],
     user_names: Object.keys(userNames).length > 0 ? userNames : undefined,
+    vip_users: vipUsersSet.size > 0 ? Array.from(vipUsersSet) : undefined,
     default_status: defaultStatus,
     poll_interval_ms:
+
       typeof fileData.poll_interval_ms === "number" &&
       fileData.poll_interval_ms >= 50
         ? fileData.poll_interval_ms

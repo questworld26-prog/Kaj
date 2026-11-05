@@ -366,7 +366,8 @@ export class TelegramBotService {
           (t) =>
             t.title.toLowerCase().includes(lowerQ) ||
             (t.details && t.details.toLowerCase().includes(lowerQ)) ||
-            (t.waiting_on && t.waiting_on.toLowerCase().includes(lowerQ)),
+            (t.waiting_on && t.waiting_on.toLowerCase().includes(lowerQ)) ||
+            (t.created_by && t.created_by.toLowerCase().includes(lowerQ)),
         )
         .slice(0, 10);
 

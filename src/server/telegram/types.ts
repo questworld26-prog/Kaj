@@ -8,9 +8,11 @@ export interface TelegramConfig {
   bot_token: string;
   allowed_user_ids: number[];
   user_names?: Record<string, string>;
+  vip_users?: string[];
   default_status: TaskStatus;
   poll_interval_ms: number;
 }
+
 
 export interface TelegramInlineButton {
   text: string;

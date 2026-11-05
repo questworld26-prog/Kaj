@@ -1260,4 +1260,57 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
       cockpitView.locator('[data-testid="cockpit-creator-stacked-chart"]'),
     ).toBeVisible();
   });
+
+  // [verifies: UI-009/AC-UI-009.6]
+  test("desktop cockpit renders VIP triage plate positioned above Today focus plate with unassigned triage tasks from VIP users", async ({
+    page,
+  }) => {
+    // Seed an unassigned triage task created by a VIP user (Oblix is VIP)
+    await page.request.post("/api/tasks", {
+      data: {
+        title: "VIP Urgent Contract Review",
+        status: "triage",
+        priority: "today",
+        project_id: null,
+        created_by: "Oblix",
+      },
+    });
+
+    // Seed a task from non-VIP user
+    await page.request.post("/api/tasks", {
+      data: {
+        title: "Normal Triage Task NonVIP",
+        status: "triage",
+        priority: "today",
+        project_id: null,
+        created_by: "RandomUser",
+      },
+    });
+
+    await page.goto("/");
+    await page.locator('[data-testid="nav-cockpit-btn"]').click();
+    const cockpitView = page.locator('[data-testid="desktop-cockpit-view"]');
+    await expect(cockpitView).toBeVisible();
+
+    const vipPlate = cockpitView.locator(
+      '[data-testid="cockpit-vip-triage-plate"]',
+    );
+    await expect(vipPlate).toBeVisible();
+    await expect(vipPlate).toContainText("VIP Urgent Contract Review");
+    await expect(vipPlate).not.toContainText("Normal Triage Task NonVIP");
+
+    // Verify ordering: VIP plate is positioned directly above Today focus plate
+    const plates = cockpitView.locator(
+      '[data-testid="cockpit-vip-triage-plate"], [data-testid="cockpit-today-focus-plate"]',
+    );
+    await expect(plates.nth(0)).toHaveAttribute(
+      "data-testid",
+      "cockpit-vip-triage-plate",
+    );
+    await expect(plates.nth(1)).toHaveAttribute(
+      "data-testid",
+      "cockpit-today-focus-plate",
+    );
+  });
 });
+

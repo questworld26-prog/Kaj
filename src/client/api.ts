@@ -132,6 +132,15 @@ export async function getCalendar(
   return res.json();
 }
 
+// [spec: TG-001]
+export async function getVipUsers(): Promise<string[]> {
+  const res = await fetch(`${API_BASE}/vip-users`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data.vip_users) ? data.vip_users : [];
+}
+
+
 export function subscribeToLiveEvents(onMutation: () => void): () => void {
   if (typeof window === "undefined" || !window.EventSource) return () => {};
 

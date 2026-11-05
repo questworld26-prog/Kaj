@@ -4,6 +4,7 @@ import type { Task, Project, TaskStatus } from "../../../shared/types.js";
 import { PRIORITY_STYLES } from "./types.js";
 
 interface CockpitExecutionDeckProps {
+  vipTriageTasks?: Task[];
   todayTasks: Task[];
   trackingTasks: Task[];
   upcomingTasks: Task[];
@@ -15,6 +16,7 @@ interface CockpitExecutionDeckProps {
 }
 
 export function CockpitExecutionDeck({
+  vipTriageTasks = [],
   todayTasks,
   trackingTasks,
   upcomingTasks,
@@ -26,7 +28,92 @@ export function CockpitExecutionDeck({
 }: CockpitExecutionDeckProps) {
   return (
     <div className="col-span-12 lg:col-span-7 space-y-5">
+      {/* VIP Triage Plate - unassigned tasks in status triage from VIP users (project_id == null) */}
+      <section
+        data-testid="cockpit-vip-triage-plate"
+        className="rounded-2xl bg-gradient-to-b from-purple-950/40 via-[#18131e] to-[#121718] border border-purple-500/40 p-5 shadow-lg"
+      >
+        <div className="flex items-center justify-between pb-3 mb-3 border-b border-purple-500/20">
+          <div className="flex items-center gap-2.5">
+            <span className="text-sm font-bold text-purple-400 tracking-wide flex items-center gap-1.5">
+              👑 VIP TRIAGE QUEUE
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-semibold">
+              {vipTriageTasks.length}{" "}
+              {vipTriageTasks.length === 1 ? "Task" : "Tasks"}
+            </span>
+          </div>
+          <span className="text-[11px] text-purple-300/70 font-medium">
+            Unassigned Triage
+          </span>
+        </div>
+
+        <div className="space-y-2.5">
+          {vipTriageTasks.length === 0 ? (
+            <div className="text-xs text-gray-400 italic py-4 text-center">
+              No unassigned triage tasks from VIP users.
+            </div>
+          ) : (
+            vipTriageTasks.map((task) => {
+              const prio =
+                PRIORITY_STYLES[task.priority] || PRIORITY_STYLES.today;
+              return (
+                <div
+                  key={task.id}
+                  data-task-id={task.id}
+                  onClick={() => onSelectTask(task)}
+                  className="group rounded-xl bg-[#1C2224] border border-purple-500/30 hover:border-purple-400/60 p-3 flex items-center justify-between gap-3 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <button
+                      type="button"
+                      aria-label="Complete task"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCompleteTask(task.id);
+                      }}
+                      className="w-4 h-4 rounded-full border border-purple-400/60 hover:border-purple-400 hover:bg-purple-500/20 flex items-center justify-center shrink-0 transition-colors"
+                    />
+                    <span
+                      className={`text-xs font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider shrink-0 ${prio.badge}`}
+                    >
+                      {prio.label}
+                    </span>
+                    <span className="text-xs font-semibold text-white truncate">
+                      {task.title}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 text-xs">
+                    {task.created_by && (
+                      <span
+                        title={`VIP Creator: ${task.created_by}`}
+                        className="px-2 py-0.5 rounded bg-purple-950/50 text-purple-300 border border-purple-500/30 truncate max-w-[120px] font-medium"
+                      >
+                        👑 {task.created_by}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onUpdateTaskStatus(task.id, "in_progress_today");
+                      }}
+                      className="px-2 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold transition-colors"
+                      title="Promote to Today Focus Plate"
+                    >
+                      ⚡ Today
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </section>
+
       {/* Today Focus Plate */}
+
       <section
         data-testid="cockpit-today-focus-plate"
         className="rounded-2xl bg-gradient-to-b from-emerald-950/30 to-[#121718] border border-emerald-500/40 p-5 shadow-lg"

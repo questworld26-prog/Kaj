@@ -54,7 +54,9 @@ export function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [unscheduledTasks, setUnscheduledTasks] = useState<Task[]>([]);
+  const [vipUsers, setVipUsers] = useState<string[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+
   const [memoryMb, setMemoryMb] = useState<number | undefined>(undefined);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [calendarRange, setCalendarRange] = useState<{
@@ -76,13 +78,14 @@ export function App() {
   // Reload all state
   const loadData = useCallback(async () => {
     try {
-      const [projs, board, allTasks, completed, unscheduled] =
+      const [projs, board, allTasks, completed, unscheduled, vips] =
         await Promise.all([
           api.getProjects(),
           api.getBoard(),
           api.getTasks(),
           api.getCompleted(),
           api.getUnscheduled(),
+          api.getVipUsers(),
         ]);
 
       setProjects(projs);
@@ -90,6 +93,8 @@ export function App() {
       setTasks(allTasks);
       setCompletedTasks(completed);
       setUnscheduledTasks(unscheduled);
+      setVipUsers(vips);
+
 
       // Load calendar events for current window
       let start: string;
@@ -353,8 +358,10 @@ export function App() {
     const q = query.toLowerCase().trim();
     const titleMatch = task.title.toLowerCase().includes(q);
     const detailsMatch = (task.details || "").toLowerCase().includes(q);
-    return titleMatch || detailsMatch;
+    const createdByMatch = (task.created_by || "").toLowerCase().includes(q);
+    return titleMatch || detailsMatch || createdByMatch;
   }, []);
+
 
   const filteredTasks = useMemo(
     () => tasks.filter((t) => filterTask(t, searchQuery)),
@@ -439,12 +446,14 @@ export function App() {
               tasks={filteredTasks}
               projects={projects}
               completedTasks={filteredCompletedTasks}
+              vipUsers={vipUsers}
               onSelectTask={handleSelectTask}
               onCompleteTask={handleCompleteTask}
               onUpdateTaskStatus={handleUpdateTaskStatus}
               onAddTask={() => setIsTaskModalOpen(true)}
             />
           ) : currentView === "board" ? (
+
             <SwimlaneBoard
               swimlanes={filteredSwimlanes}
               density={cardDensity}

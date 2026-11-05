@@ -89,6 +89,7 @@ Acceptance Criteria:
 - AC-UI-007.3: When a search query is entered, the Calendar view shall filter tasks in real-time across the calendar horizon grid, agenda, and unscheduled sidebar, displaying only tasks matching the title or details.
 - AC-UI-007.4: The search input shall provide a clear button (`✕`) when text is present, immediately restoring the unfiltered view upon selection.
 - AC-UI-007.5: On mobile viewports below 768px without a stored density preference, the card density shall default to Minimal mode.
+- AC-UI-007.6: When a search query is entered, the system shall match tasks against the creator (`created_by`) attribute in addition to title and details across Kanban, Calendar, and Cockpit views.
 
 ## UI-008: Multi-Modal Task Completion Interactions
 
@@ -111,6 +112,7 @@ Acceptance Criteria:
 - AC-UI-009.3: The Desktop Cockpit telemetry section shall render a weekly completion velocity chart displaying completed tasks grouped across the recent 6 weeks.
 - AC-UI-009.4: The Desktop Cockpit telemetry section shall render a project distribution chart displaying completed tasks proportioned across projects.
 - AC-UI-009.5: The Desktop Cockpit telemetry section shall render a horizontal stacked bar chart showing completed tasks segmented by creator (`created_by`) across weeks.
+- AC-UI-009.6: The Desktop Cockpit execution column shall render a dedicated VIP Triage Plate (`cockpit-vip-triage-plate`) positioned directly above the Today Focus Plate, displaying all tasks created by a configured VIP user that are in status `triage` without an assigned project (`project_id == null`).
 
 
 

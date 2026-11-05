@@ -133,9 +133,11 @@ export function createMcpServer(options: McpServerOptions): McpServer {
 
       if (params.search && params.search.trim()) {
         const pattern = `%${params.search.trim()}%`;
-        query += " AND (title LIKE ? OR details LIKE ? OR waiting_on LIKE ?)";
-        queryParams.push(pattern, pattern, pattern);
+        query +=
+          " AND (title LIKE ? OR details LIKE ? OR waiting_on LIKE ? OR created_by LIKE ?)";
+        queryParams.push(pattern, pattern, pattern, pattern);
       }
+
 
       query += " ORDER BY sort_order ASC, created_at DESC LIMIT ?";
       queryParams.push(params.limit);
