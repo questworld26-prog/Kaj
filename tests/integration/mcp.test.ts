@@ -66,7 +66,7 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
     const statusRes = (await client.callTool({
       name: "query_tasks",
       arguments: { status: ["in_progress_today"] },
-    })) as { content: [{ text: string }] };
+    })) as unknown as { content: [{ text: string }] };
     const statusTasks = JSON.parse(statusRes.content[0].text);
     expect(statusTasks.length).toBe(1);
     expect(statusTasks[0].title).toBe("Beta Integration Testing");
@@ -75,7 +75,7 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
     const searchRes = (await client.callTool({
       name: "query_tasks",
       arguments: { search: "scalability" },
-    })) as { content: [{ text: string }] };
+    })) as unknown as { content: [{ text: string }] };
     const searchTasks = JSON.parse(searchRes.content[0].text);
     expect(searchTasks.length).toBe(1);
     expect(searchTasks[0].title).toBe("Review Alpha Architecture");
@@ -95,7 +95,7 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
         waiting_on: "Waiting on peer review",
         details: "Full protocol definitions",
       },
-    })) as { content: [{ text: string }] };
+    })) as unknown as { content: [{ text: string }] };
 
     const task = JSON.parse(res.content[0].text);
     expect(task.id).toMatch(/^tsk_/);
@@ -114,7 +114,7 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
     const createRes = (await client.callTool({
       name: "create_task",
       arguments: { title: "Initial Name", priority: "week" },
-    })) as { content: [{ text: string }] };
+    })) as unknown as { content: [{ text: string }] };
     const created = JSON.parse(createRes.content[0].text);
 
     const updateRes = (await client.callTool({
@@ -124,7 +124,7 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
         title: "Updated Name",
         priority: "today",
       },
-    })) as { content: [{ text: string }] };
+    })) as unknown as { content: [{ text: string }] };
     const updated = JSON.parse(updateRes.content[0].text);
 
     expect(updated.id).toBe(created.id);
@@ -137,7 +137,7 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
     const createRes = (await client.callTool({
       name: "create_task",
       arguments: { title: "Ship Monitor", status: "todo" },
-    })) as { content: [{ text: string }] };
+    })) as unknown as { content: [{ text: string }] };
     const task = JSON.parse(createRes.content[0].text);
 
     const moveRes = (await client.callTool({
@@ -147,7 +147,7 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
         status: "tracking",
         waiting_on: "Carrier tracking #DHL8829",
       },
-    })) as { content: [{ text: string }] };
+    })) as unknown as { content: [{ text: string }] };
     const moved = JSON.parse(moveRes.content[0].text);
 
     expect(moved.status).toBe("tracking");
@@ -164,13 +164,13 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
         action_date: "2026-10-28",
         due_date: "2026-10-29",
       },
-    })) as { content: [{ text: string }] };
+    })) as unknown as { content: [{ text: string }] };
     const task = JSON.parse(createRes.content[0].text);
 
     const completeRes = (await client.callTool({
       name: "complete_task",
       arguments: { id: task.id },
-    })) as { content: [{ text: string }] };
+    })) as unknown as { content: [{ text: string }] };
     const res = JSON.parse(completeRes.content[0].text);
 
     expect(res.completed_task.status).toBe("done");
@@ -185,7 +185,7 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
     const saveRes = (await client.callTool({
       name: "save_project",
       arguments: { name: "Core Infrastructure", color: "#10B981" },
-    })) as { content: [{ text: string }] };
+    })) as unknown as { content: [{ text: string }] };
     const saved = JSON.parse(saveRes.content[0].text);
     expect(saved.id).toMatch(/^prj_/);
     expect(saved.name).toBe("Core Infrastructure");
@@ -194,7 +194,7 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
     const listRes = (await client.callTool({
       name: "list_projects",
       arguments: {},
-    })) as { content: [{ text: string }] };
+    })) as unknown as { content: [{ text: string }] };
     const list = JSON.parse(listRes.content[0].text);
     expect(list.some((p: { id: string }) => p.id === saved.id)).toBe(true);
   });
@@ -286,7 +286,7 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
     const createRes = (await client.callTool({
       name: "create_task",
       arguments: { title: "To Be Soft Deleted" },
-    })) as { content: [{ text: string }] };
+    })) as unknown as { content: [{ text: string }] };
     const task = JSON.parse(createRes.content[0].text);
 
     await client.callTool({
@@ -313,7 +313,7 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
     const createRes = (await client.callTool({
       name: "create_task",
       arguments: { title: "Restore Me" },
-    })) as { content: [{ text: string }] };
+    })) as unknown as { content: [{ text: string }] };
     const task = JSON.parse(createRes.content[0].text);
 
     await client.callTool({ name: "delete_task", arguments: { id: task.id } });
@@ -321,7 +321,7 @@ describe("Model Context Protocol Suite (MCP-001, MCP-002, MCP-003)", () => {
     const restoreRes = (await client.callTool({
       name: "restore_task",
       arguments: { id: task.id },
-    })) as { content: [{ text: string }] };
+    })) as unknown as { content: [{ text: string }] };
     const restored = JSON.parse(restoreRes.content[0].text);
 
     expect(restored.id).toBe(task.id);

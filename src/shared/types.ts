@@ -23,10 +23,13 @@ export const TASK_PRIORITIES = [
 ] as const;
 
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
+export type PriorityHorizon = TaskPriority;
 
 export const REPEAT_RULES = ["none", "weekly", "monthly", "yearly"] as const;
 
 export type RepeatRule = (typeof REPEAT_RULES)[number];
+export type RecurrenceRule = RepeatRule;
+
 
 export const RepeatDayOfWeekSchema = z.number().int().min(0).max(6).nullable();
 export const RepeatDayOfMonthSchema = z
@@ -134,7 +137,7 @@ export const CreateProjectInputSchema = z.object({
   sort_order: z.number().int().optional(),
 });
 
-export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>;
+export type CreateProjectInput = z.input<typeof CreateProjectInputSchema>;
 
 export const UpdateProjectInputSchema = z.object({
   name: z.string().trim().min(1).optional(),
@@ -157,6 +160,13 @@ export interface Project {
   created_at: string;
   updated_at: string;
 }
+
+export interface SwimlaneGroup {
+  swimlane_id: string;
+  project: Project | null;
+  tasks: Task[];
+}
+
 
 export interface CalendarEvent {
   task_id: string;

@@ -160,9 +160,9 @@ export function TaskModal({
       ref={dialogRef}
       id="task-dialog"
       data-testid="task-modal"
-      // @ts-expect-error closedby is standard per HTML spec 2025+
-      closedby="any"
+      {...{ closedby: "any" }}
       onClick={handleBackdropClick}
+
       onCancel={(e) => {
         e.preventDefault();
         onClose();

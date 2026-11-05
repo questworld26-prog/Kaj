@@ -84,8 +84,9 @@ describe("Tasks Core Workflow & Attributes (TASK-001, TASK-002, TASK-003)", () =
     taskRepo.completeTask(task.id);
 
     const reopened = taskRepo.reopenTask(task.id);
-    expect(reopened.status).toBe("todo");
-    expect(reopened.completed_at).toBeNull();
+    expect(reopened!.status).toBe("todo");
+    expect(reopened!.completed_at).toBeNull();
+
 
     const board = taskRepo.getBoardSwimlanes(projectRepo);
     const allActiveTasks = board.flatMap((lane) => lane.tasks);
@@ -116,9 +117,8 @@ describe("Tasks Core Workflow & Attributes (TASK-001, TASK-002, TASK-003)", () =
       expect(t.priority).toBe(prio);
     }
 
-    // @ts-expect-error invalid priority testing
     expect(() =>
-      taskRepo.createTask({ title: "Bad prio", priority: "invalid" }),
+      taskRepo.createTask({ title: "Bad prio", priority: "invalid" as any }),
     ).toThrow();
   });
 
@@ -133,9 +133,8 @@ describe("Tasks Core Workflow & Attributes (TASK-001, TASK-002, TASK-003)", () =
       expect(t.repeat_rule).toBe(rule);
     }
 
-    // @ts-expect-error invalid rule testing
     expect(() =>
-      taskRepo.createTask({ title: "Bad repeat", repeat_rule: "biweekly" }),
+      taskRepo.createTask({ title: "Bad repeat", repeat_rule: "biweekly" as any }),
     ).toThrow();
 
     // Valid recurrence options
@@ -162,18 +161,17 @@ describe("Tasks Core Workflow & Attributes (TASK-001, TASK-002, TASK-003)", () =
 
     // Invalid recurrence options
     expect(() =>
-      // @ts-expect-error invalid day of week (> 6)
-      taskRepo.createTask({ title: "Bad Dow", repeat_day_of_week: 7 }),
+      taskRepo.createTask({ title: "Bad Dow", repeat_day_of_week: 7 as any }),
     ).toThrow();
 
     expect(() =>
-      // @ts-expect-error invalid day of month (> 31)
-      taskRepo.createTask({ title: "Bad Dom", repeat_day_of_month: 32 }),
+      taskRepo.createTask({ title: "Bad Dom", repeat_day_of_month: 32 as any }),
     ).toThrow();
 
     expect(() =>
-      taskRepo.createTask({ title: "Bad Doy", repeat_day_of_year: "invalid" }),
+      taskRepo.createTask({ title: "Bad Doy", repeat_day_of_year: "invalid" as any }),
     ).toThrow();
+
   });
 
   // [verifies: TASK-002/AC-TASK-002.4]
