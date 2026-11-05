@@ -1,5 +1,7 @@
 // [spec: TG-001]
+// [spec: NOTIF-001]
 import {
+
   Project,
   Task,
   TaskPriority,
@@ -34,7 +36,9 @@ import {
   buildNewTaskActionKeyboard,
   formatTaskSummary,
   formatTaskCompletedNotification,
+  formatTaskTriagedNotification,
 } from "./telegram/formatters.js";
+
 
 
 // Re-export for seamless backward compatibility
@@ -57,7 +61,23 @@ export {
 
 
 // [spec: TG-001]
+// [spec: NOTIF-001]
+export function isVipUser(
+  creator: string | null | undefined,
+  vipUsers?: string[],
+): boolean {
+  if (!creator || !creator.trim()) return false;
+  const raw = creator.trim();
+  if (/\[vip\]|\(vip\)|\bvip\b/i.test(raw)) return true;
+  if (!vipUsers || vipUsers.length === 0) return false;
+  const lower = raw.toLowerCase();
+  return vipUsers.some((v) => v.toLowerCase() === lower);
+}
+
+// [spec: TG-001]
+// [spec: NOTIF-001]
 export function resolveUserIdForCreator(
+
   creator: string | null | undefined,
   userNames?: Record<string, string>,
   allowedUserIds?: number[],
@@ -118,10 +138,15 @@ export class TelegramBotService {
       options.transport || createFetchTelegramTransport(this.config.bot_token);
 
     this.eventUnsubscribe = this.eventBus.subscribe(async (event) => {
-      if (event.type === "task" && event.action === "completed") {
-        await this.handleTaskCompletedNotification(event.data);
+      if (event.type === "task") {
+        if (event.action === "completed") {
+          await this.handleTaskCompletedNotification(event.data);
+        } else if (event.action === "triaged") {
+          await this.handleTaskTriagedNotification(event.data);
+        }
       }
     });
+
   }
 
 
@@ -260,6 +285,73 @@ export class TelegramBotService {
       // Ignore background notification delivery failure
     }
   }
+
+  // [spec: NOTIF-001]
+  public async handleTaskTriagedNotification(data: unknown): Promise<void> {
+    if (!this.config.enabled || !this.hasValidToken()) {
+      return;
+    }
+    if (this.config.notify_on_completion === false) {
+      return;
+    }
+
+    const payload = data as
+      | { task?: Task; previous?: Task }
+      | undefined;
+    const task = payload?.task;
+    const previous = payload?.previous;
+
+    if (!task || !task.created_by) {
+      return;
+    }
+
+    // Verify creator is a VIP
+    if (!isVipUser(task.created_by, this.config.vip_users)) {
+      return;
+    }
+
+    // Verify previous state was unassigned triage (project_id == null && status === "triage")
+    if (
+      previous &&
+      (previous.status !== "triage" ||
+        (previous.project_id !== null &&
+          previous.project_id !== undefined &&
+          previous.project_id !== ""))
+    ) {
+      return;
+    }
+
+    // Verify task is now moved to another column or assigned to a project
+    const isStillUnassignedTriage =
+      task.status === "triage" &&
+      (!task.project_id || task.project_id === "");
+    if (isStillUnassignedTriage) {
+      return;
+    }
+
+    const recipientId = resolveUserIdForCreator(
+      task.created_by,
+      this.config.user_names,
+      this.config.allowed_user_ids,
+    );
+
+    if (!recipientId) {
+      return;
+    }
+
+    if (!this.isAuthorized(recipientId)) {
+      return;
+    }
+
+    try {
+      const projects = this.projectRepo.listProjects(true);
+      const text = formatTaskTriagedNotification(task, projects);
+      await this.transport.sendMessage(recipientId, text);
+    } catch {
+      // Ignore background notification delivery failure
+    }
+  }
+
 
 
   private scheduleNextPoll(): void {

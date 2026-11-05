@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-05T08:46:04.803403+00:00",
-  "total_requirements": 21,
-  "active_requirements_count": 21,
+  "last_audited_at": "2026-11-05T08:57:07.065431+00:00",
+  "total_requirements": 22,
+  "active_requirements_count": 22,
   "planned_requirements_count": 0,
-  "active_criteria_count": 101,
-  "verified_criteria_count": 101,
+  "active_criteria_count": 102,
+  "verified_criteria_count": 102,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -94,6 +94,28 @@
       "implementation_files": [
         "src/mcp/server.ts",
         "src/server/app.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "NOTIF-001",
+      "title": "Automated Telegram Notifications for Task Lifecycle Events",
+      "spec_file": "specs/notifications.md",
+      "is_planned": false,
+      "sha256": "63419e31af44b4167194f509e78776074f31354d41c5c5ab1e909b94eebeca74",
+      "verified_sha256": "63419e31af44b4167194f509e78776074f31354d41c5c5ab1e909b94eebeca74",
+      "acceptance_criteria": [
+        "AC-NOTIF-001.1",
+        "AC-NOTIF-001.2"
+      ],
+      "verified_criteria": [
+        "AC-NOTIF-001.1",
+        "AC-NOTIF-001.2"
+      ],
+      "implementation_files": [
+        "src/server/app.ts",
+        "src/server/telegram.ts",
+        "src/server/telegram/formatters.ts"
       ],
       "status": "VERIFIED"
     },
@@ -304,8 +326,8 @@
       "title": "Configurable Deterministic Telegram Bot for Task Creation, Search, and Quick Actions",
       "spec_file": "specs/telegram.md",
       "is_planned": false,
-      "sha256": "a64253cfa51a214864f319bcf486d597f6c4013dc94217434a7a545fc17e2ac7",
-      "verified_sha256": "a64253cfa51a214864f319bcf486d597f6c4013dc94217434a7a545fc17e2ac7",
+      "sha256": "495f04b506d33ce030ff1db2a32c62b085f83b749bee0f6b69a6974e53080847",
+      "verified_sha256": "495f04b506d33ce030ff1db2a32c62b085f83b749bee0f6b69a6974e53080847",
       "acceptance_criteria": [
         "AC-TG-001.1",
         "AC-TG-001.2",
@@ -314,8 +336,7 @@
         "AC-TG-001.5",
         "AC-TG-001.6",
         "AC-TG-001.7",
-        "AC-TG-001.8",
-        "AC-TG-001.9"
+        "AC-TG-001.8"
       ],
       "verified_criteria": [
         "AC-TG-001.1",
@@ -325,8 +346,7 @@
         "AC-TG-001.5",
         "AC-TG-001.6",
         "AC-TG-001.7",
-        "AC-TG-001.8",
-        "AC-TG-001.9"
+        "AC-TG-001.8"
       ],
       "implementation_files": [
         "src/client/api.ts",

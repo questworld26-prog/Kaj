@@ -133,7 +133,9 @@ export function isAllowedOrigin(origin: string, reqHost?: string): boolean {
 // [spec: MCP-002]
 // [spec: MCP-003]
 // [spec: TG-001]
+// [spec: NOTIF-001]
 export function createApp(options: AppOptions): Hono {
+
   const { db, eventBus, telegramBot } = options;
   const taskRepo = new TaskRepository(db);
   const projectRepo = new ProjectRepository(db);
@@ -420,6 +422,27 @@ export function createApp(options: AppOptions): Hono {
           data: { completed_task: updated, spawned_task: null },
         });
       }
+
+      const wasUnassignedTriage =
+        existing &&
+        existing.status === "triage" &&
+        (!existing.project_id || existing.project_id === "");
+      const isNowOutOrAssigned =
+        updated &&
+        (updated.status !== "triage" ||
+          (updated.project_id !== null &&
+            updated.project_id !== undefined &&
+            updated.project_id !== ""));
+
+      if (wasUnassignedTriage && isNowOutOrAssigned) {
+        eventBus.broadcast({
+          type: "task",
+          action: "triaged",
+          id: updated.id,
+          data: { task: updated, previous: existing },
+        });
+      }
+
       eventBus.broadcast({
         type: "task",
         action: "updated",
@@ -436,13 +459,27 @@ export function createApp(options: AppOptions): Hono {
   app.post("/api/tasks/:id/complete", (c) => {
     try {
       const id = c.req.param("id");
+      const existing = taskRepo.getTask(id);
       const res = taskRepo.completeTask(id);
+      const wasUnassignedTriage =
+        existing &&
+        existing.status === "triage" &&
+        (!existing.project_id || existing.project_id === "");
+      if (wasUnassignedTriage) {
+        eventBus.broadcast({
+          type: "task",
+          action: "triaged",
+          id,
+          data: { task: res.completed_task, previous: existing },
+        });
+      }
       eventBus.broadcast({ type: "task", action: "completed", id, data: res });
       return c.json(res);
     } catch (err) {
       return c.json({ error: (err as Error).message }, 400);
     }
   });
+
 
   app.post("/api/tasks/:id/reopen", (c) => {
     try {

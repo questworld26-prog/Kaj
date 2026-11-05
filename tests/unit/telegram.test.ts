@@ -1,5 +1,7 @@
 // [spec: TG-001]
+// [spec: NOTIF-001]
 import { describe, it, expect, beforeEach, vi } from "vitest";
+
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -497,7 +499,7 @@ describe("Telegram Bot Integration (TG-001)", () => {
     );
   });
 
-  // [verifies: TG-001/AC-TG-001.9]
+  // [verifies: NOTIF-001/AC-NOTIF-001.1]
   it("dispatches automated completion notification to task creator via Telegram when task is completed", async () => {
     const sentMessages: Array<{ chatId: number; text: string }> = [];
     const cfg = {
@@ -558,6 +560,88 @@ describe("Telegram Bot Integration (TG-001)", () => {
     expect(notification?.text).toContain("Completed");
     expect(notification?.text).toContain("Defense");
   });
+
+  // [verifies: NOTIF-001/AC-NOTIF-001.2]
+  it("dispatches automated Seen/Triaged: <task> notification to VIP creator when task is moved from unassigned triage (project_id == null)", async () => {
+    const sentMessages: Array<{ chatId: number; text: string }> = [];
+    const cfg = {
+      enabled: true,
+      bot_token: "123456:NOTIFY-TEST",
+      allowed_user_ids: [847921997, 928147325],
+      user_names: {
+        "847921997": "Oblix",
+        "928147325": "Asterix",
+      },
+      vip_users: ["Asterix", "928147325"],
+      default_status: "triage" as const,
+      poll_interval_ms: 2000,
+    };
+
+    // Task starts in triage with project_id == null
+    const vipTask = taskRepo.createTask({
+      title: "Secret Roman Patrol Report",
+      status: "triage",
+      project_id: null,
+      created_by: "Asterix",
+    });
+
+    const nonVipTask = taskRepo.createTask({
+      title: "Normal Unassigned Chore",
+      status: "triage",
+      project_id: null,
+      created_by: "Oblix",
+    });
+
+    const bot = new TelegramBotService({
+      config: cfg,
+      taskRepo,
+      projectRepo,
+      eventBus,
+      transport: {
+        getUpdates: async () => [],
+        sendMessage: async (chatId, text) => {
+          sentMessages.push({ chatId, text });
+        },
+        answerCallbackQuery: async () => {},
+      },
+    });
+
+    // Move VIP task out of triage to Today
+    const previous = { ...vipTask };
+    const updated = taskRepo.updateTask(vipTask.id, {
+      status: "in_progress_today",
+    });
+    eventBus.broadcast({
+      type: "task",
+      action: "triaged",
+      id: vipTask.id,
+      data: { task: updated, previous },
+    });
+
+    // Also move non-VIP task out of triage
+    const nonVipPrevious = { ...nonVipTask };
+    const nonVipUpdated = taskRepo.updateTask(nonVipTask.id, {
+      status: "in_progress_today",
+    });
+    eventBus.broadcast({
+      type: "task",
+      action: "triaged",
+      id: nonVipTask.id,
+      data: { task: nonVipUpdated, previous: nonVipPrevious },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Verify VIP Asterix received the Seen/Triaged: <task> message
+    const asterixMsg = sentMessages.find((m) => m.chatId === 928147325);
+    expect(asterixMsg).toBeDefined();
+    expect(asterixMsg?.text).toContain("Seen/Triaged: Secret Roman Patrol Report");
+
+    // Verify non-VIP Oblix did not receive a triaged notification
+    const oblixMsg = sentMessages.find((m) => m.chatId === 847921997);
+    expect(oblixMsg).toBeUndefined();
+  });
+
 });
 
 

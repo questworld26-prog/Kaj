@@ -10,7 +10,9 @@ export interface MutationEvent {
     | "reopened"
     | "deleted"
     | "restored"
-    | "reordered";
+    | "reordered"
+    | "triaged";
+
   id: string;
   data?: unknown;
 }

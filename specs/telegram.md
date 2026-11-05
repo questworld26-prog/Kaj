@@ -17,6 +17,6 @@ Acceptance Criteria:
 - AC-TG-001.6: Sending `/today` shall list all active tasks in `in_progress_today`, and tapping an inline keyboard callback button (`done:<id>`, `status:<id>:<status>`) shall immediately update the task in SQLite and broadcast an SSE event.
 - AC-TG-001.7: The system shall support a `user_names` dictionary (`Record<string, string>`) in `telegram.config.json` mapping numeric user IDs or usernames to human-readable names. When creating a task via Telegram or displaying task summaries in Telegram replies, the system shall attribute the task to the configured creator name (falling back to Telegram first_name/username, or user ID) and record it in `created_by`.
 - AC-TG-001.8: When loading configuration, the system shall support designating VIP users within `telegram.config.json` via a `[VIP]` indicator in `user_names` string values or an object mapping (`{ "name": "...", "vip": true }`), exposing the resolved VIP user identities via `GET /api/vip-users`.
-- AC-TG-001.9: When a task is marked complete, the system shall resolve the creator (`created_by`) to their configured Telegram user ID via `user_names` and dispatch an automated completion notification message with the task title and project attribution via Telegram, unless Telegram is disabled.
+
 
 

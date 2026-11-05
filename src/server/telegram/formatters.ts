@@ -1,5 +1,7 @@
 // [spec: TG-001]
+// [spec: NOTIF-001]
 import type { Task, Project } from "../../shared/types.js";
+
 import type { TelegramInlineKeyboardMarkup } from "./types.js";
 
 export function buildTaskActionKeyboard(
@@ -71,4 +73,17 @@ export function formatTaskCompletedNotification(
   lines.push("Your task has been marked as complete in Kaj (কাজ).");
   return lines.join("\n");
 }
+
+// [spec: NOTIF-001]
+export function formatTaskTriagedNotification(
+  task: Task,
+  projects: Project[],
+): string {
+  const proj = task.project_id
+    ? projects.find((p) => p.id === task.project_id)?.name
+    : null;
+  const destination = proj ? `#${proj} (${task.status})` : `[${task.status}]`;
+  return `Seen/Triaged: ${task.title}\nMoved to ${destination}`;
+}
+
 
