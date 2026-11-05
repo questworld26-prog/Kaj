@@ -11,7 +11,18 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v2.6.0`: Desktop Cockpit VIP Triage Plate, Configurable VIP Users & Creator Search Filtering
+
+- **Status**: 🚀 PLANNED / IN PROGRESS
+- **Focus**: Adds dedicated Desktop Cockpit VIP Triage Plate positioned directly above the Today Focus Plate for unassigned triage tasks created by VIP users, introduces configurable VIP user designations in `telegram.config.json` via `[VIP]` flag in `user_names` or object notation with `GET /api/vip-users` endpoint, and extends omnipresent top search and backend search across task creator (`created_by`).
+- **Deliverables**:
+  - [x] **UI-009 / AC-UI-009.6**: Dedicated VIP Triage Plate (`cockpit-vip-triage-plate`) positioned directly above the Today Focus Plate in Desktop Cockpit, displaying unassigned tasks (`project_id == null`) in status `triage` created by VIP users with 1-click status promotion (`⚡ Today`) and completion controls.
+  - [x] **TG-001 / AC-TG-001.8**: Configurable VIP designation in `telegram.config.json` supporting both `[VIP]` string indicators in `user_names` values (e.g. `"847921997": "Oblix [VIP]"`) and object mappings (`{ "name": "Oblix", "vip": true }`), exposing resolved VIP identities via `GET /api/vip-users` and `GET /api/telegram/status`.
+  - [x] **UI-007 / AC-UI-007.6**: Omnipresent search matching across task author/creator (`created_by`) in real-time on desktop and mobile viewports, synchronized with SQLite `LIKE` queries in `GET /api/tasks`, MCP task search tool, and Telegram bot `/search` commands.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (100/100), 44 unit tests + 27 integration tests + 47 Playwright E2E tests passing, clean working tree, version bumped to `2.6.0`.
+
 ### Release `v2.5.1`: Airtight Bi-Directional Spec Guardian & 1-Test-to-1-AC Anti-Stacking Governance
+
 
 - **Status**: ✅ RELEASED
 - **Focus**: Upgrades Spec Guardian to the airtight bi-directional Spec-Driven Development standard with full `[PLANNED]` roadmap lifecycle support, completes reverse codebase traceability across all source modules, enforces strict 1-Test-to-1-AC cardinality across the entire unit, integration, and Playwright E2E test suites (0 stacked tags), and formally aligns specification documentation.
