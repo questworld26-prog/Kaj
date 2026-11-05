@@ -8,9 +8,11 @@ export const DEFAULT_CONFIG: TelegramConfig = {
   enabled: false,
   bot_token: "",
   allowed_user_ids: [],
+  notify_on_completion: true,
   default_status: "triage",
   poll_interval_ms: 2000,
 };
+
 
 export function resolveTelegramConfigPath(
   configPath?: string,
@@ -115,7 +117,12 @@ export function loadTelegramConfig(
       : [...DEFAULT_CONFIG.allowed_user_ids],
     user_names: Object.keys(userNames).length > 0 ? userNames : undefined,
     vip_users: vipUsersSet.size > 0 ? Array.from(vipUsersSet) : undefined,
+    notify_on_completion:
+      typeof fileData.notify_on_completion === "boolean"
+        ? fileData.notify_on_completion
+        : DEFAULT_CONFIG.notify_on_completion,
     default_status: defaultStatus,
+
     poll_interval_ms:
 
       typeof fileData.poll_interval_ms === "number" &&
@@ -136,6 +143,13 @@ export function loadTelegramConfig(
   if (env.KAJ_TELEGRAM_BOT_TOKEN) {
     config.bot_token = env.KAJ_TELEGRAM_BOT_TOKEN.trim();
   }
+
+  if (env.KAJ_TELEGRAM_NOTIFY_COMPLETION !== undefined) {
+    const val = env.KAJ_TELEGRAM_NOTIFY_COMPLETION.trim().toLowerCase();
+    config.notify_on_completion =
+      val === "true" || val === "1" || val === "on";
+  }
+
 
   return config;
 }

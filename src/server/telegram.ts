@@ -33,7 +33,9 @@ import {
   buildTaskActionKeyboard,
   buildNewTaskActionKeyboard,
   formatTaskSummary,
+  formatTaskCompletedNotification,
 } from "./telegram/formatters.js";
+
 
 // Re-export for seamless backward compatibility
 export type {
@@ -53,6 +55,47 @@ export {
   createFetchTelegramTransport,
 };
 
+
+// [spec: TG-001]
+export function resolveUserIdForCreator(
+  creator: string | null | undefined,
+  userNames?: Record<string, string>,
+  allowedUserIds?: number[],
+): number | null {
+  if (!creator || !creator.trim()) return null;
+  const cleanCreator = creator.trim();
+  const lowerCreator = cleanCreator.toLowerCase();
+
+  // 1. Direct numeric match
+  const numericId = Number(cleanCreator);
+  if (Number.isFinite(numericId) && numericId > 0) {
+    if (
+      !allowedUserIds ||
+      allowedUserIds.length === 0 ||
+      allowedUserIds.includes(numericId)
+    ) {
+      return numericId;
+    }
+  }
+
+  // 2. Lookup in userNames mapping (e.g. "847921997": "Oblix")
+  if (userNames) {
+    for (const [idStr, name] of Object.entries(userNames)) {
+      if (
+        name.trim().toLowerCase() === lowerCreator ||
+        idStr === cleanCreator
+      ) {
+        const uid = Number(idStr);
+        if (Number.isFinite(uid) && uid > 0) {
+          return uid;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 // [spec: TG-001]
 export class TelegramBotService {
   private config: TelegramConfig;
@@ -63,6 +106,8 @@ export class TelegramBotService {
   private running = false;
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
   private offset = 0;
+  private eventUnsubscribe?: () => void;
+  private inTelegramCompletedTaskIds = new Set<string>();
 
   constructor(options: TelegramBotServiceOptions) {
     this.config = options.config;
@@ -71,7 +116,14 @@ export class TelegramBotService {
     this.eventBus = options.eventBus;
     this.transport =
       options.transport || createFetchTelegramTransport(this.config.bot_token);
+
+    this.eventUnsubscribe = this.eventBus.subscribe(async (event) => {
+      if (event.type === "task" && event.action === "completed") {
+        await this.handleTaskCompletedNotification(event.data);
+      }
+    });
   }
+
 
   private hasValidToken(): boolean {
     return Boolean(
@@ -151,6 +203,65 @@ export class TelegramBotService {
     }
   }
 
+  public destroy(): void {
+    this.stop();
+    if (this.eventUnsubscribe) {
+      this.eventUnsubscribe();
+      this.eventUnsubscribe = undefined;
+    }
+  }
+
+  public async handleTaskCompletedNotification(data: unknown): Promise<void> {
+    if (!this.config.enabled || !this.hasValidToken()) {
+      return;
+    }
+    if (this.config.notify_on_completion === false) {
+      return;
+    }
+
+    const payload = data as
+      | { completed_task?: Task; title?: string }
+      | undefined;
+    const task: Task | undefined =
+      payload?.completed_task ||
+      (payload && typeof payload.title === "string"
+        ? (payload as Task)
+        : undefined);
+
+    if (!task || !task.created_by) {
+      return;
+    }
+
+    const recipientId = resolveUserIdForCreator(
+      task.created_by,
+      this.config.user_names,
+      this.config.allowed_user_ids,
+    );
+
+    if (!recipientId) {
+      return;
+    }
+
+    if (!this.isAuthorized(recipientId)) {
+      return;
+    }
+
+    const completedKey = `${task.id}:${recipientId}`;
+    if (this.inTelegramCompletedTaskIds.has(completedKey)) {
+      this.inTelegramCompletedTaskIds.delete(completedKey);
+      return;
+    }
+
+    try {
+      const projects = this.projectRepo.listProjects(true);
+      const text = formatTaskCompletedNotification(task, projects);
+      await this.transport.sendMessage(recipientId, text);
+    } catch {
+      // Ignore background notification delivery failure
+    }
+  }
+
+
   private scheduleNextPoll(): void {
     if (!this.running) return;
     this.pollTimer = setTimeout(async () => {
@@ -227,7 +338,11 @@ export class TelegramBotService {
       const data = cb.data || "";
       if (data.startsWith("done:")) {
         const taskId = data.slice(5);
+        const completionKey = chatId ? `${taskId}:${chatId}` : null;
         try {
+          if (completionKey) {
+            this.inTelegramCompletedTaskIds.add(completionKey);
+          }
           const res = this.taskRepo.completeTask(taskId);
           this.eventBus.broadcast({
             type: "task",
@@ -246,10 +361,14 @@ export class TelegramBotService {
             );
           }
         } catch {
+          if (completionKey) {
+            this.inTelegramCompletedTaskIds.delete(completionKey);
+          }
           await this.transport.answerCallbackQuery(cb.id, "⚠️ Task not found");
         }
         return;
       }
+
 
       if (data.startsWith("status:")) {
         const parts = data.split(":");

@@ -9,9 +9,11 @@ export interface TelegramConfig {
   allowed_user_ids: number[];
   user_names?: Record<string, string>;
   vip_users?: string[];
+  notify_on_completion?: boolean;
   default_status: TaskStatus;
   poll_interval_ms: number;
 }
+
 
 
 export interface TelegramInlineButton {

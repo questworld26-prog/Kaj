@@ -56,3 +56,19 @@ export function formatTaskSummary(task: Task, projects: Project[]): string {
   if (task.waiting_on) parts.push(`wait:${task.waiting_on}`);
   return parts.join(" ");
 }
+
+export function formatTaskCompletedNotification(
+  task: Task,
+  projects: Project[],
+): string {
+  const proj = task.project_id
+    ? projects.find((p) => p.id === task.project_id)?.name
+    : null;
+  const lines = [`✅ Task Completed: ${task.title}`];
+  if (proj) {
+    lines.push(`📁 Project: #${proj}`);
+  }
+  lines.push("Your task has been marked as complete in Kaj (কাজ).");
+  return lines.join("\n");
+}
+

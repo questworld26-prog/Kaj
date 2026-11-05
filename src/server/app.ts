@@ -407,9 +407,18 @@ export function createApp(options: AppOptions): Hono {
       const id = c.req.param("id");
       const body = await c.req.json();
       const validated = UpdateTaskInputSchema.parse(body);
+      const existing = taskRepo.getTask(id);
       const updated = taskRepo.updateTask(id, validated);
       if (!updated) {
         return c.json({ error: "Task not found" }, 404);
+      }
+      if (existing && existing.status !== "done" && updated.status === "done") {
+        eventBus.broadcast({
+          type: "task",
+          action: "completed",
+          id: updated.id,
+          data: { completed_task: updated, spawned_task: null },
+        });
       }
       eventBus.broadcast({
         type: "task",
@@ -417,6 +426,7 @@ export function createApp(options: AppOptions): Hono {
         id: updated.id,
         data: updated,
       });
+
       return c.json(updated);
     } catch (err) {
       return c.json({ error: (err as Error).message }, 400);

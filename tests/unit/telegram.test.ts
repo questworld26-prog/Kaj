@@ -496,5 +496,68 @@ describe("Telegram Bot Integration (TG-001)", () => {
       expect.arrayContaining(["Oblix", "Asterix", "111", "222"]),
     );
   });
+
+  // [verifies: TG-001/AC-TG-001.9]
+  it("dispatches automated completion notification to task creator via Telegram when task is completed", async () => {
+    const sentMessages: Array<{ chatId: number; text: string }> = [];
+    const cfg = {
+      enabled: true,
+      bot_token: "123456:NOTIFY-TEST",
+      allowed_user_ids: [847921997, 928147325],
+      user_names: {
+        "847921997": "Oblix",
+        "928147325": "Asterix",
+      },
+      default_status: "triage" as const,
+      poll_interval_ms: 2000,
+    };
+
+    const prj = projectRepo.createProject({
+      name: "Defense",
+      color: "#10B981",
+    });
+
+    const task = taskRepo.createTask({
+      title: "Deliver Menhir Stone",
+      status: "in_progress_today",
+      project_id: prj.id,
+      created_by: "Oblix",
+    });
+
+    const bot = new TelegramBotService({
+      config: cfg,
+      taskRepo,
+      projectRepo,
+      eventBus,
+      transport: {
+        getUpdates: async () => [],
+        sendMessage: async (chatId, text) => {
+          sentMessages.push({ chatId, text });
+        },
+        answerCallbackQuery: async () => {},
+      },
+    });
+
+    // Complete the task via taskRepo and broadcast event (as app.ts/mcp.ts does)
+    const completionResult = taskRepo.completeTask(task.id);
+    eventBus.broadcast({
+      type: "task",
+      action: "completed",
+      id: task.id,
+      data: completionResult,
+    });
+
+    // Allow event loop to process async notification
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Verify Oblix (ID: 847921997) received the notification
+    expect(sentMessages.length).toBeGreaterThan(0);
+    const notification = sentMessages.find((m) => m.chatId === 847921997);
+    expect(notification).toBeDefined();
+    expect(notification?.text).toContain("Deliver Menhir Stone");
+    expect(notification?.text).toContain("Completed");
+    expect(notification?.text).toContain("Defense");
+  });
 });
+
 

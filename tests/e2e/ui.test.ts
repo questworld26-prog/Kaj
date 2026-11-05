@@ -1265,14 +1265,19 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
   test("desktop cockpit renders VIP triage plate positioned above Today focus plate with unassigned triage tasks from VIP users", async ({
     page,
   }) => {
-    // Seed an unassigned triage task created by a VIP user (Oblix is VIP)
+    // Resolve active configured VIP user from API
+    const vipRes = await page.request.get("/api/vip-users");
+    const vipData = (await vipRes.json()) as { vip_users: string[] };
+    const vipUser = vipData.vip_users && vipData.vip_users.length > 0 ? vipData.vip_users[0] : "VIPUser [VIP]";
+
+    // Seed an unassigned triage task created by a VIP user
     await page.request.post("/api/tasks", {
       data: {
         title: "VIP Urgent Contract Review",
         status: "triage",
         priority: "today",
         project_id: null,
-        created_by: "Oblix",
+        created_by: vipUser,
       },
     });
 
@@ -1283,9 +1288,10 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
         status: "triage",
         priority: "today",
         project_id: null,
-        created_by: "RandomUser",
+        created_by: "RandomUserNonVip",
       },
     });
+
 
     await page.goto("/");
     await page.locator('[data-testid="nav-cockpit-btn"]').click();
