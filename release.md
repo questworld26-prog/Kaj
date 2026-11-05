@@ -11,9 +11,20 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v2.7.0`: Automated Telegram Notifications, VIP Seen/Triaged Alerts & Task Completion Dispatch
+
+- **Status**: ✅ RELEASED
+- **Focus**: Formalizes automated Telegram notifications under dedicated specification `NOTIF-001`, dispatches real-time `Seen/Triaged: <task>` Telegram notifications to VIP users when their tasks in the Unassigned Inbox triage section are triaged to any other column or project, and dispatches automated task completion notifications to the creator via Telegram ID resolution from `user_names`.
+- **Deliverables**:
+  - [x] **NOTIF-001 / AC-NOTIF-001.1**: Automated Telegram notification dispatched to task creator (`created_by`) upon task completion, mapping creator name to numeric Telegram ID via `telegram.config.json` (`user_names`).
+  - [x] **NOTIF-001 / AC-NOTIF-001.2**: Automated `Seen/Triaged: <task>` Telegram notification dispatched to VIP creator when their task moves out of the Unassigned Inbox (`project_id == null` and `status == "triage"`) into any other column or project swimlane.
+  - [x] **Event Bus Architecture (`src/server/events.ts`)**: Added `"triaged"` event payload tracking both updated task and previous task state for accurate transition detection.
+  - [x] **Telegram Notification Engine (`src/server/telegram.ts` & `formatters.ts`)**: Implemented `handleTaskTriagedNotification` with VIP verification (`isVipUser`) and `formatTaskTriagedNotification` formatting destination status/project.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (102/102 across 22 active specs), 46 unit tests + 27 integration tests + 47 Playwright E2E tests passing, clean working tree, version bumped to `2.7.0`.
+
 ### Release `v2.6.0`: Desktop Cockpit VIP Triage Plate, Configurable VIP Users & Creator Search Filtering
 
-- **Status**: 🚀 PLANNED / IN PROGRESS
+- **Status**: ✅ RELEASED
 - **Focus**: Adds dedicated Desktop Cockpit VIP Triage Plate positioned directly above the Today Focus Plate for unassigned triage tasks created by VIP users, introduces configurable VIP user designations in `telegram.config.json` via `[VIP]` flag in `user_names` or object notation with `GET /api/vip-users` endpoint, and extends omnipresent top search and backend search across task creator (`created_by`).
 - **Deliverables**:
   - [x] **UI-009 / AC-UI-009.6**: Dedicated VIP Triage Plate (`cockpit-vip-triage-plate`) positioned directly above the Today Focus Plate in Desktop Cockpit, displaying unassigned tasks (`project_id == null`) in status `triage` created by VIP users with 1-click status promotion (`⚡ Today`) and completion controls.
