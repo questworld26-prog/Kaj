@@ -173,7 +173,39 @@ describe("Telegram Bot Integration (TG-001)", () => {
     expect(parsed.due_date).toBe("2026-11-05");
     expect(parsed.waiting_on).toBe("DevOps");
 
-    // Also test via TelegramBotService handleUpdate (/add and plain text)
+    // Test DD-MM shorthand (infers current year 2026) and DD-MM-YYYY shorthand
+    const parsedDDMM = parseTelegramTaskInput(
+      "Review PR #Infra @15-11 due:20-11-2027",
+      projectRepo.listProjects(),
+      "triage",
+      new Date("2026-10-29T12:00:00Z"),
+    );
+    expect(parsedDDMM.title).toBe("Review PR");
+    expect(parsedDDMM.action_date).toBe("2026-11-15");
+    expect(parsedDDMM.due_date).toBe("2027-11-20");
+
+    // Test single-digit day and month @5-4
+    const parsedSingleDigit = parseTelegramTaskInput(
+      "Quarterly Tax Filing @5-4",
+      projectRepo.listProjects(),
+      "triage",
+      new Date("2026-10-29T12:00:00Z"),
+    );
+    expect(parsedSingleDigit.title).toBe("Quarterly Tax Filing");
+    expect(parsedSingleDigit.action_date).toBe("2026-04-05");
+
+    // Test invalid dates fall through as title text
+    const parsedInvalid = parseTelegramTaskInput(
+      "Impossible Date @31-02-2026 due:35-12",
+      projectRepo.listProjects(),
+      "triage",
+      new Date("2026-10-29T12:00:00Z"),
+    );
+    expect(parsedInvalid.action_date).toBeNull();
+    expect(parsedInvalid.due_date).toBeNull();
+    expect(parsedInvalid.title).toContain("@31-02-2026");
+
+    // Also test via TelegramBotService handleUpdate (/add and plain text) with DD-MM
     const sentMessages: Array<{ chatId: number; text: string }> = [];
     const events: unknown[] = [];
     eventBus.subscribe((ev) => events.push(ev));
@@ -204,7 +236,7 @@ describe("Telegram Bot Integration (TG-001)", () => {
         message_id: 11,
         from: { id: 424242, first_name: "Owner" },
         chat: { id: 424242 },
-        text: "/add Upgrade Postgres #Infra !today @2026-11-02",
+        text: "/add Upgrade Postgres #Infra !today @02-11",
       },
     });
 
@@ -213,9 +245,15 @@ describe("Telegram Bot Integration (TG-001)", () => {
     expect(tasks[0].title).toBe("Upgrade Postgres");
     expect(tasks[0].project_id).toBe(infraProj.id);
     expect(tasks[0].status).toBe("in_progress_today");
-    expect(tasks[0].action_date).toBe("2026-11-02");
+    expect(tasks[0].action_date).toBe(
+      `${new Date().getUTCFullYear()}-11-02`,
+    );
     expect(events).toHaveLength(1);
     expect(sentMessages[0].text).toContain("Upgrade Postgres");
+    // Verify Telegram reply formats dates as DD-MM-YYYY
+    expect(sentMessages[0].text).toContain(
+      `@02-11-${new Date().getUTCFullYear()}`,
+    );
   });
 
   // [verifies: TG-001/AC-TG-001.5]

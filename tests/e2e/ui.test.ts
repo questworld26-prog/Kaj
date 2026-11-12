@@ -1040,9 +1040,9 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
       card.locator('[data-testid="task-status-select"]'),
     ).toBeHidden();
 
-    // Action and due date indicators should be visible inline
-    await expect(card.locator("text=2026-11-01")).toBeVisible();
-    await expect(card.locator("text=2026-11-05")).toBeVisible();
+    // Action and due date indicators should be visible inline in DD-MM-YYYY format
+    await expect(card.locator("text=01-11-2026")).toBeVisible();
+    await expect(card.locator("text=05-11-2026")).toBeVisible();
   });
 
   // [verifies: UI-005/AC-UI-005.3]

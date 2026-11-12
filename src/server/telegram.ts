@@ -525,7 +525,7 @@ export class TelegramBotService {
           `Your Telegram User ID: ${userId ?? "unknown"}`,
           "",
           "Commands:",
-          "• Send any text or /add <title> [#Project] [!today|!week|!todo] [@today|@tomorrow|@YYYY-MM-DD] [due:YYYY-MM-DD] [wait:Person]",
+          "• Send any text or /add <title> [#Project] [!today|!week|!todo] [@today|@tomorrow|@DD-MM|@DD-MM-YYYY] [due:DD-MM|due:DD-MM-YYYY] [wait:Person]",
           "• /search <query> (or /s <query> or ? <query>) — Search tasks by title & details",
           "• /today — List tasks in Today",
         ].join("\n"),

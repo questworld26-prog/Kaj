@@ -4,7 +4,12 @@
 // [spec: TASK-006]
 import { h } from "preact";
 import { useState } from "preact/hooks";
-import type { Task, SwimlaneGroup, TaskStatus } from "../../shared/types.js";
+import {
+  type Task,
+  type SwimlaneGroup,
+  type TaskStatus,
+  formatDisplayDateDMY,
+} from "../../shared/types.js";
 import type { CardDensity } from "./TopBar.js";
 
 interface SwimlaneBoardProps {
@@ -350,7 +355,7 @@ export function SwimlaneBoard({
                     )}
                     {task.due_date && (
                       <span className="text-rose-400 font-medium">
-                        ⚑ {task.due_date.slice(5)}
+                        ⚑ {formatDisplayDateDMY(task.due_date)}
                       </span>
                     )}
                   </div>
@@ -458,12 +463,12 @@ export function SwimlaneBoard({
                 <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-gray-400">
                   {task.action_date && (
                     <span className="flex items-center gap-0.5 text-emerald-400 font-medium">
-                      <span>▶</span> {task.action_date}
+                      <span>▶</span> {formatDisplayDateDMY(task.action_date)}
                     </span>
                   )}
                   {task.due_date && (
                     <span className="flex items-center gap-0.5 text-rose-400 font-medium">
-                      <span>⚑</span> {task.due_date}
+                      <span>⚑</span> {formatDisplayDateDMY(task.due_date)}
                     </span>
                   )}
                   {isTracking && task.waiting_on && (

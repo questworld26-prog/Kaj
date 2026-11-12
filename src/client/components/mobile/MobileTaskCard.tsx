@@ -1,7 +1,11 @@
 // [spec: UI-006]
 // [spec: UI-008]
 import { h } from "preact";
-import type { Task, Project } from "../../../shared/types.js";
+import {
+  type Task,
+  type Project,
+  formatDisplayDateDMY,
+} from "../../../shared/types.js";
 import type { CardDensity } from "../TopBar.js";
 import { PRIORITY_STYLES, STATUS_LABELS } from "./types.js";
 
@@ -149,11 +153,13 @@ export function MobileTaskCard({
         </span>
         {task.action_date && (
           <span className="text-emerald-400 font-medium">
-            ▶ {task.action_date}
+            ▶ {formatDisplayDateDMY(task.action_date)}
           </span>
         )}
         {task.due_date && (
-          <span className="text-rose-400 font-medium">⚑ {task.due_date}</span>
+          <span className="text-rose-400 font-medium">
+            ⚑ {formatDisplayDateDMY(task.due_date)}
+          </span>
         )}
         {task.created_by && (
           <span

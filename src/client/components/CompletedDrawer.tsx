@@ -1,6 +1,10 @@
 // [spec: UI-004]
 import { h } from "preact";
-import type { Task, Project } from "../../shared/types.js";
+import {
+  type Task,
+  type Project,
+  formatTimestampDMY,
+} from "../../shared/types.js";
 
 interface CompletedDrawerProps {
   isOpen: boolean;
@@ -112,7 +116,7 @@ export function CompletedDrawer({
                     <span>
                       Done:{" "}
                       {task.completed_at
-                        ? new Date(task.completed_at).toLocaleDateString()
+                        ? formatTimestampDMY(task.completed_at)
                         : "recently"}
                     </span>
 

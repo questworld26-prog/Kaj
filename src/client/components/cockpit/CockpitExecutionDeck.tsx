@@ -1,6 +1,11 @@
 // [spec: UI-009]
 import { h } from "preact";
-import type { Task, Project, TaskStatus } from "../../../shared/types.js";
+import {
+  type Task,
+  type Project,
+  type TaskStatus,
+  formatDisplayDateDMY,
+} from "../../../shared/types.js";
 import { PRIORITY_STYLES } from "./types.js";
 
 interface CockpitExecutionDeckProps {
@@ -191,7 +196,7 @@ export function CockpitExecutionDeck({
                     )}
                     {task.due_date && (
                       <span className="text-rose-400 font-medium">
-                        ⚑ {task.due_date}
+                        ⚑ {formatDisplayDateDMY(task.due_date)}
                       </span>
                     )}
                   </div>

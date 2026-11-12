@@ -1,6 +1,10 @@
 // [spec: TG-001]
 // [spec: NOTIF-001]
-import type { Task, Project } from "../../shared/types.js";
+import {
+  type Task,
+  type Project,
+  formatDisplayDateDMY,
+} from "../../shared/types.js";
 
 import type { TelegramInlineKeyboardMarkup } from "./types.js";
 
@@ -53,8 +57,8 @@ export function formatTaskSummary(task: Task, projects: Project[]): string {
   const parts = [`• ${task.title} [${task.status}]`];
   if (proj) parts.push(`#${proj}`);
   if (task.created_by) parts.push(`👤 ${task.created_by}`);
-  if (task.action_date) parts.push(`@${task.action_date}`);
-  if (task.due_date) parts.push(`due:${task.due_date}`);
+  if (task.action_date) parts.push(`@${formatDisplayDateDMY(task.action_date)}`);
+  if (task.due_date) parts.push(`due:${formatDisplayDateDMY(task.due_date)}`);
   if (task.waiting_on) parts.push(`wait:${task.waiting_on}`);
   return parts.join(" ");
 }

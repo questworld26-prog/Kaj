@@ -2,12 +2,13 @@
 // [spec: UI-008]
 import { h } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
-import type {
-  Task,
-  Project,
-  TaskStatus,
-  PriorityHorizon,
-  RecurrenceRule,
+import {
+  type Task,
+  type Project,
+  type TaskStatus,
+  type PriorityHorizon,
+  type RecurrenceRule,
+  formatDisplayDateDMY,
 } from "../../shared/types.js";
 import {
   EmojiPickerPopover,
@@ -382,8 +383,13 @@ export function TaskModal({
           {/* Dual Date Scheduling */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-emerald-400 mb-1.5">
-                ▶ Action Date (When to Work)
+              <label className="block text-xs font-semibold text-emerald-400 mb-1.5 flex items-center justify-between">
+                <span>▶ Action Date</span>
+                {formData.action_date && (
+                  <span className="text-[10px] text-emerald-300 font-mono">
+                    {formatDisplayDateDMY(formData.action_date)}
+                  </span>
+                )}
               </label>
               <input
                 type="date"
@@ -402,8 +408,13 @@ export function TaskModal({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-rose-400 mb-1.5">
-                ⚑ Due Date (Hard Deadline)
+              <label className="block text-xs font-semibold text-rose-400 mb-1.5 flex items-center justify-between">
+                <span>⚑ Due Date</span>
+                {formData.due_date && (
+                  <span className="text-[10px] text-rose-300 font-mono">
+                    {formatDisplayDateDMY(formData.due_date)}
+                  </span>
+                )}
               </label>
               <input
                 type="date"

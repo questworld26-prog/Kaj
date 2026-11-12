@@ -9,6 +9,17 @@ export function formatDateYMD(dt: Date): string {
   return `${y}-${m}-${d}`;
 }
 
+function isValidDate(year: number, month: number, day: number): boolean {
+  if (month < 1 || month > 12) return false;
+  if (day < 1 || day > 31) return false;
+  const dt = new Date(Date.UTC(year, month - 1, day));
+  return (
+    dt.getUTCFullYear() === year &&
+    dt.getUTCMonth() === month - 1 &&
+    dt.getUTCDate() === day
+  );
+}
+
 export function resolveDateToken(token: string, now: Date): string | null {
   const lower = token.toLowerCase();
   if (lower === "today") {
@@ -18,9 +29,47 @@ export function resolveDateToken(token: string, now: Date): string | null {
     const next = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     return formatDateYMD(next);
   }
-  if (/^\d{4}-\d{2}-\d{2}$/.test(token)) {
-    return token;
+
+  // 1. DD-MM-YYYY format (e.g. 15-11-2026 or 5-4-2026)
+  const dmyMatch = token.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if (dmyMatch) {
+    const day = parseInt(dmyMatch[1], 10);
+    const month = parseInt(dmyMatch[2], 10);
+    const year = parseInt(dmyMatch[3], 10);
+    if (isValidDate(year, month, day)) {
+      const mStr = String(month).padStart(2, "0");
+      const dStr = String(day).padStart(2, "0");
+      return `${year}-${mStr}-${dStr}`;
+    }
+    return null;
   }
+
+  // 2. DD-MM format (e.g. 15-11 or 5-4) -> assume current year from now
+  const dmMatch = token.match(/^(\d{1,2})-(\d{1,2})$/);
+  if (dmMatch) {
+    const day = parseInt(dmMatch[1], 10);
+    const month = parseInt(dmMatch[2], 10);
+    const year = now.getUTCFullYear();
+    if (isValidDate(year, month, day)) {
+      const mStr = String(month).padStart(2, "0");
+      const dStr = String(day).padStart(2, "0");
+      return `${year}-${mStr}-${dStr}`;
+    }
+    return null;
+  }
+
+  // 3. Fallback: ISO YYYY-MM-DD format (e.g. 2026-11-15)
+  const ymdMatch = token.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (ymdMatch) {
+    const year = parseInt(ymdMatch[1], 10);
+    const month = parseInt(ymdMatch[2], 10);
+    const day = parseInt(ymdMatch[3], 10);
+    if (isValidDate(year, month, day)) {
+      return token;
+    }
+    return null;
+  }
+
   return null;
 }
 
@@ -95,7 +144,7 @@ export function parseTelegramTaskInput(
       }
     }
 
-    // 3. Action date token: @today, @tomorrow, @YYYY-MM-DD
+    // 3. Action date token: @today, @tomorrow, @DD-MM, @DD-MM-YYYY, @YYYY-MM-DD
     if (token.startsWith("@") && token.length > 1) {
       const resolved = resolveDateToken(token.slice(1), now);
       if (resolved) {
@@ -104,7 +153,7 @@ export function parseTelegramTaskInput(
       }
     }
 
-    // 4. Due date token: due:today, due:tomorrow, due:YYYY-MM-DD
+    // 4. Due date token: due:today, due:tomorrow, due:DD-MM, due:DD-MM-YYYY, due:YYYY-MM-DD
     if (/^due:/i.test(token)) {
       const resolved = resolveDateToken(token.slice(4), now);
       if (resolved) {

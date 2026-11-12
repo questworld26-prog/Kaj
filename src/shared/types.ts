@@ -57,6 +57,40 @@ export const DateStringSchema = z
   }, "Invalid calendar date (e.g. leap year or non-existent day)")
   .nullable();
 
+/**
+ * Formats an ISO YYYY-MM-DD date string to DD-MM-YYYY display format.
+ */
+export function formatDisplayDateDMY(
+  dateStr: string | null | undefined,
+): string {
+  if (!dateStr) return "";
+  const parts = dateStr.trim().split("-");
+  if (parts.length === 3 && parts[0].length === 4) {
+    const [y, m, d] = parts;
+    return `${d.padStart(2, "0")}-${m.padStart(2, "0")}-${y}`;
+  }
+  return dateStr;
+}
+
+/**
+ * Formats an ISO timestamp or date string to DD-MM-YYYY display format.
+ */
+export function formatTimestampDMY(
+  timestampStr: string | null | undefined,
+): string {
+  if (!timestampStr) return "";
+  try {
+    const d = new Date(timestampStr);
+    if (isNaN(d.getTime())) return timestampStr;
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  } catch {
+    return timestampStr;
+  }
+}
+
 export const CreateTaskInputSchema = z.object({
   title: z
     .string()
