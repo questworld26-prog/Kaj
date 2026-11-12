@@ -26,6 +26,8 @@ This document defines the rules of engagement, architectural constraints, and ve
    - An agent must NEVER mark a feature or milestone as completed without running the Spec Guardian strict audit (`npm run audit:specs`) and verifying 0 missing implementations, 0 untested criteria, and 0 hash drifts.
 7. **Human-in-the-Loop Releases**:
    - Always ask the user for explicit confirmation before creating any Major or Minor release tag.
+8. **Mandatory Post-Release Daemon Restart**:
+   - Whenever a new release is generated, the agent MUST immediately rebuild the project (`npm run build`) and restart the background daemon (`npm run daemon:restart` or `./scripts/daemon-ctl.sh restart`) to ensure the user is actively running the latest version.
 
 ---
 
@@ -57,4 +59,9 @@ This document defines the rules of engagement, architectural constraints, and ve
 - **Spec Guardian Strict Audit**:
   ```bash
   npm run audit:specs
+  ```
+- **Post-Release Build & Daemon Restart**:
+  ```bash
+  npm run build
+  npm run daemon:restart
   ```

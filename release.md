@@ -6,6 +6,7 @@
 - **Human-in-the-Loop Approval**: Always ask the user for explicit confirmation before releasing any MAJOR or MINOR versions.
 - **Spec-Driven Governance**: Every release candidate must pass strict Spec Guardian verification (0 untested criteria, 0 hash drift).
 - **Automated 6-Gate Release Pipeline**: Enforced via `release_manager.py`.
+- **Mandatory Post-Release Daemon Restart**: Rebuild (`npm run build`) and restart the daemon (`npm run daemon:restart`) upon completing any release.
 
 ---
 
