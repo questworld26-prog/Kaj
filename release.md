@@ -11,6 +11,19 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v2.8.0`: Telegram DD-MM/DD-MM-YYYY Date Shorthand & Universal UI DD-MM-YYYY Display
+
+- **Status**: ✅ RELEASED
+- **Focus**: Adds intuitive `DD-MM` (with current year inference) and `DD-MM-YYYY` shorthand parsing for action and due dates in the Telegram bot, formats bot replies and summaries using `DD-MM-YYYY`, and standardizes `DD-MM-YYYY` date display across all UI views (Kanban cards, Mobile cards, Desktop Cockpit, Completed drawer, and Task Modal helper hints) while preserving canonical ISO `YYYY-MM-DD` SQLite persistence.
+- **Deliverables**:
+  - [x] **TG-001 / AC-TG-001.4**: Extended Telegram shorthand parser (`src/server/telegram/parser.ts`) to support `@DD-MM`, `@DD-MM-YYYY`, `due:DD-MM`, and `due:DD-MM-YYYY` with calendar validation and current year inference, retaining ISO `YYYY-MM-DD` compatibility.
+  - [x] **TG-001 / Bot Reply Formatting**: Formatted action and due dates in Telegram replies and task summaries as `DD-MM-YYYY` via `formatTaskSummary` in `src/server/telegram/formatters.ts`.
+  - [x] **UI-001 & UI-005 / Kanban Display**: Formatted action date (`▶`) and due date (`⚑`) badges on compact and minimal Kanban cards as `DD-MM-YYYY` in `src/client/components/SwimlaneBoard.tsx`.
+  - [x] **UI-006 & UI-009 / Mobile & Cockpit Display**: Formatted date badges in `src/client/components/mobile/MobileTaskCard.tsx` and `src/client/components/cockpit/CockpitExecutionDeck.tsx` as `DD-MM-YYYY`.
+  - [x] **UI-004 / Modal & Archive Display**: Added `DD-MM-YYYY` formatted hints to TaskModal date inputs and formatted completion dates in `src/client/components/CompletedDrawer.tsx`.
+  - [x] **Shared Utilities**: Introduced deterministic zero-skew date formatters `formatDisplayDateDMY` and `formatTimestampDMY` in `src/shared/types.ts`.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (102/102 across 22 active specs), 46 unit tests + 27 integration tests + 47 Playwright E2E tests passing, clean working tree, version bumped to `2.8.0`.
+
 ### Release `v2.7.0`: Automated Telegram Notifications, VIP Seen/Triaged Alerts & Task Completion Dispatch
 
 - **Status**: ✅ RELEASED
