@@ -212,3 +212,41 @@ export interface CalendarEvent {
   date_type: "action" | "due";
   is_virtual?: boolean;
 }
+
+/**
+ * Format local wall-clock calendar date as `YYYY-MM-DD`.
+ */
+// [spec: TASK-008]
+// [spec: UI-010]
+export function formatLocalDateYMD(now: Date = new Date()): string {
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * Check whether a task's action_date matches today's local calendar date.
+ */
+// [spec: TASK-008]
+// [spec: UI-010]
+export function isActionDateToday(
+  actionDate: string | null | undefined,
+  todayStr?: string,
+): boolean {
+  if (!actionDate) return false;
+  return actionDate === (todayStr || formatLocalDateYMD());
+}
+
+/**
+ * Compute Chronos dark-mode card background and border classes, switching to high-visibility crimson when action_date is today.
+ */
+// [spec: UI-010]
+export function getTaskCardSurfaceClasses(
+  actionDate: string | null | undefined,
+  normalBorderClass = "border-[#2A3235]",
+): string {
+  return isActionDateToday(actionDate)
+    ? "bg-[#4A1215] border-red-500/70"
+    : `bg-[#1C2224] ${normalBorderClass}`;
+}

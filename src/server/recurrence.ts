@@ -1,6 +1,7 @@
 // [spec: TASK-004]
 // [spec: TASK-007]
-import type { RepeatRule } from "../shared/types.js";
+import { formatLocalDateYMD, type RepeatRule } from "../shared/types.js";
+export { formatLocalDateYMD };
 
 export interface RecurrenceOptions {
   targetDay?: number;
@@ -100,16 +101,6 @@ function getISOWeekParts(dateStr: string): { isoYear: number; weekNum: number } 
 
 export function getISOWeekNumber(dateStr: string): number {
   return getISOWeekParts(dateStr).weekNum;
-}
-
-/**
- * Format local wall-clock calendar date as `YYYY-MM-DD`.
- */
-export function formatLocalDateYMD(now: Date = new Date()): string {
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
 }
 
 /**

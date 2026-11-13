@@ -149,29 +149,31 @@ describe("Automatic Triage-to-Todo Recurrence Promotion (TASK-007)", () => {
 
   // [verifies: TASK-007/AC-TASK-007.4]
   it("excludes non-recurring tasks, soft-deleted tasks, dateless recurring tasks, and tasks outside triage", () => {
-    // 1. Non-recurring task in triage scheduled for today
+    const simulatedDate = "2027-01-13";
+
+    // 1. Non-recurring task in triage matching the simulated date
     const nonRecurring = taskRepo.createTask({
       title: "One-off Triage Item",
       status: "triage",
       repeat_rule: "none",
-      action_date: "2026-11-13",
+      action_date: simulatedDate,
     });
 
-    // 2. Soft-deleted recurring task in triage matching today
+    // 2. Soft-deleted recurring task in triage matching simulated week
     const deletedRecurring = taskRepo.createTask({
-      title: "Deleted Recurring [46]",
+      title: "Deleted Recurring [2]",
       status: "triage",
       repeat_rule: "weekly",
-      action_date: "2026-11-13",
+      action_date: simulatedDate,
     });
     taskRepo.deleteTask(deletedRecurring.id);
 
     // 3. Recurring task already in in_progress_today / tracking
     const activeInProgress = taskRepo.createTask({
-      title: "Already Working [46]",
+      title: "Already Working [2]",
       status: "in_progress_today",
       repeat_rule: "weekly",
-      action_date: "2026-11-13",
+      action_date: simulatedDate,
     });
 
     // 4. Dateless recurring task in triage
@@ -183,7 +185,7 @@ describe("Automatic Triage-to-Todo Recurrence Promotion (TASK-007)", () => {
       due_date: null,
     });
 
-    const promoted = taskRepo.promoteDueRecurringTasks("2026-11-13");
+    const promoted = taskRepo.promoteDueRecurringTasks(simulatedDate);
     expect(promoted).toEqual([]);
 
     expect(taskRepo.getTask(nonRecurring.id)!.status).toBe("triage");

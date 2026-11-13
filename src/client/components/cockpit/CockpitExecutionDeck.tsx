@@ -1,10 +1,12 @@
 // [spec: UI-009]
+// [spec: UI-010]
 import { h } from "preact";
 import {
   type Task,
   type Project,
   type TaskStatus,
   formatDisplayDateDMY,
+  getTaskCardSurfaceClasses,
 } from "../../../shared/types.js";
 import { PRIORITY_STYLES } from "./types.js";
 
@@ -67,7 +69,7 @@ export function CockpitExecutionDeck({
                   key={task.id}
                   data-task-id={task.id}
                   onClick={() => onSelectTask(task)}
-                  className="group rounded-xl bg-[#1C2224] border border-purple-500/30 hover:border-purple-400/60 p-3 flex items-center justify-between gap-3 transition-colors cursor-pointer"
+                  className={`group rounded-xl border hover:border-purple-400/60 p-3 flex items-center justify-between gap-3 transition-colors cursor-pointer ${getTaskCardSurfaceClasses(task.action_date, "border-purple-500/30")}`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <button
@@ -159,7 +161,7 @@ export function CockpitExecutionDeck({
                   key={task.id}
                   data-task-id={task.id}
                   onClick={() => onSelectTask(task)}
-                  className="group rounded-xl bg-[#1C2224] border border-[#2A3235] hover:border-emerald-500/50 p-3 flex items-center justify-between gap-3 transition-colors cursor-pointer"
+                  className={`group rounded-xl border hover:border-emerald-500/50 p-3 flex items-center justify-between gap-3 transition-colors cursor-pointer ${getTaskCardSurfaceClasses(task.action_date)}`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <button
@@ -228,7 +230,7 @@ export function CockpitExecutionDeck({
               <div
                 key={task.id}
                 onClick={() => onSelectTask(task)}
-                className="rounded-xl bg-[#1C2224] border border-[#2A3235] hover:border-gray-500 p-2.5 flex items-center justify-between text-xs transition-colors cursor-pointer"
+                className={`rounded-xl border hover:border-gray-500 p-2.5 flex items-center justify-between text-xs transition-colors cursor-pointer ${getTaskCardSurfaceClasses(task.action_date)}`}
               >
                 <div className="flex items-center gap-2 truncate">
                   <span
@@ -295,7 +297,7 @@ export function CockpitExecutionDeck({
               <div
                 key={task.id}
                 onClick={() => onSelectTask(task)}
-                className="rounded-xl bg-[#1C2224] border border-[#2A3235] hover:border-amber-500/40 p-3 transition-colors cursor-pointer flex items-center justify-between gap-3"
+                className={`rounded-xl border hover:border-amber-500/40 p-3 transition-colors cursor-pointer flex items-center justify-between gap-3 ${getTaskCardSurfaceClasses(task.action_date)}`}
               >
                 <div className="min-w-0 flex items-center gap-2.5">
                   <button

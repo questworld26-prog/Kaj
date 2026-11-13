@@ -1,6 +1,7 @@
 // [spec: UI-001]
 // [spec: UI-002]
 // [spec: UI-005]
+// [spec: UI-010]
 // [spec: TASK-006]
 import { h } from "preact";
 import { useState } from "preact/hooks";
@@ -9,6 +10,7 @@ import {
   type SwimlaneGroup,
   type TaskStatus,
   formatDisplayDateDMY,
+  isActionDateToday,
 } from "../../shared/types.js";
 import type { CardDensity } from "./TopBar.js";
 
@@ -251,6 +253,12 @@ export function SwimlaneBoard({
               }
             };
 
+            const isUrgentToday = isActionDateToday(task.action_date);
+            const cardBgClass = isUrgentToday ? "bg-[#4A1215]" : "bg-[#1C2224]";
+            const cardBorderClass = isUrgentToday
+              ? "border border-red-500/70"
+              : "border border-[#2A3235]";
+
             // Minimal Density View (UI-005)
             if (density === "minimal") {
               return (
@@ -258,6 +266,7 @@ export function SwimlaneBoard({
                   key={task.id}
                   data-testid="task-card"
                   data-task-id={task.id}
+                  data-urgent-today={isUrgentToday ? "true" : undefined}
                   draggable={true}
                   onDragStart={(e) => {
                     const payload = JSON.stringify({
@@ -272,12 +281,12 @@ export function SwimlaneBoard({
                   onDragOver={handleCardDragOver}
                   onDragLeave={handleCardDragLeave}
                   onDrop={handleCardDrop}
-                  className={`group relative rounded-lg py-1 px-2.5 bg-[#1C2224] transition-all hover:border-gray-500 hover:shadow-sm cursor-grab active:cursor-grabbing flex items-center justify-between gap-2 h-9 min-h-[36px] max-h-[38px] ${
+                  className={`group relative rounded-lg py-1 px-2.5 ${cardBgClass} transition-all hover:border-gray-500 hover:shadow-sm cursor-grab active:cursor-grabbing flex items-center justify-between gap-2 h-9 min-h-[36px] max-h-[38px] ${
                     dragOverTaskId === task.id
                       ? "ring-2 ring-emerald-400 border-emerald-400 shadow-md"
                       : isTracking
                         ? "border-2 border-dashed border-amber-500/60"
-                        : "border border-[#2A3235]"
+                        : cardBorderClass
                   }`}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -369,6 +378,7 @@ export function SwimlaneBoard({
                 key={task.id}
                 data-testid="task-card"
                 data-task-id={task.id}
+                data-urgent-today={isUrgentToday ? "true" : undefined}
                 draggable={true}
                 onDragStart={(e) => {
                   const payload = JSON.stringify({
@@ -383,12 +393,12 @@ export function SwimlaneBoard({
                 onDragOver={handleCardDragOver}
                 onDragLeave={handleCardDragLeave}
                 onDrop={handleCardDrop}
-                className={`group relative rounded-xl p-2.5 bg-[#1C2224] transition-all hover:border-gray-500 hover:shadow-md cursor-grab active:cursor-grabbing ${
+                className={`group relative rounded-xl p-2.5 ${cardBgClass} transition-all hover:border-gray-500 hover:shadow-md cursor-grab active:cursor-grabbing ${
                   dragOverTaskId === task.id
                     ? "ring-2 ring-emerald-400 border-emerald-400 shadow-md"
                     : isTracking
                       ? "border-2 border-dashed border-amber-500/60 shadow-amber-950/20"
-                      : "border border-[#2A3235]"
+                      : cardBorderClass
                 }`}
                 onClick={(e) => {
                   e.stopPropagation();

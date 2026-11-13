@@ -85,4 +85,15 @@ Acceptance Criteria:
 - AC-TASK-007.3: When a recurring task in `triage` is scheduled for a future week or month relative to today, the system shall keep that task in `triage` until the matching period begins.
 - AC-TASK-007.4: While evaluating tasks for automatic promotion, the system shall exclude non-recurring tasks, archived tasks, soft-deleted tasks, and tasks already outside `triage`.
 
+## TASK-008: Automatic In-Progress-Today Promotion for Action Date Today
+
+When any active task has an action date matching today's local calendar date, the system shall promote the task status automatically to In Progress (Today).
+
+Acceptance Criteria:
+- AC-TASK-008.1: When a scheduled promotion check runs or board state is fetched, the system shall move any non-completed task whose action date equals today's local calendar date from earlier workflow stages into In Progress (Today) without altering its priority, project, or dates.
+- AC-TASK-008.2: When a new task is created or an existing task is updated with an action date equal to today's local calendar date while not marked completed, the system shall place or transition that task into In Progress (Today) automatically.
+- AC-TASK-008.3: While evaluating tasks for today action promotion, the system shall exclude completed tasks, soft-deleted tasks, tasks already in In Progress (Today), and tasks awaiting external tracking.
+- AC-TASK-008.4: When a recurring task in triage is due for period promotion and also carries today's action date, the system shall evaluate period promotion first and then promote the task into In Progress (Today).
+
+
 

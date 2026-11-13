@@ -131,6 +131,7 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
 
   // [verifies: UI-001/AC-UI-001.4]
   test("allows moving tasks across columns and swimlanes", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1100 });
     await page.goto("/");
 
     // Create a task in Triage
@@ -152,7 +153,9 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     const targetTodayCol = page.locator(
       '[data-testid="swimlane-pod-unassigned"] [data-col="in_progress_today"]',
     );
-    await taskCard.dragTo(targetTodayCol);
+    await taskCard.dragTo(targetTodayCol, {
+      targetPosition: { x: 40, y: 20 },
+    });
 
     // Verify it updated in UI and persisted
     await expect(
@@ -169,7 +172,9 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     const targetTrackingCol = page.locator(
       '[data-testid="swimlane-pod-unassigned"] [data-col="tracking"]',
     );
-    await taskCard.dragTo(targetTrackingCol);
+    await taskCard.dragTo(targetTrackingCol, {
+      targetPosition: { x: 40, y: 20 },
+    });
 
     await expect(
       page.locator(`[data-col="tracking"] [data-task-id="${task.id}"]`),
@@ -337,8 +342,10 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     // #0E1111 in RGB is rgb(14, 17, 17)
     expect(bodyBg).toBe("rgb(14, 17, 17)");
 
-    // Check card surface color
-    const card = page.locator('[data-testid="task-card"]').first();
+    // Check standard (non-urgent-today) card surface color
+    const card = page
+      .locator('[data-testid="task-card"]:not([data-urgent-today="true"])')
+      .first();
     if (await card.isVisible()) {
       const cardBg = await card.evaluate(
         (el) => window.getComputedStyle(el).backgroundColor,
@@ -1317,6 +1324,180 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
       "data-testid",
       "cockpit-today-focus-plate",
     );
+  });
+
+  // [verifies: UI-010/AC-UI-010.1]
+  test("auto-moves today action_date task to In Progress Today column and highlights card red in both Compact and Minimal desktop board modes", async ({
+    page,
+  }) => {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+    const createdRes = await page.request.post("/api/tasks", {
+      data: {
+        title: "Urgent Action Today Card",
+        status: "todo",
+        action_date: todayStr,
+      },
+    });
+    const createdTask = (await createdRes.json()) as {
+      id: string;
+      status: string;
+    };
+    expect(createdTask.status).toBe("in_progress_today");
+
+    await page.goto("/");
+    await page.click('[data-testid="nav-board-btn"]');
+    const inProgressCol = page.locator(
+      '[data-testid="swimlane-pod-unassigned"] [data-col="in_progress_today"]',
+    );
+    const urgentCard = inProgressCol.locator(
+      `[data-task-id="${createdTask.id}"]`,
+    );
+    await expect(urgentCard).toBeVisible();
+
+    // Compact mode background color check (#4A1215 -> rgb(74, 18, 21))
+    const compactBg = await urgentCard.evaluate(
+      (el) => window.getComputedStyle(el).backgroundColor,
+    );
+    expect(compactBg).toBe("rgb(74, 18, 21)");
+
+    // Switch to Minimal density mode and verify red background persists
+    await page.click('[data-testid="density-minimal-btn"]');
+    await expect(urgentCard).toBeVisible();
+    const minimalBg = await urgentCard.evaluate(
+      (el) => window.getComputedStyle(el).backgroundColor,
+    );
+    expect(minimalBg).toBe("rgb(74, 18, 21)");
+
+    // Reset density back to compact so subsequent tests keep baseline state
+    await page.click('[data-testid="density-compact-btn"]');
+  });
+
+  // [verifies: UI-010/AC-UI-010.2]
+  test("highlights today action_date task cards with red surface in Desktop Cockpit and Mobile task cards", async ({
+    page,
+  }) => {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+    const createdRes = await page.request.post("/api/tasks", {
+      data: {
+        title: "Cockpit Mobile Urgent Task",
+        status: "in_progress_today",
+        action_date: todayStr,
+      },
+    });
+    const createdTask = (await createdRes.json()) as { id: string };
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.click('[data-testid="nav-cockpit-btn"]');
+
+    const cockpitCard = page
+      .locator('[data-testid="desktop-cockpit-view"]')
+      .locator(`[data-task-id="${createdTask.id}"]`)
+      .first();
+    await expect(cockpitCard).toBeVisible();
+    const cockpitBg = await cockpitCard.evaluate(
+      (el) => window.getComputedStyle(el).backgroundColor,
+    );
+    expect(cockpitBg).toBe("rgb(74, 18, 21)");
+
+    // Verify mobile viewport card surface
+    await page.setViewportSize({ width: 390, height: 844 });
+    const mobileCard = page
+      .locator('[data-testid="mobile-cockpit-view"]')
+      .locator(`[data-mobile-task-id="${createdTask.id}"]`)
+      .first();
+    await expect(mobileCard).toBeVisible();
+    const mobileBg = await mobileCard.evaluate(
+      (el) => window.getComputedStyle(el).backgroundColor,
+    );
+    expect(mobileBg).toBe("rgb(74, 18, 21)");
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+  });
+
+  // [verifies: UI-010/AC-UI-010.3]
+  test("ensures primary and secondary text colors preserve >= 4.5:1 WCAG contrast on red today-action cards", async ({
+    page,
+  }) => {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+    const createdRes = await page.request.post("/api/tasks", {
+      data: {
+        title: "Contrast Red Surface Task",
+        status: "in_progress_today",
+        action_date: todayStr,
+      },
+    });
+    const createdTask = (await createdRes.json()) as { id: string };
+
+    await page.goto("/");
+    const urgentCard = page
+      .locator(`[data-testid="task-card"][data-task-id="${createdTask.id}"]`)
+      .first();
+    await expect(urgentCard).toBeVisible();
+
+    const contrastMetrics = await urgentCard.evaluate((el) => {
+      function parseRgb(str: string): [number, number, number] {
+        const match = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        if (!match) return [0, 0, 0];
+        return [Number(match[1]), Number(match[2]), Number(match[3])];
+      }
+      function relLuminance([r, g, b]: [number, number, number]) {
+        const [rs, gs, bs] = [r, g, b].map((v) => {
+          const s = v / 255;
+          return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+        });
+        return rs * 0.2126 + gs * 0.7152 + bs * 0.0722;
+      }
+      function contrastRatio(
+        fg: [number, number, number],
+        bg: [number, number, number],
+      ) {
+        const l1 = relLuminance(fg);
+        const l2 = relLuminance(bg);
+        return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+      }
+      const bg = parseRgb(window.getComputedStyle(el).backgroundColor);
+      const titleEl = el.querySelector("h4") || el;
+      const fg = parseRgb(window.getComputedStyle(titleEl).color);
+      const secondaryRatio = contrastRatio([156, 163, 175], bg); // #9CA3AF muted text
+      return {
+        primaryRatio: contrastRatio(fg, bg),
+        secondaryRatio,
+      };
+    });
+
+    expect(contrastMetrics.primaryRatio).toBeGreaterThanOrEqual(4.5);
+    expect(contrastMetrics.secondaryRatio).toBeGreaterThanOrEqual(4.5);
+  });
+
+  // [verifies: UI-010/AC-UI-010.4]
+  test("retains standard #1C2224 card background when action_date is absent or not today", async ({
+    page,
+  }) => {
+    const res = await page.request.post("/api/tasks", {
+      data: {
+        title: "Non-Today Action Standard Card",
+        status: "todo",
+        action_date: "2099-12-31",
+      },
+    });
+    const futureTask = (await res.json()) as { id: string };
+
+    await page.goto("/");
+    const standardCard = page
+      .locator(`[data-testid="task-card"][data-task-id="${futureTask.id}"]`)
+      .first();
+    await expect(standardCard).toBeVisible();
+    const bg = await standardCard.evaluate(
+      (el) => window.getComputedStyle(el).backgroundColor,
+    );
+    expect(bg).toBe("rgb(28, 34, 36)");
   });
 });
 

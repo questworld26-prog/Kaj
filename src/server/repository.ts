@@ -7,16 +7,32 @@ import {
   UpdateProjectInput,
   UpdateProjectInputSchema,
   Task,
+  TaskStatus,
   CreateTaskInput,
   CreateTaskInputSchema,
   UpdateTaskInput,
   UpdateTaskInputSchema,
   CalendarEvent,
   RepeatRule,
+  isActionDateToday,
 } from "../shared/types.js";
 
 function generateId(prefix: "prj" | "tsk"): string {
   return `${prefix}_${Date.now().toString(36)}_${crypto.randomBytes(4).toString("hex")}`;
+}
+
+function resolveActionTodayStatus(
+  status: TaskStatus,
+  actionDate: string | null,
+): TaskStatus {
+  if (
+    status === "done" ||
+    status === "tracking" ||
+    status === "in_progress_today"
+  ) {
+    return status;
+  }
+  return isActionDateToday(actionDate) ? "in_progress_today" : status;
 }
 
 import {
@@ -144,12 +160,17 @@ export class ProjectRepository {
 // [spec: TASK-004]
 // [spec: TASK-005]
 // [spec: TASK-007]
+// [spec: TASK-008]
 // [spec: PROJ-002]
 export class TaskRepository {
   constructor(private db: DatabaseSync) {}
 
   createTask(input: CreateTaskInput): Task {
     const validated = CreateTaskInputSchema.parse(input);
+    const effectiveStatus = resolveActionTodayStatus(
+      validated.status,
+      validated.action_date,
+    );
     const id = generateId("tsk");
     const now = new Date().toISOString();
 
@@ -175,7 +196,7 @@ export class TaskRepository {
       .run(
         id,
         validated.title,
-        validated.status,
+        effectiveStatus,
         validated.details,
         validated.project_id,
         validated.priority,
@@ -224,7 +245,7 @@ export class TaskRepository {
 
     const title =
       validated.title !== undefined ? validated.title : existing.title;
-    const status =
+    const rawStatus =
       validated.status !== undefined ? validated.status : existing.status;
     const details =
       validated.details !== undefined ? validated.details : existing.details;
@@ -238,6 +259,7 @@ export class TaskRepository {
       validated.action_date !== undefined
         ? validated.action_date
         : existing.action_date;
+    const status = resolveActionTodayStatus(rawStatus, actionDate);
     const dueDate =
       validated.due_date !== undefined ? validated.due_date : existing.due_date;
     const repeatRule =
@@ -685,6 +707,37 @@ export class TaskRepository {
     return events;
   }
 
+  private batchPromoteStatus(
+    candidates: Task[],
+    nextStatus: TaskStatus,
+    extraWhereClause: string,
+  ): Task[] {
+    if (candidates.length === 0) return [];
+    const now = new Date().toISOString();
+    const promoted: Task[] = [];
+
+    this.db.exec("BEGIN IMMEDIATE;");
+    try {
+      const stmt = this.db.prepare(
+        `UPDATE tasks SET status = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL AND ${extraWhereClause}`,
+      );
+      for (const task of candidates) {
+        stmt.run(nextStatus, now, task.id);
+        promoted.push({
+          ...task,
+          status: nextStatus,
+          updated_at: now,
+        });
+      }
+      this.db.exec("COMMIT;");
+    } catch (err) {
+      this.db.exec("ROLLBACK;");
+      throw err;
+    }
+
+    return promoted;
+  }
+
   /**
    * Automatically move recurring tasks in `triage` to `todo` when `todayDateStr`'s
    * calendar week or month matches their scheduled period.
@@ -700,30 +753,44 @@ export class TaskRepository {
     const toPromote = candidates.filter((task) =>
       shouldPromoteRecurringTask(task, today),
     );
-    if (toPromote.length === 0) return [];
+    return this.batchPromoteStatus(toPromote, "todo", "status = 'triage'");
+  }
 
-    const now = new Date().toISOString();
-    const promoted: Task[] = [];
+  /**
+   * Automatically move active non-completed, non-tracking tasks with `action_date` matching
+   * today's local calendar date into `in_progress_today`.
+   */
+  promoteTodayActionDateTasks(todayDateStr?: string): Task[] {
+    const today = todayDateStr || formatLocalDateYMD();
+    const candidates = this.db
+      .prepare(
+        `SELECT * FROM tasks
+         WHERE deleted_at IS NULL
+           AND action_date = ?
+           AND status NOT IN ('done', 'in_progress_today', 'tracking')`,
+      )
+      .all(today) as unknown as Task[];
 
-    this.db.exec("BEGIN IMMEDIATE;");
-    try {
-      const stmt = this.db.prepare(
-        "UPDATE tasks SET status = 'todo', updated_at = ? WHERE id = ? AND status = 'triage' AND deleted_at IS NULL",
-      );
-      for (const task of toPromote) {
-        stmt.run(now, task.id);
-        promoted.push({
-          ...task,
-          status: "todo",
-          updated_at: now,
-        });
-      }
-      this.db.exec("COMMIT;");
-    } catch (err) {
-      this.db.exec("ROLLBACK;");
-      throw err;
+    return this.batchPromoteStatus(
+      candidates,
+      "in_progress_today",
+      "status NOT IN ('done', 'in_progress_today', 'tracking')",
+    );
+  }
+
+  /**
+   * Run all periodic/fetch-time promotions in canonical order:
+   * 1) Due recurring triage tasks -> `todo` (TASK-007)
+   * 2) Active tasks with `action_date === today` -> `in_progress_today` (TASK-008)
+   */
+  runScheduledPromotions(todayDateStr?: string): Task[] {
+    const merged = new Map<string, Task>();
+    for (const task of this.promoteDueRecurringTasks(todayDateStr)) {
+      merged.set(task.id, task);
     }
-
-    return promoted;
+    for (const task of this.promoteTodayActionDateTasks(todayDateStr)) {
+      merged.set(task.id, task);
+    }
+    return Array.from(merged.values());
   }
 }

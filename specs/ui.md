@@ -114,6 +114,19 @@ Acceptance Criteria:
 - AC-UI-009.5: The Desktop Cockpit telemetry section shall render a horizontal stacked bar chart showing completed tasks segmented by creator (`created_by`) across weeks.
 - AC-UI-009.6: The Desktop Cockpit execution column shall render a dedicated VIP Triage Plate (`cockpit-vip-triage-plate`) positioned directly above the Today Focus Plate, displaying all tasks created by a configured VIP user that are in status `triage` without an assigned project (`project_id == null`).
 
+---
+
+## UI-010: Today Action Date Urgent Red Card Highlight
+
+When a task card displays an active task whose action date matches today's local calendar date, the system shall render the card with a high-visibility red background surface across board, cockpit, and mobile views to highlight its immediate importance.
+
+Acceptance Criteria:
+- AC-UI-010.1: On the desktop Kanban board in both Compact and Minimal display modes, any task card whose action date equals today's local calendar date shall render with a dark red surface background and red accent border instead of the default neutral card background.
+- AC-UI-010.2: On the Desktop Cockpit execution deck and responsive mobile task cards, any active task card whose action date equals today's local calendar date shall render with the same high-visibility red background surface.
+- AC-UI-010.3: On any red-highlighted today-action task card, primary and secondary text foreground colors shall maintain a minimum WCAG contrast ratio of 4.5:1 against the red card background.
+- AC-UI-010.4: When a task has no action date or an action date different from today's local calendar date, the card shall retain the standard Chronos card surface background (`#1C2224`).
+
+
 
 
 

@@ -55,8 +55,10 @@ async function startDaemon() {
   const taskRepo = new TaskRepository(db);
   const projectRepo = new ProjectRepository(db);
 
-  const runRecurrencePromotion = () => {
-    const promoted = taskRepo.promoteDueRecurringTasks();
+  // [spec: TASK-007]
+  // [spec: TASK-008]
+  const runTaskPromotions = () => {
+    const promoted = taskRepo.runScheduledPromotions();
     for (const task of promoted) {
       eventBus.broadcast({
         type: "task",
@@ -66,10 +68,10 @@ async function startDaemon() {
       });
     }
   };
-  runRecurrencePromotion();
+  runTaskPromotions();
   setInterval(() => {
     try {
-      runRecurrencePromotion();
+      runTaskPromotions();
     } catch {
       // Keep background scheduler resilient
     }

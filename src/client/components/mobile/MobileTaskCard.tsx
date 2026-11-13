@@ -1,10 +1,12 @@
 // [spec: UI-006]
 // [spec: UI-008]
+// [spec: UI-010]
 import { h } from "preact";
 import {
   type Task,
   type Project,
   formatDisplayDateDMY,
+  getTaskCardSurfaceClasses,
 } from "../../../shared/types.js";
 import type { CardDensity } from "../TopBar.js";
 import { PRIORITY_STYLES, STATUS_LABELS } from "./types.js";
@@ -44,7 +46,8 @@ export function MobileTaskCard({
 
   const cardContent = isMinimal ? (
     <div
-      className="rounded-lg bg-[#1C2224] border border-[#2A3235] px-2.5 py-1.5 flex items-center justify-between gap-2 transition-colors hover:border-gray-500 w-full"
+      data-mobile-task-id={task.id}
+      className={`rounded-lg border px-2.5 py-1.5 flex items-center justify-between gap-2 transition-colors hover:border-gray-500 w-full ${getTaskCardSurfaceClasses(task.action_date)}`}
       style={{
         transform:
           currentOffset > 0 ? `translateX(${currentOffset}px)` : "none",
@@ -98,7 +101,8 @@ export function MobileTaskCard({
     </div>
   ) : (
     <div
-      className="rounded-xl bg-[#1C2224] border border-[#2A3235] p-3 flex flex-col gap-2 transition-colors hover:border-gray-500 w-full"
+      data-mobile-task-id={task.id}
+      className={`rounded-xl border p-3 flex flex-col gap-2 transition-colors hover:border-gray-500 w-full ${getTaskCardSurfaceClasses(task.action_date)}`}
       style={{
         transform:
           currentOffset > 0 ? `translateX(${currentOffset}px)` : "none",
