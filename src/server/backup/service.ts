@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import type { DatabaseSync } from "node:sqlite";
+import { expandHomePath } from "../db.js";
 import { encryptDatabase } from "./crypto.js";
 
 export interface BackupRunOptions {
@@ -124,10 +125,11 @@ export function resolveBackupPassphrase(
 // [spec: BACKUP-001]
 export function performDailyBackup(options: BackupRunOptions): BackupResult {
   const now = options.now || new Date();
-  const backupDir =
+  const rawBackupDir =
     options.backupDir !== undefined
       ? options.backupDir
       : process.env.KAJ_BACKUP_DIR || null;
+  const backupDir = rawBackupDir ? path.resolve(expandHomePath(rawBackupDir)) : null;
 
   // AC-BACKUP-001.4: Directory validation
   if (!backupDir || !fs.existsSync(backupDir)) {

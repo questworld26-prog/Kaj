@@ -1,10 +1,7 @@
-import fs from "node:fs";
-import path from "node:path";
 import os from "node:os";
 import { execSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
 import { serve } from "@hono/node-server";
-import { createDatabase, initSchema } from "./db.js";
+import { createDatabase, initSchema, loadEnvFromRoot } from "./db.js";
 import { EventBus } from "./events.js";
 import { createApp } from "./app.js";
 import { TaskRepository, ProjectRepository } from "./repository.js";
@@ -14,23 +11,7 @@ import {
   formatBackupNotificationMessage,
 } from "./backup/index.js";
 
-// Load environment variables from .env if present
-try {
-  if (typeof process.loadEnvFile === "function") {
-    const cwdEnv = path.resolve(process.cwd(), ".env");
-    if (fs.existsSync(cwdEnv)) {
-      process.loadEnvFile(cwdEnv);
-    } else {
-      const dirname = path.dirname(fileURLToPath(import.meta.url));
-      const rootEnv = path.resolve(dirname, "../../.env");
-      if (fs.existsSync(rootEnv)) {
-        process.loadEnvFile(rootEnv);
-      }
-    }
-  }
-} catch {
-  // Ignore missing or unreadable .env file
-}
+loadEnvFromRoot();
 
 function getLocalNetworkHost(): string {
   if (process.env.KAJ_HOST_NAME) return process.env.KAJ_HOST_NAME;

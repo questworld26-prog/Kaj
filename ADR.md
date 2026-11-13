@@ -24,6 +24,11 @@ This document records the foundational architectural decisions, technical trade-
 8. [ADR-008: Real-Time Event Synchronization via Server-Sent Events (SSE)](#adr-008-real-time-event-synchronization-via-server-sent-events-sse)
 9. [ADR-009: Spec-Driven Development (SDD) & Automated Guardian Audit Gatekeeping](#adr-009-spec-driven-development-sdd--automated-guardian-audit-gatekeeping)
 10. [ADR-010: Local Network Access & DNS Rebinding / CSRF Origin Guard](#adr-010-local-network-access--dns-rebinding--csrf-origin-guard)
+11. [ADR-011: Responsive Mobile Execution Architecture (< 768px)](#adr-011-responsive-mobile-execution-architecture--768px)
+12. [ADR-012: Deterministic Zero-LLM Telegram Bot Companion & Notifications](#adr-012-deterministic-zero-llm-telegram-bot-companion--notifications)
+13. [ADR-013: Desktop Execution Cockpit & Lightweight SVG Weekly Telemetry](#adr-013-desktop-execution-cockpit--lightweight-svg-weekly-telemetry)
+14. [ADR-014: Automated Daily Encrypted Backups with Strict Directory Isolation](#adr-014-automated-daily-encrypted-backups-with-strict-directory-isolation)
+15. [ADR-015: Schema Versioning (`PRAGMA user_version`), Staged Migrations & WAL-Safe Recovery](#adr-015-schema-versioning-pragma-user_version-staged-migrations--wal-safe-recovery)
 
 ---
 
@@ -317,3 +322,147 @@ Chosen **Option 3**: Configure the daemon to bind by default to `0.0.0.0:4820`, 
 - **Positive**: Robust security barrier against DNS rebinding, CSRF, and drive-by web browser attacks from external internet origins.
 - **Positive**: Low memory footprint remains unchanged (~75–88 MB RSS under load).
 - **Negative**: Client devices must be on the same local network subnet or have mDNS resolution enabled.
+
+---
+
+## ADR-011: Responsive Mobile Execution Architecture (< 768px)
+
+- **Status**: ACCEPTED
+- **Date**: 2026-11-04
+- **Deciders**: UI/UX Lead, Frontend Engineering
+
+### Context & Problem Statement
+
+Kaj's desktop 6-column Bento Kanban board and HTML5 drag-and-drop interactions do not adapt cleanly to narrow mobile touchscreens (< 768px). Shrinking 6 columns horizontally causes tiny tap targets, horizontal scroll fatigue, and broken touch dragging.
+
+### Considered Options
+
+1. **Dedicated Mobile Execution Shell (< 768px)**: Render a sticky 4-tab bottom navigation dock (`Cockpit`, `Pods`, `7-Day`, `Triage`), touch swipe-to-complete cards, and a one-thumb bottom action sheet for status changes and project reassignment—while leaving the desktop >= 768px UI untouched.
+2. **Horizontal Scrollable Kanban**: Preserves identical markup across viewports, but fails mobile ergonomics and one-handed task execution.
+3. **Separate Native Mobile App**: Duplicates business logic and requires separate distribution/builds.
+
+### Decision Outcome
+
+Chosen **Option 1**: Implemented viewport-adaptive rendering in `src/client/components/mobile/` below `768px` powered by the same REST + SSE backend APIs.
+
+### Consequences
+
+- **Positive**: Zero extra API endpoints or separate app packaging; fast mobile triage and 1-swipe task completion.
+- **Negative**: Separate layout/component tree must be verified under Playwright mobile viewport tests.
+
+---
+
+## ADR-012: Deterministic Zero-LLM Telegram Bot Companion & Notifications
+
+- **Status**: ACCEPTED
+- **Date**: 2026-11-06
+- **Deciders**: Systems Architect, Backend Engineering
+
+### Context & Problem Statement
+
+Users frequently want fast mobile capture, quick task searches, VIP triage alerts, and completion notifications without opening a browser. Embedding a local LLM or external Python bot runner would violate Kaj's ~56–95 MB RSS footprint constraint and add latency or external API costs.
+
+### Considered Options
+
+1. **In-Daemon Deterministic Long-Polling Service**: Integrate long-polling directly in the Node daemon using deterministic token parsing (`#Project`, `!priority`, `@DD-MM`, `due:DD-MM-YYYY`, `wait:note`), inline reply buttons, and creator/VIP attribution from `telegram.config.json`.
+2. **External LLM Webhook Agent**: Flexible natural language parsing, but requires external API latency/tokens or multi-gigabyte local models.
+3. **Separate Webhook Bot Process**: Requires public HTTPS tunnel (ngrok/Cloudflare) and adds deployment complexity.
+
+### Decision Outcome
+
+Chosen **Option 1**: Implemented `TelegramBotService` (`src/server/telegram.ts` and `src/server/telegram/`) using native HTTPS long polling, canonical `DD-MM-YYYY` user-facing date formatting, and automated event-driven completion and VIP triage notifications.
+
+### Consequences
+
+- **Positive**: Works behind home NAT/firewalls with ~0 MB extra memory overhead and deterministic sub-50ms command parsing.
+- **Positive**: Enables instant bidirectional alerts (including backup status notifications) via existing bot credentials.
+- **Negative**: Users must learn simple shorthand prefixes instead of free-form natural language sentences.
+
+---
+
+## ADR-013: Desktop Execution Cockpit & Lightweight SVG Weekly Telemetry
+
+- **Status**: ACCEPTED
+- **Date**: 2026-11-09
+- **Deciders**: UI/UX Lead, Product Architect
+
+### Context & Problem Statement
+
+While Kanban columns excel at backlog organization, daily focus benefits from an execution-first command surface pairing `Today` focus, VIP triage items, `Upcoming` horizons, and `Tracking` blockers alongside throughput telemetry. Heavy charting libraries (`Chart.js`, `Recharts`, `D3`) bloat client bundles unnecessarily.
+
+### Considered Options
+
+1. **Dedicated Execution Cockpit + Zero-Dependency Custom SVG Charts**: Build `DesktopCockpit` as the primary command view with lightweight pure-SVG telemetry charts (ISO Weekly Velocity, Project Distribution Donut, Creator Stacked Velocity).
+2. **Third-Party Charting Library**: Faster initial setup, but adds 80–250 KB minified JS overhead.
+
+### Decision Outcome
+
+Chosen **Option 1**: Implemented modular components in `src/client/components/cockpit/` using native `<svg>` charts and live SQLite telemetry queries.
+
+### Consequences
+
+- **Positive**: Keeps compiled frontend JS bundle compact (~43 KB gzipped total) with zero runtime chart library dependencies.
+- **Negative**: Adding new telemetry chart types requires hand-authoring SVG geometry.
+
+---
+
+## ADR-014: Automated Daily Encrypted Backups with Strict Directory Isolation
+
+- **Status**: ACCEPTED
+- **Date**: 2026-11-13
+- **Deciders**: Systems Architect, Security Engineering, Lead Maintainer
+
+### Context & Problem Statement
+
+Local SQLite databases on laptops are vulnerable to hardware failure or accidental deletion. Syncing live WAL files directly inside Google Drive causes SQLite file corruption. At the same time, Kaj must respect user privacy by **never** scanning or traversing parent or sibling Google Drive directories, and must work cleanly on laptops that sleep frequently.
+
+### Considered Options
+
+1. **In-Daemon Catch-Up `VACUUM INTO` + `node:crypto` AES-256-GCM + Strict `KAJ_BACKUP_DIR` Isolation**: Check on daemon startup and hourly whether today's backup (`kaj-backup-DD-MM-YYYY.db.enc`) exists exclusively inside `KAJ_BACKUP_DIR`; take an atomic hot snapshot via `VACUUM INTO`, encrypt with AES-256-GCM (`scrypt` key derivation, 16B salt, 12B IV, 16B tag), prune backups > 7 days old, and dispatch brief pathless Telegram status alerts.
+2. **External Shell `cron` + `sqlite3` / `gpg`**: Fragile across macOS TCC permissions and laptop sleep cycles; adds external GPG dependency.
+3. **Cloud Storage API Integration (Google Drive OAuth)**: Heavy SDK dependencies, token refresh failures, and broad Drive permissions.
+
+### Decision Outcome
+
+Chosen **Option 1**: Implemented `BACKUP-001` (`src/server/backup/crypto.ts`, `service.ts`) with zero external dependencies, strict boundary isolation inside `KAJ_BACKUP_DIR`, and standalone cross-machine decryption (`scripts/decrypt-backup.js`).
+
+### Consequences
+
+- **Positive**: Zero locking of concurrent WAL reads/writes, zero Google Drive scanning, and portable decryption on any machine with Node.js.
+- **Positive**: Works automatically whenever the laptop wakes up without missed midnight cron jobs.
+- **Negative**: User must safeguard their passphrase (`KAJ_BACKUP_KEY` or `~/.config/kaj/backup.key`) independently of Google Drive.
+
+---
+
+## ADR-015: Schema Versioning (`PRAGMA user_version`), Staged Migrations & WAL-Safe Recovery
+
+- **Status**: ACCEPTED
+- **Date**: 2026-11-13
+- **Deciders**: Systems Architect, Backend Lead, Lead Maintainer
+
+### Context & Problem Statement
+
+Replacing a live SQLite database from an encrypted `.db.enc` backup introduces two critical failure modes:
+1. **WAL Desynchronization**: If `-wal` or `-shm` sidecar files remain on disk or the daemon holds open file handles when `tasks.db` is overwritten, SQLite replays stale journal frames and corrupts the database.
+2. **Database Schema Drift Across Releases**: Restoring an older backup onto a newer Kaj version requires schema upgrades, whereas restoring a newer backup onto an older Kaj binary can break queries or lose columns. Furthermore, `KAJ_DB_PATH` from `.env` must be consistently honored across the daemon, backup engine, MCP stdio adapter, and recovery tool.
+
+### Considered Options
+
+1. **SQLite `PRAGMA user_version` + Staged Transactional Forward Migrations + WAL-Safe Atomic Swap**:
+   - Store Kaj's integer schema version natively in `PRAGMA user_version` (zero extra schema tables).
+   - Execute recovery against a **temporary staging file** first: verify AES-256-GCM authentication, run `PRAGMA integrity_check` and core table sanity checks, and run ordered transactional forward migrations if `backupVersion <= appVersion`.
+   - Abort safely if `backupVersion > appVersion` (downgrade guard) or if any validation/migration fails—never touching the live database.
+   - Stop any running daemon before mutation, consolidate a pre-restore rollback snapshot (`.pre-restore-<timestamp>.bak`) via `VACUUM INTO`, remove `-wal`/`-shm` sidecars, rename the staged DB atomically into `KAJ_DB_PATH`, and restart the daemon.
+2. **Raw Decrypted Copy + In-Place Startup Migration**: Simple, but risks corrupting the live database if an upgrade fails mid-way or if `-wal` frames remain.
+3. **Destructive Table Reconstruction (`--remap`) Only**: Complex column-intersection heuristics that risk silent semantic loss without explicit migration scripts.
+
+### Decision Outcome
+
+Chosen **Option 1**: Standardize `KAJ_DB_PATH` resolution via shared helpers in `src/server/db.ts`, track integer schema versions via `PRAGMA user_version` with sequential transactional migrations, and implement `BACKUP-002` CLI recovery (`npm run recover`) enforcing staged verification, downgrade protection, pre-restore `.bak` snapshots, and WAL/SHM cleanup.
+
+### Consequences
+
+- **Positive**: Any historic encrypted backup from prior versions automatically upgrades in a safe isolated staging copy before touching active files.
+- **Positive**: Incompatible future-version backups fail safely without corrupting the current workspace, while every restore remains reversible via the local `.pre-restore-*.bak` snapshot.
+- **Positive**: All database consumers (daemon, daily backup, MCP stdio adapter, recovery CLI) honor `KAJ_DB_PATH` from `.env` consistently.
+- **Negative**: Future schema alterations must increment the ordered migration list and `LATEST_SCHEMA_VERSION` in `src/server/db.ts`.

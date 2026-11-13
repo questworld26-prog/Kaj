@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-13T04:26:41.069548+00:00",
-  "total_requirements": 23,
-  "active_requirements_count": 23,
+  "last_audited_at": "2026-11-13T04:53:14.778084+00:00",
+  "total_requirements": 24,
+  "active_requirements_count": 24,
   "planned_requirements_count": 0,
-  "active_criteria_count": 107,
-  "verified_criteria_count": 107,
+  "active_criteria_count": 112,
+  "verified_criteria_count": 112,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -44,6 +44,36 @@
         "src/server/backup/service.ts",
         "src/server/index.ts",
         "src/server/telegram.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "BACKUP-002",
+      "title": "Verified Encrypted Database Recovery and Schema Migration",
+      "spec_file": "specs/backup.md",
+      "is_planned": false,
+      "sha256": "bdc71a2458743590017ea2e8cb0558a596231566629e9fe130d91f4608fcfa1a",
+      "verified_sha256": "bdc71a2458743590017ea2e8cb0558a596231566629e9fe130d91f4608fcfa1a",
+      "acceptance_criteria": [
+        "AC-BACKUP-002.1",
+        "AC-BACKUP-002.2",
+        "AC-BACKUP-002.3",
+        "AC-BACKUP-002.4",
+        "AC-BACKUP-002.5"
+      ],
+      "verified_criteria": [
+        "AC-BACKUP-002.1",
+        "AC-BACKUP-002.2",
+        "AC-BACKUP-002.3",
+        "AC-BACKUP-002.4",
+        "AC-BACKUP-002.5"
+      ],
+      "implementation_files": [
+        "src/mcp/stdio.ts",
+        "src/server/backup/index.ts",
+        "src/server/backup/recover-cli.ts",
+        "src/server/backup/recover.ts",
+        "src/server/db.ts"
       ],
       "status": "VERIFIED"
     },

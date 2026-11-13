@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "vite build && tsc -p tsconfig.server.json",
     "start": "node dist/server/index.js",
+    "recover": "node dist/server/backup/recover-cli.js",
     "daemon:start": "./scripts/daemon-ctl.sh start",
     "daemon:stop": "./scripts/daemon-ctl.sh stop",
     "daemon:restart": "./scripts/daemon-ctl.sh restart",

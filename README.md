@@ -213,6 +213,77 @@ npm run daemon:install
 
 ---
 
+## Encrypted Daily Backup & Disaster Recovery
+
+Kaj provides built-in, zero-dependency encrypted daily backups and atomic disaster recovery backed by Node 26 `node:crypto` (**AES-256-GCM** + `scrypt` key derivation) and SQLite hot snapshots (`VACUUM INTO`).
+
+### 1. Environment Configuration (`.env`)
+
+Create `.env` in the repository root from the provided template:
+
+```bash
+cp .env.example .env
+```
+
+Configure these core variables in `.env`:
+
+```bash
+# Active SQLite database file location (shared by Daemon, Backup, MCP Stdio & Recovery CLI)
+# Keep on local disk to prevent cloud sync WAL locking conflicts.
+KAJ_DB_PATH="~/.local/share/kaj/tasks.db"
+
+# Target folder inside Google Drive (or other cloud sync folder)
+KAJ_BACKUP_DIR="~/Library/CloudStorage/GoogleDrive-you@gmail.com/My Drive/KajBackups"
+
+# Passphrase used to encrypt and decrypt daily backups
+# (Alternatively store passphrase in ~/.config/kaj/backup.key with chmod 600)
+KAJ_BACKUP_KEY="your-secret-passphrase-here"
+```
+
+### 2. How Daily Automated Backups Work (`BACKUP-001`)
+
+- **Sleep-Safe Catch-Up Schedule**: On daemon startup and once every hour, Kaj checks if today's backup (`kaj-backup-DD-MM-YYYY.db.enc`) already exists inside `KAJ_BACKUP_DIR`.
+- **Non-Locking Hot Snapshot**: Uses `VACUUM INTO` to consolidate active WAL transactions into a single temporary snapshot without locking live operations, encrypts it via AES-256-GCM, and removes the temporary unencrypted file immediately.
+- **7-Day Rolling Retention**: Deletes only `kaj-backup-*.db.enc` files older than 7 calendar days inside `KAJ_BACKUP_DIR`, leaving all other files untouched.
+- **Strict Directory Isolation**: Kaj **never** scans, lists, or traverses parent or sibling folders outside `KAJ_BACKUP_DIR`.
+- **Brief Telegram Alerts**: When Telegram is enabled, Kaj sends a brief pathless confirmation (`✅ Kaj Backup Successful: kaj-backup-DD-MM-YYYY.db.enc`) or failure alert (`⚠️ Kaj Backup Failed: Backup directory not accessible or not found. Please check Google Drive.`).
+
+### 3. Restoring Your Database (`BACKUP-002`)
+
+Always build (`npm run build`) before running recovery commands for the first time:
+
+```bash
+# Interactive recovery: lists backups strictly inside KAJ_BACKUP_DIR and restores to KAJ_DB_PATH
+npm run recover
+
+# Restore from an explicit backup archive (e.g., on a new machine or USB drive)
+npm run recover -- --file "/path/to/kaj-backup-13-11-2026.db.enc"
+
+# Verify decryption, SQLite integrity, and task/project counts WITHOUT modifying the live DB
+npm run recover -- --file "/path/to/kaj-backup-13-11-2026.db.enc" --verify-only
+
+# Restore to a custom target database path non-interactively
+npm run recover -- --file "/path/to/backup.db.enc" --target "/custom/path/tasks.db" --yes
+```
+
+**What `npm run recover` Guarantees:**
+1. **Staged Validation First**: Decrypts into a temporary staging file, validates AES-256-GCM authentication, runs `PRAGMA integrity_check`, and verifies core Kaj tables before touching your live database.
+2. **Schema Versioning & Compatibility Guard**: Inspects SQLite `PRAGMA user_version` cleanly. Older backups run sequential transactional forward migrations in staging automatically; incompatible newer backups abort safely without modifying your live DB.
+3. **Daemon Shutdown & Pre-Restore Snapshot**: Gracefully stops the running daemon, creates a consolidated local rollback snapshot (`<KAJ_DB_PATH>.pre-restore-DD-MM-YYYY-HHmmss.bak`) via `VACUUM INTO`, removes stale `-wal` and `-shm` sidecar files, atomically swaps the verified database into `KAJ_DB_PATH`, and restarts the daemon.
+
+### 4. Standalone Offline Decryption
+
+To inspect or extract a backup as a raw SQLite `.db` file without running the Kaj app (for instance, on another machine with Node.js installed):
+
+```bash
+node scripts/decrypt-backup.js /path/to/kaj-backup-13-11-2026.db.enc ./restored-tasks.db
+```
+
+> [!IMPORTANT]
+> For full disaster recovery after a laptop loss, keep your passphrase (`KAJ_BACKUP_KEY` or `~/.config/kaj/backup.key`) backed up securely in a password manager separately from Google Drive.
+
+---
+
 ## Connecting Model Context Protocol (MCP) Clients
 
 Kaj supports both **Streamable HTTP** and **stdio** MCP connections.
@@ -293,17 +364,24 @@ npm run audit:specs
 │   ├── projects.md                 # PROJ-001..002: Project entities, swimlanes, inbox
 │   ├── mcp.md                      # MCP-001..003: Tools, transports, safety annotations
 │   ├── telegram.md                 # TG-001: Telegram bot integration & token parsing
+│   ├── notifications.md            # NOTIF-001: Automated task & VIP triage notifications
+│   ├── backup.md                   # BACKUP-001..002: Encrypted backups & verified CLI recovery
 │   ├── ui.md                       # UI-001..009: Bento, Chronos, Calendar, Mobile, Cockpit
 │   └── traceability.json           # Automated Spec Guardian verification manifest
 ├── src/
 │   ├── shared/                     # Domain schemas and TypeScript types
 │   │   └── types.ts
 │   ├── server/                     # Backend daemon
-│   │   ├── db.ts                   # node:sqlite WAL initialization and schema migrations
+│   │   ├── db.ts                   # node:sqlite WAL initialization, KAJ_DB_PATH, & migrations
 │   │   ├── recurrence.ts           # Pure recurrence calculation and period tagging engine
 │   │   ├── repository.ts           # Task and Project SQLite repositories
 │   │   ├── events.ts               # In-memory SSE event bus
 │   │   ├── app.ts                  # Hono REST endpoints and route handlers
+│   │   ├── backup/                 # Encrypted backup & recovery engine
+│   │   │   ├── crypto.ts           # Built-in node:crypto AES-256-GCM + scrypt encryption
+│   │   │   ├── service.ts          # Daily backup runner, 7-day pruning, pathless alerts
+│   │   │   ├── recover.ts          # Staged decryption, integrity/schema checks, atomic swap
+│   │   │   └── recover-cli.ts      # CLI recovery command (npm run recover)
 │   │   ├── telegram/               # Telegram parser, HTTP transport, config, and formatters
 │   │   │   ├── config.ts
 │   │   │   ├── formatters.ts
@@ -325,13 +403,15 @@ npm run audit:specs
 │       ├── server.ts               # Streamable HTTP MCP server handler
 │       └── stdio.ts                # Stdio CLI adapter
 ├── tests/
-│   ├── unit/                       # Deterministic unit tests (tasks, calendar, recurrence, telegram)
+│   ├── unit/                       # Deterministic unit tests (tasks, calendar, recurrence, backup, recover)
 │   ├── integration/                # SQLite integration and MCP protocol tests
 │   └── e2e/                        # Playwright automated browser verification
 ├── tools/
 │   └── guardian.py                 # Self-contained zero-dependency EARS specification auditor
 ├── scripts/
-│   └── daemon-ctl.sh               # Background daemon manager & LaunchAgent installer
+│   ├── daemon-ctl.sh               # Background daemon manager & LaunchAgent installer
+│   └── decrypt-backup.js           # Standalone zero-dependency backup decryption utility
+├── .env.example                    # Environment configuration template (KAJ_DB_PATH, KAJ_BACKUP_DIR)
 ├── ADR.md                          # Architecture Decision Records
 ├── AGENTS.md                       # Operating guidelines and verification protocols for AI agents
 ├── release.md                      # 6-Gate release roadmap and version history

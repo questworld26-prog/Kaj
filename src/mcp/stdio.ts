@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { createDatabase, initSchema } from "../server/db.js";
+import { createDatabase, initSchema, loadEnvFromRoot } from "../server/db.js";
 import { EventBus } from "../server/events.js";
 import { createMcpServer } from "./server.js";
 
 // [spec: MCP-002]
+// [spec: BACKUP-002]
 async function main() {
-  const db = createDatabase();
+  loadEnvFromRoot();
+  const db = createDatabase(process.env.KAJ_DB_PATH);
   initSchema(db);
   const eventBus = new EventBus();
 
