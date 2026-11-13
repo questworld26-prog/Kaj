@@ -352,6 +352,8 @@ def scan_reverse_and_semantic_traceability(
 
     # 3. Layer 4: AC Backtick Anchor Verification
     for r in requirements:
+        if r.is_planned:
+            continue
         src_tokens = req_src_tokens.get(r.req_id, set())
         for ac_id, ac_text in r.ac_texts.items():
             key = f"{r.req_id}/{ac_id}"
