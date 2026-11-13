@@ -12,6 +12,20 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v2.9.0`: Automated Daily Encrypted Database Backup & Brief Telegram Notifications
+
+- **Status**: ✅ RELEASED
+- **Focus**: Adds automated daily encrypted SQLite backups to a user-specified cloud sync directory (Google Drive) using Node built-in AES-256-GCM encryption with atomic SQLite hot snapshots (`VACUUM INTO`), 7-day rolling window retention, strict directory isolation without scanning external folders, and brief Telegram notifications on backup completion and failures.
+- **Deliverables**:
+  - [x] **BACKUP-001 / AC-BACKUP-001.1**: Generates exactly one encrypted backup file `kaj-backup-DD-MM-YYYY.db.enc` per calendar day using AES-256-GCM encryption without locking concurrent database operations via `VACUUM INTO`.
+  - [x] **BACKUP-001 / AC-BACKUP-001.2**: Implements automated 7-day rolling retention, pruning only `kaj-backup-*.db.enc` older than 7 calendar days within `KAJ_BACKUP_DIR`.
+  - [x] **BACKUP-001 / AC-BACKUP-001.3**: Brief Telegram success notification (`✅ Kaj Backup Successful: kaj-backup-DD-MM-YYYY.db.enc`), strictly omitting directory paths.
+  - [x] **BACKUP-001 / AC-BACKUP-001.4**: Brief Telegram failure alert (`⚠️ Kaj Backup Failed: Backup directory not accessible or not found. Please check Google Drive.`), throttled to once per day.
+  - [x] **BACKUP-001 / AC-BACKUP-001.5**: Strict directory isolation restricting all read, write, and pruning operations strictly to `KAJ_BACKUP_DIR` without traversing parent or external cloud storage directories.
+  - [x] **Standalone Decryption Utility**: Added portable `scripts/decrypt-backup.js` for zero-dependency offline database restoration.
+  - [x] **Configuration & Runtime Loading**: Added `.env.example` template and automatic `.env` loading in `src/server/index.ts` via Node built-in `process.loadEnvFile()`.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (107/107 across 23 active specs), 78 unit/integration tests + 47 Playwright E2E tests passing, clean working tree, version bumped to `2.9.0`.
+
 ### Release `v2.8.0`: Telegram DD-MM/DD-MM-YYYY Date Shorthand & Universal UI DD-MM-YYYY Display
 
 - **Status**: ✅ RELEASED
