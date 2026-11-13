@@ -6,6 +6,10 @@ import { EventBus } from "./events.js";
 import { createApp } from "./app.js";
 import { TaskRepository, ProjectRepository } from "./repository.js";
 import { loadTelegramConfig, TelegramBotService } from "./telegram.js";
+import {
+  performDailyBackup,
+  formatBackupNotificationMessage,
+} from "./backup/index.js";
 
 function getLocalNetworkHost(): string {
   if (process.env.KAJ_HOST_NAME) return process.env.KAJ_HOST_NAME;
@@ -54,6 +58,32 @@ async function startDaemon() {
     eventBus,
   });
   telegramBot.start();
+
+  // [spec: BACKUP-001]
+  let lastFailureAlertDate = "";
+  const runScheduledBackup = async () => {
+    if (!process.env.KAJ_BACKUP_DIR) return;
+
+    const result = performDailyBackup({ db });
+    const now = new Date();
+    const todayKey = `${now.getUTCDate()}-${now.getUTCMonth() + 1}-${now.getUTCFullYear()}`;
+
+    if (result.success && !result.skipped) {
+      const msg = formatBackupNotificationMessage(result);
+      await telegramBot.broadcastBackupNotification(msg);
+    } else if (!result.success) {
+      if (lastFailureAlertDate !== todayKey) {
+        lastFailureAlertDate = todayKey;
+        const msg = formatBackupNotificationMessage(result);
+        await telegramBot.broadcastBackupNotification(msg);
+      }
+    }
+  };
+
+  runScheduledBackup().catch(() => {});
+  setInterval(() => {
+    runScheduledBackup().catch(() => {});
+  }, 60 * 60 * 1000);
 
   const app = createApp({ db, eventBus, telegramBot });
 

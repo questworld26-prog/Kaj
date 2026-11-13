@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-13T04:09:46.966451+00:00",
+  "last_audited_at": "2026-11-13T04:16:32.234270+00:00",
   "total_requirements": 23,
-  "active_requirements_count": 22,
-  "planned_requirements_count": 1,
-  "active_criteria_count": 102,
-  "verified_criteria_count": 102,
+  "active_requirements_count": 23,
+  "planned_requirements_count": 0,
+  "active_criteria_count": 107,
+  "verified_criteria_count": 107,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -21,9 +21,9 @@
       "requirement_id": "BACKUP-001",
       "title": "Automated Daily Encrypted Database Backup and Telegram Status Notifications",
       "spec_file": "specs/backup.md",
-      "is_planned": true,
-      "sha256": "4ffed98333b0b5efe37ccb640f8045ced101edab763f73463b50701e6c0ef8fc",
-      "verified_sha256": "4ffed98333b0b5efe37ccb640f8045ced101edab763f73463b50701e6c0ef8fc",
+      "is_planned": false,
+      "sha256": "528849aabf94aba5247e0d27dbd87494c68dd707562757ca3b53eb53693ec637",
+      "verified_sha256": "528849aabf94aba5247e0d27dbd87494c68dd707562757ca3b53eb53693ec637",
       "acceptance_criteria": [
         "AC-BACKUP-001.1",
         "AC-BACKUP-001.2",
@@ -31,9 +31,21 @@
         "AC-BACKUP-001.4",
         "AC-BACKUP-001.5"
       ],
-      "verified_criteria": [],
-      "implementation_files": [],
-      "status": "PLANNED"
+      "verified_criteria": [
+        "AC-BACKUP-001.1",
+        "AC-BACKUP-001.2",
+        "AC-BACKUP-001.3",
+        "AC-BACKUP-001.4",
+        "AC-BACKUP-001.5"
+      ],
+      "implementation_files": [
+        "src/server/backup/crypto.ts",
+        "src/server/backup/index.ts",
+        "src/server/backup/service.ts",
+        "src/server/index.ts",
+        "src/server/telegram.ts"
+      ],
+      "status": "VERIFIED"
     },
     {
       "requirement_id": "MCP-001",

@@ -354,6 +354,32 @@ export class TelegramBotService {
 
 
 
+  // [spec: BACKUP-001]
+  public async broadcastBackupNotification(text: string): Promise<void> {
+    if (!this.config.enabled || !this.hasValidToken()) {
+      return;
+    }
+    const recipients: number[] = [];
+    if (this.config.allowed_user_ids.length > 0) {
+      recipients.push(...this.config.allowed_user_ids);
+    } else if (this.config.user_names) {
+      for (const idStr of Object.keys(this.config.user_names)) {
+        const parsed = parseInt(idStr, 10);
+        if (!isNaN(parsed) && parsed > 0 && !recipients.includes(parsed)) {
+          recipients.push(parsed);
+        }
+      }
+    }
+
+    for (const chatId of recipients) {
+      try {
+        await this.transport.sendMessage(chatId, text);
+      } catch {
+        // Ignore background delivery errors
+      }
+    }
+  }
+
   private scheduleNextPoll(): void {
     if (!this.running) return;
     this.pollTimer = setTimeout(async () => {

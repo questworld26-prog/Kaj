@@ -4,9 +4,9 @@ This specification defines the low-footprint automated encrypted daily backup en
 
 ---
 
-## BACKUP-001: Automated Daily Encrypted Database Backup and Telegram Status Notifications [PLANNED]
+## BACKUP-001: Automated Daily Encrypted Database Backup and Telegram Status Notifications
 
-Where a backup directory is configured via `KAJ_BACKUP_DIR` and an encryption key is configured, the system shall generate daily encrypted backups and dispatch brief status notifications via Telegram without local LLM overhead.
+Where a backup directory is configured via `KAJ_BACKUP_DIR` and an encryption key is configured, the system shall generate daily encrypted backups of the database and dispatch brief status notifications via Telegram without local LLM overhead.
 
 Acceptance Criteria:
 - AC-BACKUP-001.1: Where a backup directory is configured via `KAJ_BACKUP_DIR` and an encryption key is configured, the system shall generate exactly one encrypted backup file named `kaj-backup-DD-MM-YYYY.db.enc` per calendar day using AES-256-GCM encryption without locking concurrent database operations.
