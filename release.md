@@ -12,6 +12,18 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v3.0.0`: Verified Encrypted Recovery, Automated Workflow Promotions & Urgent Today Visuals
+
+- **Status**: ✅ RELEASED
+- **Focus**: Introduces verified offline encrypted SQLite recovery with forward schema migrations (`BACKUP-002`) and unified `KAJ_DB_PATH` configuration, automates rule-driven task promotions across `triage` → `todo` → `in_progress_today` (`TASK-007`, `TASK-008`, `TASK-009`) enforcing Monday-to-Sunday weeks, and highlights today-action cards in high-contrast crimson (`UI-010`).
+- **Deliverables**:
+  - [x] **BACKUP-002 / Verified Encrypted Recovery CLI**: Added `npm run recover` (`scripts` / `src/server/backup/recover.ts` & `recover-cli.ts`) with `--verify-only` dry-run mode, `AES-256-GCM` decryption + SQLite `PRAGMA quick_check` / `integrity_check` in staging, `.pre-restore-*.bak` rollback snapshots, and README documentation.
+  - [x] **Schema Migrations & `KAJ_DB_PATH` Standardization**: Implemented transactional `PRAGMA user_version` forward migrations during recovery with an architecture decision record (`ADR-008` in `ADR.md`) and standardized `KAJ_DB_PATH` resolution across runtime and recovery utilities.
+  - [x] **TASK-007 / Recurring Period Triage-to-Todo Promotion**: Automatically promotes active recurring `triage` tasks matching the current Monday-start ISO week or month to `todo` on startup, 15-minute intervals, and `/api/board` fetch.
+  - [x] **TASK-009 / Current Monday-Start Week Triage Promotion**: Automatically promotes any active `triage` task whose `action_date` falls within the current Monday–Sunday week to `todo`, codifying the Monday week-start rule in `AGENTS.md` and `.agents/rules/calendar-week.md`.
+  - [x] **TASK-008 & UI-010 / Today Action Auto-Promotion & Red Card Highlight**: Automatically moves active tasks with `action_date === today` into `in_progress_today` and renders dark crimson `#4A1215` card surfaces with `border-red-500/70` and >= 4.5:1 WCAG contrast across Kanban Compact/Minimal, Desktop Cockpit, and Mobile cards.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (128/128 across 28 active specs), 95 unit/integration tests + 51 Playwright E2E tests passing, clean working tree, version bumped to `3.0.0`.
+
 ### Release `v2.9.0`: Automated Daily Encrypted Database Backup & Brief Telegram Notifications
 
 - **Status**: ✅ RELEASED
