@@ -57,6 +57,7 @@ async function startDaemon() {
 
   // [spec: TASK-007]
   // [spec: TASK-008]
+  // [spec: TASK-009]
   const runTaskPromotions = () => {
     const promoted = taskRepo.runScheduledPromotions();
     for (const task of promoted) {

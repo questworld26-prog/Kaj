@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-13T11:34:22.215831+00:00",
-  "total_requirements": 27,
-  "active_requirements_count": 27,
+  "last_audited_at": "2026-11-13T11:38:26.095140+00:00",
+  "total_requirements": 28,
+  "active_requirements_count": 28,
   "planned_requirements_count": 0,
-  "active_criteria_count": 124,
-  "verified_criteria_count": 124,
+  "active_criteria_count": 128,
+  "verified_criteria_count": 128,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -426,6 +426,33 @@
         "AC-TASK-008.2",
         "AC-TASK-008.3",
         "AC-TASK-008.4"
+      ],
+      "implementation_files": [
+        "src/server/app.ts",
+        "src/server/index.ts",
+        "src/server/repository.ts",
+        "src/shared/types.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "TASK-009",
+      "title": "Automatic Triage-to-Todo Promotion for Current Monday-Start Week",
+      "spec_file": "specs/tasks.md",
+      "is_planned": false,
+      "sha256": "3071c4c6f6373c80bbebce9ef631f8ff13ebf8b9e516ff15439afd56ac4f9bdf",
+      "verified_sha256": "3071c4c6f6373c80bbebce9ef631f8ff13ebf8b9e516ff15439afd56ac4f9bdf",
+      "acceptance_criteria": [
+        "AC-TASK-009.1",
+        "AC-TASK-009.2",
+        "AC-TASK-009.3",
+        "AC-TASK-009.4"
+      ],
+      "verified_criteria": [
+        "AC-TASK-009.1",
+        "AC-TASK-009.2",
+        "AC-TASK-009.3",
+        "AC-TASK-009.4"
       ],
       "implementation_files": [
         "src/server/app.ts",

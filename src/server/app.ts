@@ -524,6 +524,7 @@ export function createApp(options: AppOptions): Hono {
   // REST: Board swimlanes
   // [spec: TASK-007]
   // [spec: TASK-008]
+  // [spec: TASK-009]
   app.get("/api/board", (c) => {
     const promoted = taskRepo.runScheduledPromotions();
     for (const task of promoted) {

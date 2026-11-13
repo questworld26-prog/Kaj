@@ -95,5 +95,15 @@ Acceptance Criteria:
 - AC-TASK-008.3: While evaluating tasks for today action promotion, the system shall exclude completed tasks, soft-deleted tasks, tasks already in In Progress (Today), and tasks awaiting external tracking.
 - AC-TASK-008.4: When a recurring task in triage is due for period promotion and also carries today's action date, the system shall evaluate period promotion first and then promote the task into In Progress (Today).
 
+## TASK-009: Automatic Triage-to-Todo Promotion for Current Monday-Start Week
+
+When an active task in `triage` has an action date falling within the current Monday-to-Sunday calendar week, the system shall promote the task status automatically to `todo`.
+
+Acceptance Criteria:
+- AC-TASK-009.1: When evaluating whether a date belongs to the current week, the system shall treat Monday as the first day of the week and Sunday as the last day of the week.
+- AC-TASK-009.2: When a scheduled promotion check runs or board state is fetched, the system shall move any non-deleted task in `triage` whose action date falls within the current Monday-to-Sunday week to `todo` without altering its priority, project, or dates.
+- AC-TASK-009.3: When a new task is created in `triage` or an existing `triage` task is updated with an action date inside the current Monday-to-Sunday week, the system shall transition that task to `todo` automatically unless promoted further to In Progress (Today).
+- AC-TASK-009.4: While evaluating tasks for current-week triage promotion, the system shall exclude tasks outside `triage`, soft-deleted tasks, dateless tasks, and tasks scheduled for past or future Monday-to-Sunday weeks.
+
 
 

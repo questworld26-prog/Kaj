@@ -65,3 +65,9 @@ This document defines the rules of engagement, architectural constraints, and ve
   npm run build
   npm run daemon:restart
   ```
+
+---
+
+## 4. Calendar & Scheduling Domain Rules
+
+- **Week Starts on Monday**: All calendar grids, ISO-week velocity telemetry, recurrence week matching, and current-week triage promotions treat **Monday** (`day 1`) as the first day of the week and **Sunday** (`day 7`) as the last day of the week. Never use Sunday-start (`day 0`) week boundaries.

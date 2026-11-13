@@ -239,6 +239,37 @@ export function isActionDateToday(
 }
 
 /**
+ * Compute the Monday (`YYYY-MM-DD`) starting the Monday-to-Sunday calendar week containing `dateStr`.
+ */
+// [spec: TASK-009]
+export function getMondayWeekStartYMD(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  const day = dt.getUTCDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  dt.setUTCDate(dt.getUTCDate() + diffToMonday);
+  const my = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth() + 1).padStart(2, "0");
+  const md = String(dt.getUTCDate()).padStart(2, "0");
+  return `${my}-${mm}-${md}`;
+}
+
+/**
+ * Check whether `dateStr` (`YYYY-MM-DD`) falls within the current Monday-to-Sunday week.
+ */
+// [spec: TASK-009]
+export function isDateInCurrentMondayWeek(
+  dateStr: string | null | undefined,
+  todayStr?: string,
+): boolean {
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
+  return (
+    getMondayWeekStartYMD(dateStr) ===
+    getMondayWeekStartYMD(todayStr || formatLocalDateYMD())
+  );
+}
+
+/**
  * Compute Chronos dark-mode card background and border classes, switching to high-visibility crimson when action_date is today.
  */
 // [spec: UI-010]

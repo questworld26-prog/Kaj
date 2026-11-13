@@ -15,13 +15,14 @@ import {
   CalendarEvent,
   RepeatRule,
   isActionDateToday,
+  isDateInCurrentMondayWeek,
 } from "../shared/types.js";
 
 function generateId(prefix: "prj" | "tsk"): string {
   return `${prefix}_${Date.now().toString(36)}_${crypto.randomBytes(4).toString("hex")}`;
 }
 
-function resolveActionTodayStatus(
+function resolveAutoPromotionStatus(
   status: TaskStatus,
   actionDate: string | null,
 ): TaskStatus {
@@ -32,7 +33,13 @@ function resolveActionTodayStatus(
   ) {
     return status;
   }
-  return isActionDateToday(actionDate) ? "in_progress_today" : status;
+  if (isActionDateToday(actionDate)) {
+    return "in_progress_today";
+  }
+  if (status === "triage" && isDateInCurrentMondayWeek(actionDate)) {
+    return "todo";
+  }
+  return status;
 }
 
 import {
@@ -161,13 +168,14 @@ export class ProjectRepository {
 // [spec: TASK-005]
 // [spec: TASK-007]
 // [spec: TASK-008]
+// [spec: TASK-009]
 // [spec: PROJ-002]
 export class TaskRepository {
   constructor(private db: DatabaseSync) {}
 
   createTask(input: CreateTaskInput): Task {
     const validated = CreateTaskInputSchema.parse(input);
-    const effectiveStatus = resolveActionTodayStatus(
+    const effectiveStatus = resolveAutoPromotionStatus(
       validated.status,
       validated.action_date,
     );
@@ -259,7 +267,7 @@ export class TaskRepository {
       validated.action_date !== undefined
         ? validated.action_date
         : existing.action_date;
-    const status = resolveActionTodayStatus(rawStatus, actionDate);
+    const status = resolveAutoPromotionStatus(rawStatus, actionDate);
     const dueDate =
       validated.due_date !== undefined ? validated.due_date : existing.due_date;
     const repeatRule =
@@ -779,13 +787,35 @@ export class TaskRepository {
   }
 
   /**
+   * Automatically move active `triage` tasks whose `action_date` falls in the current
+   * Monday-to-Sunday calendar week into `todo` (TASK-009).
+   */
+  promoteThisWeekTriageTasks(todayDateStr?: string): Task[] {
+    const today = todayDateStr || formatLocalDateYMD();
+    const candidates = this.db
+      .prepare(
+        "SELECT * FROM tasks WHERE status = 'triage' AND deleted_at IS NULL AND action_date IS NOT NULL",
+      )
+      .all() as unknown as Task[];
+
+    const toPromote = candidates.filter((task) =>
+      isDateInCurrentMondayWeek(task.action_date, today),
+    );
+    return this.batchPromoteStatus(toPromote, "todo", "status = 'triage'");
+  }
+
+  /**
    * Run all periodic/fetch-time promotions in canonical order:
    * 1) Due recurring triage tasks -> `todo` (TASK-007)
-   * 2) Active tasks with `action_date === today` -> `in_progress_today` (TASK-008)
+   * 2) Active triage tasks with `action_date` in this Mon-Sun week -> `todo` (TASK-009)
+   * 3) Active tasks with `action_date === today` -> `in_progress_today` (TASK-008)
    */
   runScheduledPromotions(todayDateStr?: string): Task[] {
     const merged = new Map<string, Task>();
     for (const task of this.promoteDueRecurringTasks(todayDateStr)) {
+      merged.set(task.id, task);
+    }
+    for (const task of this.promoteThisWeekTriageTasks(todayDateStr)) {
       merged.set(task.id, task);
     }
     for (const task of this.promoteTodayActionDateTasks(todayDateStr)) {
