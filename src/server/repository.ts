@@ -24,6 +24,8 @@ import {
   shiftDate,
   getISOWeekNumber,
   appendPeriodTag,
+  formatLocalDateYMD,
+  shouldPromoteRecurringTask,
 } from "./recurrence.js";
 
 export type { RecurrenceOptions };
@@ -141,6 +143,7 @@ export class ProjectRepository {
 // [spec: TASK-003]
 // [spec: TASK-004]
 // [spec: TASK-005]
+// [spec: TASK-007]
 // [spec: PROJ-002]
 export class TaskRepository {
   constructor(private db: DatabaseSync) {}
@@ -680,5 +683,47 @@ export class TaskRepository {
     }
 
     return events;
+  }
+
+  /**
+   * Automatically move recurring tasks in `triage` to `todo` when `todayDateStr`'s
+   * calendar week or month matches their scheduled period.
+   */
+  promoteDueRecurringTasks(todayDateStr?: string): Task[] {
+    const today = todayDateStr || formatLocalDateYMD();
+    const candidates = this.db
+      .prepare(
+        "SELECT * FROM tasks WHERE status = 'triage' AND deleted_at IS NULL AND repeat_rule != 'none'",
+      )
+      .all() as unknown as Task[];
+
+    const toPromote = candidates.filter((task) =>
+      shouldPromoteRecurringTask(task, today),
+    );
+    if (toPromote.length === 0) return [];
+
+    const now = new Date().toISOString();
+    const promoted: Task[] = [];
+
+    this.db.exec("BEGIN IMMEDIATE;");
+    try {
+      const stmt = this.db.prepare(
+        "UPDATE tasks SET status = 'todo', updated_at = ? WHERE id = ? AND status = 'triage' AND deleted_at IS NULL",
+      );
+      for (const task of toPromote) {
+        stmt.run(now, task.id);
+        promoted.push({
+          ...task,
+          status: "todo",
+          updated_at: now,
+        });
+      }
+      this.db.exec("COMMIT;");
+    } catch (err) {
+      this.db.exec("ROLLBACK;");
+      throw err;
+    }
+
+    return promoted;
   }
 }

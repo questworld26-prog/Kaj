@@ -1,4 +1,5 @@
 // [spec: TASK-004]
+// [spec: TASK-007]
 import type { RepeatRule } from "../shared/types.js";
 
 export interface RecurrenceOptions {
@@ -84,13 +85,79 @@ export function shiftDate(
   return dateStr;
 }
 
-export function getISOWeekNumber(dateStr: string): number {
+function getISOWeekParts(dateStr: string): { isoYear: number; weekNum: number } {
   const [y, m, d] = dateStr.split("-").map(Number);
   const date = new Date(Date.UTC(y, m - 1, d));
   const dayNum = date.getUTCDay() || 7;
   date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  return Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  const isoYear = date.getUTCFullYear();
+  const yearStart = new Date(Date.UTC(isoYear, 0, 1));
+  const weekNum = Math.ceil(
+    ((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+  );
+  return { isoYear, weekNum };
+}
+
+export function getISOWeekNumber(dateStr: string): number {
+  return getISOWeekParts(dateStr).weekNum;
+}
+
+/**
+ * Format local wall-clock calendar date as `YYYY-MM-DD`.
+ */
+export function formatLocalDateYMD(now: Date = new Date()): string {
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * Return ISO 8601 week-year and week key (`YYYY-Www`) so cross-year boundary weeks match reliably.
+ */
+export function getISOWeekKey(dateStr: string): string {
+  const { isoYear, weekNum } = getISOWeekParts(dateStr);
+  return `${isoYear}-W${String(weekNum).padStart(2, "0")}`;
+}
+
+/**
+ * Return canonical `YYYY-MM` key for calendar month comparison.
+ */
+export function getYearMonthKey(dateStr: string): string {
+  return dateStr.slice(0, 7);
+}
+
+/**
+ * Determine whether an active recurring task in `triage` matches `todayDateStr`'s week or month.
+ */
+export function shouldPromoteRecurringTask(
+  task: {
+    status: string;
+    deleted_at: string | null;
+    repeat_rule: RepeatRule;
+    action_date: string | null;
+    due_date: string | null;
+  },
+  todayDateStr: string = formatLocalDateYMD(),
+): boolean {
+  if (task.status !== "triage" || task.deleted_at !== null) return false;
+  if (task.repeat_rule === "none") return false;
+
+  const refDate = task.action_date || task.due_date;
+  if (!refDate) return false;
+
+  if (task.repeat_rule === "weekly") {
+    return getISOWeekKey(refDate) === getISOWeekKey(todayDateStr);
+  }
+
+  if (task.repeat_rule === "monthly" || task.repeat_rule === "yearly") {
+    return (
+      getYearMonthKey(refDate) === getYearMonthKey(todayDateStr) ||
+      getISOWeekKey(refDate) === getISOWeekKey(todayDateStr)
+    );
+  }
+
+  return false;
 }
 
 export function appendPeriodTag(

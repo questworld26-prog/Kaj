@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-13T04:53:14.778084+00:00",
-  "total_requirements": 24,
-  "active_requirements_count": 24,
+  "last_audited_at": "2026-11-13T11:19:57.977801+00:00",
+  "total_requirements": 25,
+  "active_requirements_count": 25,
   "planned_requirements_count": 0,
-  "active_criteria_count": 112,
-  "verified_criteria_count": 112,
+  "active_criteria_count": 116,
+  "verified_criteria_count": 116,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -377,6 +377,33 @@
         "src/client/api.ts",
         "src/client/components/SwimlaneBoard.tsx",
         "src/server/app.ts",
+        "src/server/repository.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "TASK-007",
+      "title": "Automatic Triage-to-Todo Promotion for Matching Recurring Periods",
+      "spec_file": "specs/tasks.md",
+      "is_planned": false,
+      "sha256": "ae0549a5a6ae64b44dd76c1fefaa48e458cc3046d1321c0bd4982f9352c4f444",
+      "verified_sha256": "ae0549a5a6ae64b44dd76c1fefaa48e458cc3046d1321c0bd4982f9352c4f444",
+      "acceptance_criteria": [
+        "AC-TASK-007.1",
+        "AC-TASK-007.2",
+        "AC-TASK-007.3",
+        "AC-TASK-007.4"
+      ],
+      "verified_criteria": [
+        "AC-TASK-007.1",
+        "AC-TASK-007.2",
+        "AC-TASK-007.3",
+        "AC-TASK-007.4"
+      ],
+      "implementation_files": [
+        "src/server/app.ts",
+        "src/server/index.ts",
+        "src/server/recurrence.ts",
         "src/server/repository.ts"
       ],
       "status": "VERIFIED"

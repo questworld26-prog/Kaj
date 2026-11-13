@@ -75,4 +75,14 @@ Acceptance Criteria:
 - AC-TASK-006.2: The board query and swimlane groupers shall return active tasks within each column ordered by `sort_order` ascending.
 - AC-TASK-006.3: If invalid or non-existent task IDs are provided to the reorder endpoint, the request shall be rejected with status 400.
 
+## TASK-007: Automatic Triage-to-Todo Promotion for Matching Recurring Periods
+
+While an active recurring task resides in `triage` and its scheduled period matches the current calendar week or month, the system shall promote the task status automatically to `todo`.
+
+Acceptance Criteria:
+- AC-TASK-007.1: When the calendar ISO week of today matches the action or due date of a weekly recurring task in `triage`, the system shall move that task to `todo` automatically without altering its priority or project.
+- AC-TASK-007.2: When the calendar year-month or ISO week of today matches the action or due date of a monthly or yearly recurring task in `triage`, the system shall move that task to `todo` automatically without altering its priority or project.
+- AC-TASK-007.3: When a recurring task in `triage` is scheduled for a future week or month relative to today, the system shall keep that task in `triage` until the matching period begins.
+- AC-TASK-007.4: While evaluating tasks for automatic promotion, the system shall exclude non-recurring tasks, archived tasks, soft-deleted tasks, and tasks already outside `triage`.
+
 

@@ -522,7 +522,17 @@ export function createApp(options: AppOptions): Hono {
   });
 
   // REST: Board swimlanes
+  // [spec: TASK-007]
   app.get("/api/board", (c) => {
+    const promoted = taskRepo.promoteDueRecurringTasks();
+    for (const task of promoted) {
+      eventBus.broadcast({
+        type: "task",
+        action: "updated",
+        id: task.id,
+        data: task,
+      });
+    }
     const swimlanes = taskRepo.getBoardSwimlanes(projectRepo);
     return c.json(swimlanes);
   });

@@ -47,16 +47,39 @@ function getLanIp(): string | null {
 
 // [spec: MCP-002]
 // [spec: TG-001]
+// [spec: TASK-007]
 async function startDaemon() {
   const db = createDatabase(process.env.KAJ_DB_PATH);
   initSchema(db);
   const eventBus = new EventBus();
+  const taskRepo = new TaskRepository(db);
+  const projectRepo = new ProjectRepository(db);
+
+  const runRecurrencePromotion = () => {
+    const promoted = taskRepo.promoteDueRecurringTasks();
+    for (const task of promoted) {
+      eventBus.broadcast({
+        type: "task",
+        action: "updated",
+        id: task.id,
+        data: task,
+      });
+    }
+  };
+  runRecurrencePromotion();
+  setInterval(() => {
+    try {
+      runRecurrencePromotion();
+    } catch {
+      // Keep background scheduler resilient
+    }
+  }, 15 * 60 * 1000);
 
   const telegramConfig = loadTelegramConfig();
   const telegramBot = new TelegramBotService({
     config: telegramConfig,
-    taskRepo: new TaskRepository(db),
-    projectRepo: new ProjectRepository(db),
+    taskRepo,
+    projectRepo,
     eventBus,
   });
   telegramBot.start();
