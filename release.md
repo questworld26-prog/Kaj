@@ -12,6 +12,16 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v3.1.0`: Global Repeating Triage Toggle, Cockpit Creator Chart Telemetry & Root Config Consolidation
+
+- **Status**: ✅ RELEASED
+- **Focus**: Adds a global toggle to hide repeating tasks in Triage across all project swimlanes (`UI-011`), promotes the Desktop Cockpit stacked creator chart above Weekly Velocity with latest-week-first ordering and inline segment counts (`UI-012`), and consolidates root configuration by merging Vitest into `vite.config.ts`, migrating Telegram bot configuration (`TG-001`) to `.env`, and adding IDE file nesting.
+- **Deliverables**:
+  - [x] **UI-011 / Global Repeating Triage Visibility Toggle**: Added `RepeatingTriageToggle` in the sticky desktop Triage header and mobile triage/pods views, hiding recurring `triage` items across all swimlanes with `localStorage` persistence while keeping non-triage and Calendar recurring items visible.
+  - [x] **UI-012 / Desktop Cockpit Creator Chart Order & Segment Counts**: Positioned the stacked completed-tasks-by-creator chart above Weekly Velocity (`CockpitTelemetryDeck.tsx`), ordered weekly rows with the latest week on top, and rendered inline completion counts inside each non-zero creator segment.
+  - [x] **TG-001 & Root Config Consolidation**: Merged `vitest.config.ts` into `vite.config.ts`, moved Telegram runtime configuration and `scripts/daemon-ctl.sh` toggles to `.env` (with optional `KAJ_TELEGRAM_CONFIG` JSON fallback), updated `.env.example`/`README.md`/`ADR.md`, and configured `.vscode/settings.json` IDE file nesting.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (135/135 across 30 active specs), 101 unit/integration tests + 58 Playwright E2E tests passing, clean working tree, version bumped to `3.1.0`.
+
 ### Release `v3.0.0`: Verified Encrypted Recovery, Automated Workflow Promotions & Urgent Today Visuals
 
 - **Status**: ✅ RELEASED
