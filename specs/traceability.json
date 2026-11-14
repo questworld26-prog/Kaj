@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-14T05:10:02.524783+00:00",
-  "total_requirements": 29,
-  "active_requirements_count": 29,
+  "last_audited_at": "2026-11-14T06:33:18.069064+00:00",
+  "total_requirements": 30,
+  "active_requirements_count": 30,
   "planned_requirements_count": 0,
-  "active_criteria_count": 132,
-  "verified_criteria_count": 132,
+  "active_criteria_count": 135,
+  "verified_criteria_count": 135,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -834,6 +834,29 @@
         "src/client/components/mobile/MobilePodsTab.tsx",
         "src/client/components/mobile/MobileTriageTab.tsx",
         "src/shared/types.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "UI-012",
+      "title": "Desktop Cockpit Creator Stacked Chart Order and Segment Counts",
+      "spec_file": "specs/ui.md",
+      "is_planned": false,
+      "sha256": "bcc5f0cc0cc8c3b0f3bc81601a39ec035a8c792902cda7b12eb6817e3855f42a",
+      "verified_sha256": "bcc5f0cc0cc8c3b0f3bc81601a39ec035a8c792902cda7b12eb6817e3855f42a",
+      "acceptance_criteria": [
+        "AC-UI-012.1",
+        "AC-UI-012.2",
+        "AC-UI-012.3"
+      ],
+      "verified_criteria": [
+        "AC-UI-012.1",
+        "AC-UI-012.2",
+        "AC-UI-012.3"
+      ],
+      "implementation_files": [
+        "src/client/components/cockpit/CockpitTelemetryDeck.tsx",
+        "src/client/components/cockpit/types.ts"
       ],
       "status": "VERIFIED"
     }

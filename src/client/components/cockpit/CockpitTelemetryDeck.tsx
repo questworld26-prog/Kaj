@@ -1,8 +1,9 @@
 // [spec: UI-009]
+// [spec: UI-012]
 import { h } from "preact";
 import { useMemo } from "preact/hooks";
 import type { Task, Project } from "../../../shared/types.js";
-import { getISOWeekKey } from "./types.js";
+import { buildCreatorStackData, getISOWeekKey } from "./types.js";
 
 interface CockpitTelemetryDeckProps {
   completedTasks: Task[];
@@ -100,62 +101,111 @@ export function CockpitTelemetryDeck({
     return { total, segments };
   }, [completedTasks, projects]);
 
-  // Telemetry 3: Stacked Completed by Creator (Option 2 style: horizontal stacked bars)
-  const creatorStackData = useMemo(() => {
-    const now = new Date();
-    const weeks: Array<{
-      label: string;
-      isCurrent: boolean;
-      total: number;
-      creators: Record<string, number>;
-    }> = [];
-
-    for (let i = 2; i >= 0; i--) {
-      const d = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
-      weeks.push({
-        label: i === 0 ? `${getISOWeekKey(d)} (Current)` : getISOWeekKey(d),
-        isCurrent: i === 0,
-        total: 0,
-        creators: {},
-      });
-    }
-
-    const allCreators = new Set<string>();
-
-    for (const t of completedTasks) {
-      if (!t.completed_at) continue;
-      const compDate = new Date(t.completed_at);
-      const wKey = getISOWeekKey(compDate);
-      const weekEntry = weeks.find((w) => w.label.startsWith(wKey));
-      if (weekEntry) {
-        const creator = t.created_by?.trim() || "Unspecified";
-        allCreators.add(creator);
-        weekEntry.creators[creator] = (weekEntry.creators[creator] || 0) + 1;
-        weekEntry.total += 1;
-      }
-    }
-
-    const creatorList = Array.from(allCreators);
-    const CREATOR_COLORS = [
-      "#10B981",
-      "#38BDF8",
-      "#F59E0B",
-      "#A855F7",
-      "#EC4899",
-      "#64748B",
-    ];
-
-    const creatorColorMap: Record<string, string> = {};
-    creatorList.forEach((c, idx) => {
-      creatorColorMap[c] = CREATOR_COLORS[idx % CREATOR_COLORS.length];
-    });
-
-    return { weeks, creatorList, creatorColorMap };
-  }, [completedTasks]);
+  // Telemetry 1: Stacked Completed by Creator (latest week on top, counts rendered inside bar)
+  const creatorStackData = useMemo(
+    () => buildCreatorStackData(completedTasks),
+    [completedTasks],
+  );
 
   return (
     <div className="col-span-12 lg:col-span-5 space-y-5">
-      {/* Chart 1: Tasks Completed by Week (Velocity Bar Chart) */}
+      {/* Chart 1: Horizontal Stacked Completed by Creator */}
+      <section
+        data-testid="cockpit-creator-stacked-chart"
+        className="rounded-2xl bg-[#121718] border border-[#2A3235] p-5 shadow-sm"
+      >
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+              👥 Stacked Completed Tasks by Creator
+            </h3>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Horizontal weekly breakdown segmented by `created_by`
+            </p>
+          </div>
+          <span className="text-xs text-gray-400">Latest Week First</span>
+        </div>
+
+        {creatorStackData.creatorList.length === 0 ? (
+          <div className="text-xs text-gray-400 italic py-6 text-center">
+            No creator attribution recorded on completed tasks yet.
+          </div>
+        ) : (
+          <div className="space-y-3.5 pt-1">
+            {creatorStackData.weeks.map((w) => (
+              <div key={w.label} data-testid="creator-stacked-week-row">
+                <div className="flex justify-between text-xs mb-1">
+                  <span
+                    className={
+                      w.isCurrent
+                        ? "text-emerald-400 font-semibold"
+                        : "text-gray-300 font-medium"
+                    }
+                  >
+                    {w.label}
+                  </span>
+                  <span className="text-gray-400">
+                    {w.total} {w.total === 1 ? "task" : "tasks"}
+                  </span>
+                </div>
+                {w.total === 0 ? (
+                  <div className="w-full h-6 rounded-lg bg-[#1C2224] border border-[#2A3235] text-xs text-gray-400 flex items-center px-2.5">
+                    0 completed
+                  </div>
+                ) : (
+                  <div className="w-full h-6 rounded-lg overflow-hidden flex bg-[#1C2224]">
+                    {creatorStackData.creatorList.map((creator) => {
+                      const count = w.creators[creator] || 0;
+                      if (count === 0) return null;
+                      const pct = (count / w.total) * 100;
+                      const segmentStyle =
+                        creatorStackData.creatorStyleMap[creator];
+                      return (
+                        <div
+                          key={creator}
+                          data-testid="creator-bar-segment"
+                          data-creator={creator}
+                          style={{
+                            width: `${pct}%`,
+                            minWidth: "1.35rem",
+                            backgroundColor: segmentStyle.bg,
+                            color: segmentStyle.text,
+                          }}
+                          className="h-full flex items-center justify-center text-xs font-bold leading-none tabular-nums px-1 overflow-hidden hover:brightness-110 transition-all"
+                          title={`${creator}: ${count} (${Math.round(pct)}%)`}
+                        >
+                          {count}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* Creator Color Legend */}
+            <div className="flex flex-wrap items-center gap-3 text-xs border-t border-[#2A3235] pt-3">
+              {creatorStackData.creatorList.map((creator) => (
+                <span
+                  key={creator}
+                  className="flex items-center gap-1.5 text-gray-300"
+                >
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{
+                      backgroundColor:
+                        creatorStackData.creatorStyleMap[creator].bg,
+                    }}
+                  />
+                  <span>{creator}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Chart 2: Tasks Completed by Week (Velocity Bar Chart) */}
       <section
         data-testid="cockpit-weekly-velocity-chart"
         className="rounded-2xl bg-[#121718] border border-[#2A3235] p-5 shadow-sm"
@@ -292,92 +342,6 @@ export function CockpitTelemetryDeck({
                     </span>
                   </span>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* Chart 3: Option 2 Horizontal Stacked Completed by Creator */}
-      <section
-        data-testid="cockpit-creator-stacked-chart"
-        className="rounded-2xl bg-[#121718] border border-[#2A3235] p-5 shadow-sm"
-      >
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-              👥 Stacked Completed Tasks by Creator
-            </h3>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Horizontal weekly breakdown segmented by `created_by`
-            </p>
-          </div>
-          <span className="text-xs text-gray-400">Weekly Proportion</span>
-        </div>
-
-        {creatorStackData.creatorList.length === 0 ? (
-          <div className="text-xs text-gray-400 italic py-6 text-center">
-            No creator attribution recorded on completed tasks yet.
-          </div>
-        ) : (
-          <div className="space-y-3.5 pt-1">
-            {creatorStackData.weeks.map((w) => (
-              <div key={w.label}>
-                <div className="flex justify-between text-xs mb-1">
-                  <span
-                    className={
-                      w.isCurrent
-                        ? "text-emerald-400 font-semibold"
-                        : "text-gray-300 font-medium"
-                    }
-                  >
-                    {w.label}
-                  </span>
-                  <span className="text-gray-400">
-                    {w.total} {w.total === 1 ? "task" : "tasks"}
-                  </span>
-                </div>
-                {w.total === 0 ? (
-                  <div className="w-full h-3.5 rounded-lg bg-[#1C2224] border border-[#2A3235] text-[10px] text-gray-500 flex items-center px-2">
-                    0 completed
-                  </div>
-                ) : (
-                  <div className="w-full h-4 rounded-lg overflow-hidden flex bg-[#1C2224]">
-                    {creatorStackData.creatorList.map((creator) => {
-                      const count = w.creators[creator] || 0;
-                      if (count === 0) return null;
-                      const pct = (count / w.total) * 100;
-                      const color = creatorStackData.creatorColorMap[creator];
-                      return (
-                        <div
-                          key={creator}
-                          style={{ width: `${pct}%`, backgroundColor: color }}
-                          className="h-full hover:brightness-110 transition-all"
-                          title={`${creator}: ${count} (${Math.round(pct)}%)`}
-                        />
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {/* Creator Color Legend */}
-            <div className="flex flex-wrap items-center gap-3 text-xs border-t border-[#2A3235] pt-3">
-              {creatorStackData.creatorList.map((creator) => (
-                <span
-                  key={creator}
-                  className="flex items-center gap-1.5 text-gray-300"
-                >
-                  <span
-                    className="w-2 h-2 rounded-full"
-                    style={{
-                      backgroundColor:
-                        creatorStackData.creatorColorMap[creator],
-                    }}
-                  />
-                  <span>{creator}</span>
-                </span>
               ))}
             </div>
           </div>
