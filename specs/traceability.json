@@ -1,5 +1,5 @@
 {
-  "last_audited_at": "2026-11-14T06:55:02.578668+00:00",
+  "last_audited_at": "2026-11-14T06:57:07.913367+00:00",
   "total_requirements": 32,
   "active_requirements_count": 32,
   "planned_requirements_count": 0,
@@ -874,8 +874,8 @@
       "title": "Desktop Cockpit Creator Stacked Chart Order and Segment Counts",
       "spec_file": "specs/ui.md",
       "is_planned": false,
-      "sha256": "bcc5f0cc0cc8c3b0f3bc81601a39ec035a8c792902cda7b12eb6817e3855f42a",
-      "verified_sha256": "bcc5f0cc0cc8c3b0f3bc81601a39ec035a8c792902cda7b12eb6817e3855f42a",
+      "sha256": "34be1aab8aa2d80530ea8fa9d47db61400458db2243ca9cc1da3b493d1605518",
+      "verified_sha256": "34be1aab8aa2d80530ea8fa9d47db61400458db2243ca9cc1da3b493d1605518",
       "acceptance_criteria": [
         "AC-UI-012.1",
         "AC-UI-012.2",

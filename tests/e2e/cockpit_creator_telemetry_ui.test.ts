@@ -159,8 +159,8 @@ test.describe("Kaj (কাজ) Cockpit Creator Stacked Telemetry (UI-012)", () =
 
     await expect(alphaSeg).toBeVisible();
     await expect(betaSeg).toBeVisible();
-    await expect(alphaSeg).toHaveText("3");
-    await expect(betaSeg).toHaveText("2");
+    await expect(alphaSeg).toHaveText("3 (60%)");
+    await expect(betaSeg).toHaveText("2 (40%)");
 
     const alphaBox = await alphaSeg.boundingBox();
     const betaBox = await betaSeg.boundingBox();

@@ -138,12 +138,12 @@ Acceptance Criteria:
 
 ## UI-012: Desktop Cockpit Creator Stacked Chart Order and Segment Counts
 
-When the Desktop Cockpit telemetry column renders completed task analytics, the system shall position the stacked completed tasks by creator chart above the weekly velocity chart with the latest week at the top and display per-creator completion counts inside each bar segment.
+When the Desktop Cockpit telemetry column renders completed task analytics, the system shall position the stacked completed tasks by creator chart above the weekly velocity chart with the latest week at the top and display each creator's count and percentage inside each bar segment.
 
 Acceptance Criteria:
 - AC-UI-012.1: When the Desktop Cockpit telemetry column renders, the system shall position the stacked completed tasks by creator chart above the Tasks Completed by Week velocity chart.
 - AC-UI-012.2: In the stacked completed tasks by creator chart, the system shall order the weekly rows chronologically with the current latest week at the top row and older weeks below.
-- AC-UI-012.3: Within each weekly stacked bar, the system shall display each creator (`created_by`) completed task count inside that creator segment whenever its count is greater than zero.
+- AC-UI-012.3: Within each weekly stacked bar, the system shall display each creator (`created_by`) completed task count followed by its rounded percentage in parentheses inside that creator segment whenever its count is greater than zero.
 
 ## UI-013: Telemetry Snapshot Integration and Retention Controls
 

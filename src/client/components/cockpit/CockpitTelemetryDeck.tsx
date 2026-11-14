@@ -180,6 +180,7 @@ export function CockpitTelemetryDeck({
                       const count = w.creators[creator] || 0;
                       if (count === 0) return null;
                       const pct = (count / w.total) * 100;
+                      const roundedPct = Math.round(pct);
                       const segmentStyle =
                         creatorStackData.creatorStyleMap[creator];
                       return (
@@ -189,14 +190,14 @@ export function CockpitTelemetryDeck({
                           data-creator={creator}
                           style={{
                             width: `${pct}%`,
-                            minWidth: "1.35rem",
+                            minWidth: "3.25rem",
                             backgroundColor: segmentStyle.bg,
                             color: segmentStyle.text,
                           }}
-                          className="h-full flex items-center justify-center text-xs font-bold leading-none tabular-nums px-1 overflow-hidden hover:brightness-110 transition-all"
-                          title={`${creator}: ${count} (${Math.round(pct)}%)`}
+                          className="h-full flex items-center justify-center text-xs font-bold leading-none tabular-nums whitespace-nowrap px-1.5 overflow-hidden hover:brightness-110 transition-all"
+                          title={`${creator}: ${count} (${roundedPct}%)`}
                         >
-                          {count}
+                          {count} ({roundedPct}%)
                         </div>
                       );
                     })}
