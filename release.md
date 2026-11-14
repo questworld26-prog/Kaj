@@ -12,6 +12,16 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v3.2.0`: Daily Non-VIP Telegram Digest, 90-Day Auto-Purge Telemetry Snapshots & Cockpit Creator Percentages
+
+- **Status**: ✅ RELEASED
+- **Focus**: Adds a scheduled `08:00` daily brief In Progress Today task digest for non-VIP Telegram members (`NOTIF-002`), automates 90-day retention auto-purge for completed tasks while preserving Desktop Cockpit historical charts via atomic `completed_telemetry_snapshots` (`TASK-010`, `UI-013`), and enhances stacked creator telemetry bars with `count (%)` inline labels (`UI-012`).
+- **Deliverables**:
+  - [x] **NOTIF-002 / Scheduled Daily Non-VIP In Progress Today Digest**: Added `src/server/telegram/digest.ts`, concise `formatDailyBriefTaskList`, schema v3 `telegram_digest_dispatches` table for restart-safe once-daily delivery at `08:00` (`KAJ_TELEGRAM_DAILY_DIGEST_ENABLED`), strict `action_date === today` top ordering across active `in_progress_today` tasks (excluding `todo` and VIP members), and `POST /api/telegram/daily-digest`.
+  - [x] **TASK-010 & UI-013 / 90-Day Completed Task Auto-Purge & Telemetry Snapshots**: Added `src/server/retention.ts` (`KAJ_DONE_RETENTION_DAYS=90`), atomic `completed_telemetry_snapshots` persistence across weekly/project/creator charts, startup/periodic purge scheduling, `POST /api/completed/purge`, and Completed Archive purge banner + manual purge control.
+  - [x] **UI-012 / Creator Stacked Bar Count & Percentage Labels**: Updated `CockpitTelemetryDeck.tsx` stacked creator segments to display `count (%)` inline labels with accessible contrast.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (148/148 across 33 active specs), 111 unit/integration tests + 61 Playwright E2E tests passing, clean working tree, version bumped to `3.2.0`.
+
 ### Release `v3.1.0`: Global Repeating Triage Toggle, Cockpit Creator Chart Telemetry & Root Config Consolidation
 
 - **Status**: ✅ RELEASED
