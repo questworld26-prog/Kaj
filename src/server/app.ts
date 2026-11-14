@@ -230,9 +230,31 @@ export function createApp(options: AppOptions): Hono {
       ),
       allowed_user_ids: cfg.allowed_user_ids,
       vip_users: cfg.vip_users || [],
+      daily_digest_enabled: Boolean(cfg.daily_digest_enabled),
+      daily_digest_time: cfg.daily_digest_time || "08:00",
       default_status: cfg.default_status,
       poll_interval_ms: cfg.poll_interval_ms,
     });
+  });
+
+  // [spec: NOTIF-002]
+  // REST: Trigger or force daily non-VIP digest
+  app.post("/api/telegram/daily-digest", async (c) => {
+    if (!telegramBot) {
+      return c.json({ error: "Telegram bot service not active" }, 400);
+    }
+    let force = true;
+    try {
+      const raw = await c.req.text();
+      if (raw) {
+        const body = JSON.parse(raw) as { force?: boolean };
+        if (typeof body.force === "boolean") force = body.force;
+      }
+    } catch {
+      return c.json({ error: "Invalid JSON payload" }, 400);
+    }
+    const result = await telegramBot.runDailyDigest({ force });
+    return c.json(result);
   });
 
   // REST: VIP users list (TG-001)

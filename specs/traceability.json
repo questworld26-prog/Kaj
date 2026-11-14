@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-14T06:57:07.913367+00:00",
-  "total_requirements": 32,
-  "active_requirements_count": 32,
+  "last_audited_at": "2026-11-14T13:33:18.216962+00:00",
+  "total_requirements": 33,
+  "active_requirements_count": 33,
   "planned_requirements_count": 0,
-  "active_criteria_count": 143,
-  "verified_criteria_count": 143,
+  "active_criteria_count": 148,
+  "verified_criteria_count": 148,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -175,7 +175,41 @@
       "implementation_files": [
         "src/server/app.ts",
         "src/server/telegram.ts",
+        "src/server/telegram/digest.ts",
         "src/server/telegram/formatters.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "NOTIF-002",
+      "title": "Scheduled Daily Brief Task Digest for Non-VIP Telegram Members",
+      "spec_file": "specs/notifications.md",
+      "is_planned": false,
+      "sha256": "569b44d90c8aa15324e563e28859b5e218d08eebc08679f60682d31047f8b3cf",
+      "verified_sha256": "569b44d90c8aa15324e563e28859b5e218d08eebc08679f60682d31047f8b3cf",
+      "acceptance_criteria": [
+        "AC-NOTIF-002.1",
+        "AC-NOTIF-002.2",
+        "AC-NOTIF-002.3",
+        "AC-NOTIF-002.4",
+        "AC-NOTIF-002.5"
+      ],
+      "verified_criteria": [
+        "AC-NOTIF-002.1",
+        "AC-NOTIF-002.2",
+        "AC-NOTIF-002.3",
+        "AC-NOTIF-002.4",
+        "AC-NOTIF-002.5"
+      ],
+      "implementation_files": [
+        "src/server/app.ts",
+        "src/server/db.ts",
+        "src/server/index.ts",
+        "src/server/telegram.ts",
+        "src/server/telegram/config.ts",
+        "src/server/telegram/digest.ts",
+        "src/server/telegram/formatters.ts",
+        "src/server/telegram/types.ts"
       ],
       "status": "VERIFIED"
     },
@@ -527,6 +561,7 @@
         "src/server/index.ts",
         "src/server/telegram.ts",
         "src/server/telegram/config.ts",
+        "src/server/telegram/digest.ts",
         "src/server/telegram/formatters.ts",
         "src/server/telegram/parser.ts",
         "src/server/telegram/transport.ts",

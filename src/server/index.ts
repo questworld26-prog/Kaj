@@ -58,6 +58,16 @@ async function startDaemon() {
   // [spec: TASK-007]
   // [spec: TASK-008]
   // [spec: TASK-009]
+  // [spec: NOTIF-002]
+  const telegramConfig = loadTelegramConfig();
+  const telegramBot = new TelegramBotService({
+    config: telegramConfig,
+    taskRepo,
+    projectRepo,
+    eventBus,
+    db,
+  });
+
   const runTaskPromotions = () => {
     const promoted = taskRepo.runScheduledPromotions();
     for (const task of promoted) {
@@ -70,22 +80,17 @@ async function startDaemon() {
     }
   };
   runTaskPromotions();
+  telegramBot.start();
+  telegramBot.runDailyDigest().catch(() => {});
+
   setInterval(() => {
     try {
       runTaskPromotions();
     } catch {
       // Keep background scheduler resilient
     }
+    telegramBot.runDailyDigest().catch(() => {});
   }, 15 * 60 * 1000);
-
-  const telegramConfig = loadTelegramConfig();
-  const telegramBot = new TelegramBotService({
-    config: telegramConfig,
-    taskRepo,
-    projectRepo,
-    eventBus,
-  });
-  telegramBot.start();
 
   // [spec: BACKUP-001]
   // [spec: TASK-010]

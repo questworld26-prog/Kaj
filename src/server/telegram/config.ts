@@ -1,4 +1,5 @@
 // [spec: TG-001]
+// [spec: NOTIF-002]
 import fs from "node:fs";
 import path from "node:path";
 import { TASK_STATUSES, type TaskStatus } from "../../shared/types.js";
@@ -9,6 +10,10 @@ export const DEFAULT_CONFIG: TelegramConfig = {
   bot_token: "",
   allowed_user_ids: [],
   notify_on_completion: true,
+  daily_digest_enabled: false,
+  daily_digest_time: "08:00",
+  daily_digest_max_items: 15,
+  daily_digest_skip_empty: true,
   default_status: "triage",
   poll_interval_ms: 2000,
 };
@@ -251,6 +256,26 @@ export function loadTelegramConfig(
       typeof fileData.notify_on_completion === "boolean"
         ? fileData.notify_on_completion
         : DEFAULT_CONFIG.notify_on_completion,
+    daily_digest_enabled:
+      typeof fileData.daily_digest_enabled === "boolean"
+        ? fileData.daily_digest_enabled
+        : DEFAULT_CONFIG.daily_digest_enabled,
+    daily_digest_time:
+      typeof fileData.daily_digest_time === "string" &&
+      /^([01]\d|2[0-3]):[0-5]\d$/.test(fileData.daily_digest_time.trim())
+        ? fileData.daily_digest_time.trim()
+        : DEFAULT_CONFIG.daily_digest_time,
+    daily_digest_max_items:
+      typeof fileData.daily_digest_max_items === "number" &&
+      Number.isInteger(fileData.daily_digest_max_items) &&
+      fileData.daily_digest_max_items >= 1 &&
+      fileData.daily_digest_max_items <= 50
+        ? fileData.daily_digest_max_items
+        : DEFAULT_CONFIG.daily_digest_max_items,
+    daily_digest_skip_empty:
+      typeof fileData.daily_digest_skip_empty === "boolean"
+        ? fileData.daily_digest_skip_empty
+        : DEFAULT_CONFIG.daily_digest_skip_empty,
     default_status: defaultStatus,
     poll_interval_ms: pollIntervalMs,
   };
@@ -267,6 +292,30 @@ export function loadTelegramConfig(
   const envNotify = parseBooleanFlag(env.KAJ_TELEGRAM_NOTIFY_COMPLETION);
   if (envNotify !== undefined) {
     config.notify_on_completion = envNotify;
+  }
+
+  const envDigestEnabled = parseBooleanFlag(env.KAJ_TELEGRAM_DAILY_DIGEST_ENABLED);
+  if (envDigestEnabled !== undefined) {
+    config.daily_digest_enabled = envDigestEnabled;
+  }
+
+  if (
+    env.KAJ_TELEGRAM_DAILY_DIGEST_TIME &&
+    /^([01]\d|2[0-3]):[0-5]\d$/.test(env.KAJ_TELEGRAM_DAILY_DIGEST_TIME.trim())
+  ) {
+    config.daily_digest_time = env.KAJ_TELEGRAM_DAILY_DIGEST_TIME.trim();
+  }
+
+  if (env.KAJ_TELEGRAM_DAILY_DIGEST_MAX_ITEMS !== undefined) {
+    const parsedMax = Number(env.KAJ_TELEGRAM_DAILY_DIGEST_MAX_ITEMS.trim());
+    if (Number.isInteger(parsedMax) && parsedMax >= 1 && parsedMax <= 50) {
+      config.daily_digest_max_items = parsedMax;
+    }
+  }
+
+  const envSkipEmpty = parseBooleanFlag(env.KAJ_TELEGRAM_DAILY_DIGEST_SKIP_EMPTY);
+  if (envSkipEmpty !== undefined) {
+    config.daily_digest_skip_empty = envSkipEmpty;
   }
 
   return config;
@@ -333,6 +382,34 @@ export function saveTelegramConfig(
     const val = updates.notify_on_completion ? "true" : "false";
     env.KAJ_TELEGRAM_NOTIFY_COMPLETION = val;
     envUpdates.KAJ_TELEGRAM_NOTIFY_COMPLETION = val;
+  }
+  if (typeof updates.daily_digest_enabled === "boolean") {
+    const val = updates.daily_digest_enabled ? "true" : "false";
+    env.KAJ_TELEGRAM_DAILY_DIGEST_ENABLED = val;
+    envUpdates.KAJ_TELEGRAM_DAILY_DIGEST_ENABLED = val;
+  }
+  if (
+    typeof updates.daily_digest_time === "string" &&
+    /^([01]\d|2[0-3]):[0-5]\d$/.test(updates.daily_digest_time.trim())
+  ) {
+    const val = updates.daily_digest_time.trim();
+    env.KAJ_TELEGRAM_DAILY_DIGEST_TIME = val;
+    envUpdates.KAJ_TELEGRAM_DAILY_DIGEST_TIME = JSON.stringify(val);
+  }
+  if (
+    typeof updates.daily_digest_max_items === "number" &&
+    Number.isInteger(updates.daily_digest_max_items) &&
+    updates.daily_digest_max_items >= 1 &&
+    updates.daily_digest_max_items <= 50
+  ) {
+    const val = String(updates.daily_digest_max_items);
+    env.KAJ_TELEGRAM_DAILY_DIGEST_MAX_ITEMS = val;
+    envUpdates.KAJ_TELEGRAM_DAILY_DIGEST_MAX_ITEMS = val;
+  }
+  if (typeof updates.daily_digest_skip_empty === "boolean") {
+    const val = updates.daily_digest_skip_empty ? "true" : "false";
+    env.KAJ_TELEGRAM_DAILY_DIGEST_SKIP_EMPTY = val;
+    envUpdates.KAJ_TELEGRAM_DAILY_DIGEST_SKIP_EMPTY = val;
   }
 
   upsertEnvFileVars(targetEnvPath, envUpdates);

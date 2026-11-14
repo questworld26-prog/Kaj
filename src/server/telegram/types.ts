@@ -1,4 +1,6 @@
 // [spec: TG-001]
+// [spec: NOTIF-002]
+import type { DatabaseSync } from "node:sqlite";
 import type { TaskPriority, TaskStatus } from "../../shared/types.js";
 import type { TaskRepository, ProjectRepository } from "../repository.js";
 import type { EventBus } from "../events.js";
@@ -10,8 +12,25 @@ export interface TelegramConfig {
   user_names?: Record<string, string>;
   vip_users?: string[];
   notify_on_completion?: boolean;
+  daily_digest_enabled?: boolean;
+  daily_digest_time?: string;
+  daily_digest_max_items?: number;
+  daily_digest_skip_empty?: boolean;
   default_status: TaskStatus;
   poll_interval_ms: number;
+}
+
+export interface DailyDigestResult {
+  dispatched_count: number;
+  recipients: number[];
+  task_count: number;
+  skipped_reason?:
+    | "telegram_disabled"
+    | "digest_disabled"
+    | "before_time"
+    | "already_dispatched"
+    | "no_nonvip_recipients"
+    | "empty";
 }
 
 
@@ -70,5 +89,6 @@ export interface TelegramBotServiceOptions {
   taskRepo: TaskRepository;
   projectRepo: ProjectRepository;
   eventBus: EventBus;
+  db?: DatabaseSync;
   transport?: TelegramApiTransport;
 }

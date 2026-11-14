@@ -1,5 +1,7 @@
 // [spec: TG-001]
 // [spec: NOTIF-001]
+// [spec: NOTIF-002]
+import type { DatabaseSync } from "node:sqlite";
 import {
 
   Project,
@@ -18,6 +20,7 @@ import type {
   TelegramApiTransport,
   ParsedTelegramTask,
   TelegramBotServiceOptions,
+  DailyDigestResult,
 } from "./telegram/types.js";
 import {
   DEFAULT_CONFIG,
@@ -38,6 +41,12 @@ import {
   formatTaskCompletedNotification,
   formatTaskTriagedNotification,
 } from "./telegram/formatters.js";
+import {
+  dispatchDailyNonVipDigest,
+  isVipUser,
+  resolveNonVipRecipients,
+  selectDailyDigestTasks,
+} from "./telegram/digest.js";
 
 
 
@@ -50,6 +59,7 @@ export type {
   TelegramApiTransport,
   ParsedTelegramTask,
   TelegramBotServiceOptions,
+  DailyDigestResult,
 };
 export {
   resolveTelegramConfigPath,
@@ -57,22 +67,10 @@ export {
   saveTelegramConfig,
   parseTelegramTaskInput,
   createFetchTelegramTransport,
+  isVipUser,
+  resolveNonVipRecipients,
+  selectDailyDigestTasks,
 };
-
-
-// [spec: TG-001]
-// [spec: NOTIF-001]
-export function isVipUser(
-  creator: string | null | undefined,
-  vipUsers?: string[],
-): boolean {
-  if (!creator || !creator.trim()) return false;
-  const raw = creator.trim();
-  if (/\[vip\]|\(vip\)|\bvip\b/i.test(raw)) return true;
-  if (!vipUsers || vipUsers.length === 0) return false;
-  const lower = raw.toLowerCase();
-  return vipUsers.some((v) => v.toLowerCase() === lower);
-}
 
 // [spec: TG-001]
 // [spec: NOTIF-001]
@@ -122,18 +120,21 @@ export class TelegramBotService {
   private taskRepo: TaskRepository;
   private projectRepo: ProjectRepository;
   private eventBus: EventBus;
+  private db?: DatabaseSync;
   private transport: TelegramApiTransport;
   private running = false;
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
   private offset = 0;
   private eventUnsubscribe?: () => void;
   private inTelegramCompletedTaskIds = new Set<string>();
+  private memorySentDigestKeys = new Set<string>();
 
   constructor(options: TelegramBotServiceOptions) {
     this.config = options.config;
     this.taskRepo = options.taskRepo;
     this.projectRepo = options.projectRepo;
     this.eventBus = options.eventBus;
+    this.db = options.db;
     this.transport =
       options.transport || createFetchTelegramTransport(this.config.bot_token);
 
@@ -378,6 +379,22 @@ export class TelegramBotService {
         // Ignore background delivery errors
       }
     }
+  }
+
+  // [spec: NOTIF-002]
+  public async runDailyDigest(
+    options: { force?: boolean; now?: Date } = {},
+  ): Promise<DailyDigestResult> {
+    return dispatchDailyNonVipDigest({
+      config: this.config,
+      taskRepo: this.taskRepo,
+      projectRepo: this.projectRepo,
+      transport: this.transport,
+      db: this.db,
+      memorySentKeys: this.memorySentDigestKeys,
+      force: options.force,
+      now: options.now,
+    });
   }
 
   private scheduleNextPoll(): void {

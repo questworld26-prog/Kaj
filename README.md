@@ -196,6 +196,10 @@ npm run daemon:install
    KAJ_TELEGRAM_USER_NAMES='{"123456789":"Alex [VIP]"}'
    KAJ_TELEGRAM_DEFAULT_STATUS="triage"
    KAJ_TELEGRAM_POLL_INTERVAL_MS=2000
+   KAJ_TELEGRAM_DAILY_DIGEST_ENABLED=true
+   KAJ_TELEGRAM_DAILY_DIGEST_TIME="08:00"
+   KAJ_TELEGRAM_DAILY_DIGEST_MAX_ITEMS=15
+   KAJ_TELEGRAM_DAILY_DIGEST_SKIP_EMPTY=true
    ```
 4. Control the bot via CLI:
    ```bash
@@ -203,6 +207,8 @@ npm run daemon:install
    npm run telegram:off     # Disable bot
    npm run telegram:status  # Check bot status
    ```
+
+   **Daily Non-VIP Task Digest (`NOTIF-002`)**: When `KAJ_TELEGRAM_DAILY_DIGEST_ENABLED=true`, Kaj sends each non-VIP allowed user a brief numbered Telegram list once per calendar day at `KAJ_TELEGRAM_DAILY_DIGEST_TIME` (default `"08:00"` local time, with sleep-safe catch-up persisted in SQLite). Tasks are drawn from active `in_progress_today` (In Progress Today) items, ordered with `action_date === today` at top (capped via `KAJ_TELEGRAM_DAILY_DIGEST_MAX_ITEMS=15`), and skipped on empty days when `KAJ_TELEGRAM_DAILY_DIGEST_SKIP_EMPTY=true`. Trigger manually via `POST /api/telegram/daily-digest`.
 
 ---
 
@@ -379,8 +385,9 @@ npm run audit:specs
 │   │   │   ├── service.ts          # Daily backup runner, 7-day pruning, pathless alerts
 │   │   │   ├── recover.ts          # Staged decryption, integrity/schema checks, atomic swap
 │   │   │   └── recover-cli.ts      # CLI recovery command (npm run recover)
-│   │   ├── telegram/               # Telegram parser, HTTP transport, config, and formatters
+│   │   ├── telegram/               # Telegram parser, transport, config, formatters, and daily digest
 │   │   │   ├── config.ts
+│   │   │   ├── digest.ts
 │   │   │   ├── formatters.ts
 │   │   │   ├── parser.ts
 │   │   │   ├── transport.ts

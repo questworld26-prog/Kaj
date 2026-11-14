@@ -8,7 +8,8 @@ import os from "node:os";
 import { fileURLToPath } from "node:url";
 
 // [spec: TASK-010]
-export const LATEST_SCHEMA_VERSION = 2;
+// [spec: NOTIF-002]
+export const LATEST_SCHEMA_VERSION = 3;
 
 /**
  * Load environment variables from `.env` if present (cwd first, then project root).
@@ -134,6 +135,12 @@ export function migrateDatabaseSchema(
         ensureTelemetrySnapshotTableAndIndex(db);
       },
     },
+    {
+      version: 3,
+      up: () => {
+        ensureTelegramDigestDispatchTable(db);
+      },
+    },
   ];
 
   db.exec("BEGIN IMMEDIATE;");
@@ -199,6 +206,7 @@ function ensureBaseTablesAndIndices(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_projects_sort_order ON projects(sort_order);
   `);
   ensureTelemetrySnapshotTableAndIndex(db);
+  ensureTelegramDigestDispatchTable(db);
 }
 
 // [spec: TASK-010]
@@ -213,6 +221,16 @@ function ensureTelemetrySnapshotTableAndIndex(db: DatabaseSync): void {
       completed_count INTEGER NOT NULL DEFAULT 0,
       updated_at TEXT NOT NULL,
       PRIMARY KEY (iso_week, project_key, creator_key)
+    );
+  `);
+}
+
+// [spec: NOTIF-002]
+function ensureTelegramDigestDispatchTable(db: DatabaseSync): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS telegram_digest_dispatches (
+      digest_key TEXT PRIMARY KEY,
+      sent_at TEXT NOT NULL
     );
   `);
 }
