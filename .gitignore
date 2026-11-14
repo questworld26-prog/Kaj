@@ -13,7 +13,6 @@ playwright-report/
 .env
 .env.*
 !.env.example
-telegram.config.json
 *.pem
 *.key
 *.cert
@@ -37,7 +36,8 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
 .gemini/
 .claude/
 .cursor/

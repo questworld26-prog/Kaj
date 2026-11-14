@@ -134,7 +134,7 @@ async function startDaemon() {
       const tgStatus = telegramBot.isRunning()
         ? "ACTIVE (polling)"
         : telegramConfig.enabled
-          ? "ENABLED (missing bot_token in telegram.config.json)"
+          ? "ENABLED (missing KAJ_TELEGRAM_BOT_TOKEN in .env)"
           : "DISABLED (flag off)";
       console.log(`
 ╔═════════════════════════════════════════════════════════════════╗

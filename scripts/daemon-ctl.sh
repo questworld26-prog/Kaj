@@ -124,40 +124,45 @@ show_logs() {
   tail -n 30 -f "${LOG_FILE}"
 }
 
-ensure_telegram_config() {
-  local cfg="${PROJECT_DIR}/telegram.config.json"
-  local ex="${PROJECT_DIR}/telegram.config.example.json"
-  if [ ! -f "$cfg" ] && [ -f "$ex" ]; then
-    cp "$ex" "$cfg"
+ensure_telegram_env() {
+  local env_file="${PROJECT_DIR}/.env"
+  local ex_file="${PROJECT_DIR}/.env.example"
+  if [ ! -f "$env_file" ] && [ -f "$ex_file" ]; then
+    cp "$ex_file" "$env_file"
+  elif [ ! -f "$env_file" ]; then
+    touch "$env_file"
   fi
 }
 
 toggle_telegram() {
   local state="$1"
-  ensure_telegram_config
-  local cfg="${PROJECT_DIR}/telegram.config.json"
+  ensure_telegram_env
+  local env_file="${PROJECT_DIR}/.env"
   "${NODE_BIN}" -e '
     const fs = require("fs");
     const file = process.argv[1];
-    const enabled = process.argv[2] === "true";
-    let data = {
-      enabled: false,
-      bot_token: "YOUR_TELEGRAM_BOT_TOKEN",
-      allowed_user_ids: [],
-      default_status: "triage",
-      poll_interval_ms: 2000
-    };
-    if (fs.existsSync(file)) {
-      try { data = { ...data, ...JSON.parse(fs.readFileSync(file, "utf8")) }; } catch {}
+    const enabled = process.argv[2] === "true" ? "true" : "false";
+    const raw = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
+    const lines = raw.length ? raw.split(/\r?\n/) : [];
+    let replaced = false;
+    const next = lines.map((line) => {
+      if (/^\s*(?:export\s+)?KAJ_TELEGRAM_ENABLED\s*=/.test(line)) {
+        replaced = true;
+        return "KAJ_TELEGRAM_ENABLED=" + enabled;
+      }
+      return line;
+    });
+    if (!replaced) {
+      if (next.length && next[next.length - 1].trim() !== "") next.push("");
+      next.push("KAJ_TELEGRAM_ENABLED=" + enabled);
     }
-    data.enabled = enabled;
-    fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8");
-  ' "$cfg" "$state"
+    fs.writeFileSync(file, next.join("\n").replace(/\n*$/, "\n"), "utf8");
+  ' "$env_file" "$state"
 
   if [ "$state" = "true" ]; then
-    echo "✅ Telegram bot feature flag set to ENABLED in telegram.config.json"
+    echo "✅ Telegram bot feature flag set to ENABLED in .env"
   else
-    echo "🛑 Telegram bot feature flag set to DISABLED in telegram.config.json"
+    echo "🛑 Telegram bot feature flag set to DISABLED in .env"
   fi
 
   # If daemon is running, notify runtime toggle endpoint or restart
@@ -170,8 +175,8 @@ toggle_telegram() {
 }
 
 telegram_status() {
-  ensure_telegram_config
-  local cfg="${PROJECT_DIR}/telegram.config.json"
+  ensure_telegram_env
+  local env_file="${PROJECT_DIR}/.env"
   echo "🤖 Telegram Bot Integration Status:"
   "${NODE_BIN}" -e '
     const fs = require("fs");
@@ -180,14 +185,19 @@ telegram_status() {
       console.log("   Config File: Not found");
       process.exit(0);
     }
-    const data = JSON.parse(fs.readFileSync(file, "utf8"));
-    const hasToken = Boolean(data.bot_token && data.bot_token !== "YOUR_TELEGRAM_BOT_TOKEN");
+    process.loadEnvFile(file);
+    const enabledVal = (process.env.KAJ_TELEGRAM_ENABLED || "false").trim().toLowerCase();
+    const enabled = enabledVal === "true" || enabledVal === "1" || enabledVal === "on";
+    const token = (process.env.KAJ_TELEGRAM_BOT_TOKEN || "").trim();
+    const hasToken = Boolean(token && token !== "your_telegram_bot_token" && token !== "YOUR_TELEGRAM_BOT_TOKEN");
+    const allowed = (process.env.KAJ_TELEGRAM_ALLOWED_USER_IDS || "").trim();
+    const defaultStatus = (process.env.KAJ_TELEGRAM_DEFAULT_STATUS || "triage").trim();
     console.log("   Config File:      " + file);
-    console.log("   Feature Flag:     " + (data.enabled ? "ON (enabled: true)" : "OFF (enabled: false)"));
-    console.log("   Bot Token Set:    " + (hasToken ? "Yes (configured)" : "No (edit telegram.config.json)"));
-    console.log("   Allowed User IDs: " + (Array.isArray(data.allowed_user_ids) && data.allowed_user_ids.length ? data.allowed_user_ids.join(", ") : "Any (recommend adding your ID)"));
-    console.log("   Default Status:   " + (data.default_status || "triage"));
-  ' "$cfg"
+    console.log("   Feature Flag:     " + (enabled ? "ON (enabled: true)" : "OFF (enabled: false)"));
+    console.log("   Bot Token Set:    " + (hasToken ? "Yes (configured)" : "No (edit .env)"));
+    console.log("   Allowed User IDs: " + (allowed || "Any (recommend adding your ID)"));
+    console.log("   Default Status:   " + defaultStatus);
+  ' "$env_file"
   if curl -s http://127.0.0.1:4820/api/telegram/status > /dev/null 2>&1; then
     LIVE=$(curl -s http://127.0.0.1:4820/api/telegram/status)
     echo "   Live Daemon:      ${LIVE}"

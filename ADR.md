@@ -364,7 +364,7 @@ Users frequently want fast mobile capture, quick task searches, VIP triage alert
 
 ### Considered Options
 
-1. **In-Daemon Deterministic Long-Polling Service**: Integrate long-polling directly in the Node daemon using deterministic token parsing (`#Project`, `!priority`, `@DD-MM`, `due:DD-MM-YYYY`, `wait:note`), inline reply buttons, and creator/VIP attribution from `telegram.config.json`.
+1. **In-Daemon Deterministic Long-Polling Service**: Integrate long-polling directly in the Node daemon using deterministic token parsing (`#Project`, `!priority`, `@DD-MM`, `due:DD-MM-YYYY`, `wait:note`), inline reply buttons, and creator/VIP attribution from `.env` (`KAJ_TELEGRAM_USER_NAMES` / optional JSON fallback).
 2. **External LLM Webhook Agent**: Flexible natural language parsing, but requires external API latency/tokens or multi-gigabyte local models.
 3. **Separate Webhook Bot Process**: Requires public HTTPS tunnel (ngrok/Cloudflare) and adds deployment complexity.
 

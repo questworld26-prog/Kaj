@@ -1,5 +1,5 @@
 {
-  "last_audited_at": "2026-11-14T06:33:18.069064+00:00",
+  "last_audited_at": "2026-11-14T06:42:10.289190+00:00",
   "total_requirements": 30,
   "active_requirements_count": 30,
   "planned_requirements_count": 0,
@@ -467,8 +467,8 @@
       "title": "Configurable Deterministic Telegram Bot for Task Creation, Search, and Quick Actions",
       "spec_file": "specs/telegram.md",
       "is_planned": false,
-      "sha256": "c36438594e4609f608929aa2792c3f9c39ad1fc9d1e7cb129828f60814a73e6e",
-      "verified_sha256": "c36438594e4609f608929aa2792c3f9c39ad1fc9d1e7cb129828f60814a73e6e",
+      "sha256": "e58db9cb3da8e7f2203af0ec4349c204ec29d7f67045ee738f78ad20af3790b6",
+      "verified_sha256": "e58db9cb3da8e7f2203af0ec4349c204ec29d7f67045ee738f78ad20af3790b6",
       "acceptance_criteria": [
         "AC-TG-001.1",
         "AC-TG-001.2",

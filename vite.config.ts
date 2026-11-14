@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import preact from "@preact/preset-vite";
 
 export default defineConfig({
@@ -14,5 +14,10 @@ export default defineConfig({
       "/mcp": "http://127.0.0.1:4820",
       "/events": "http://127.0.0.1:4820",
     },
+  },
+  test: {
+    environment: "node",
+    include: ["tests/unit/**/*.test.ts", "tests/integration/**/*.test.ts"],
+    globals: true,
   },
 });

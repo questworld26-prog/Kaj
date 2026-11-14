@@ -1,0 +1,8 @@
+{
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "package.json": "package-lock.json, tsconfig.json, tsconfig.*.json, vite.config.*, playwright.config.*, tailwind.config.*, postcss.config.*, .prettierignore, .gitignore, .env, .env.*",
+    "README.md": "ADR.md, AGENTS.md, LICENSE, release.md"
+  }
+}

@@ -84,7 +84,7 @@ Kaj runs as an always-on background daemon consuming only **~56–95 MB RSS**, u
   - `/add Implement OAuth #Auth !today @tomorrow due:2026-11-15 wait:DevOps`
   - Quick commands: `/today`, `/search <query>`, `/add <text>`, `/help`.
   - Inline buttons for instant 1-tap `✓ Done` completion and status changes.
-  - Automatic creator attribution (`created_by`) mapped to friendly user names via `telegram.config.json`.
+  - Automatic creator attribution (`created_by`) mapped to friendly user names via `KAJ_TELEGRAM_USER_NAMES` in `.env`.
 
 ---
 
@@ -186,23 +186,16 @@ npm run daemon:install
 
 ## Telegram Bot Setup (Optional)
 
-1. Copy the example configuration:
-   ```bash
-   cp telegram.config.example.json telegram.config.json
-   ```
+1. Ensure `.env` exists in the repository root (`cp .env.example .env`).
 2. Message `@BotFather` on Telegram to create a bot and get an API token.
-3. Edit `telegram.config.json`:
-   ```json
-   {
-     "enabled": true,
-     "bot_token": "YOUR_TELEGRAM_BOT_TOKEN",
-     "allowed_user_ids": [123456789],
-     "user_names": {
-       "123456789": "Alex"
-     },
-     "default_status": "triage",
-     "poll_interval_ms": 2000
-   }
+3. Add or uncomment the `KAJ_TELEGRAM_*` variables in `.env`:
+   ```env
+   KAJ_TELEGRAM_ENABLED=true
+   KAJ_TELEGRAM_BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
+   KAJ_TELEGRAM_ALLOWED_USER_IDS="123456789"
+   KAJ_TELEGRAM_USER_NAMES='{"123456789":"Alex [VIP]"}'
+   KAJ_TELEGRAM_DEFAULT_STATUS="triage"
+   KAJ_TELEGRAM_POLL_INTERVAL_MS=2000
    ```
 4. Control the bot via CLI:
    ```bash

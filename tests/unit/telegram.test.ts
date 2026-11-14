@@ -14,6 +14,7 @@ import {
 import { EventBus } from "../../src/server/events.js";
 import {
   loadTelegramConfig,
+  saveTelegramConfig,
   parseTelegramTaskInput,
   TelegramBotService,
   type TelegramApiTransport,
@@ -69,6 +70,50 @@ describe("Telegram Bot Integration (TG-001)", () => {
     );
     const cfg3 = loadTelegramConfig(cfgPath, { KAJ_TELEGRAM_ENABLED: "false" });
     expect(cfg3.enabled).toBe(false);
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  // [verifies: TG-001/AC-TG-001.1]
+  it("loads all Telegram settings from .env variables without a JSON file and persists toggle updates to .env", () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "kaj-tg-env-"));
+    const nonExistentJson = path.join(tmpDir, "missing-telegram.config.json");
+    const envFile = path.join(tmpDir, ".env");
+    fs.writeFileSync(
+      envFile,
+      'KAJ_TELEGRAM_ENABLED=false\nKAJ_TELEGRAM_BOT_TOKEN="999:ENV-TOKEN"\n',
+      "utf-8",
+    );
+
+    const testEnv: NodeJS.ProcessEnv = {
+      KAJ_TELEGRAM_ENABLED: "true",
+      KAJ_TELEGRAM_BOT_TOKEN: "999:ENV-TOKEN",
+      KAJ_TELEGRAM_ALLOWED_USER_IDS: "101, 202",
+      KAJ_TELEGRAM_DEFAULT_STATUS: "todo",
+      KAJ_TELEGRAM_POLL_INTERVAL_MS: "3500",
+      KAJ_TELEGRAM_NOTIFY_COMPLETION: "false",
+    };
+
+    const cfg = loadTelegramConfig(nonExistentJson, testEnv);
+    expect(cfg.enabled).toBe(true);
+    expect(cfg.bot_token).toBe("999:ENV-TOKEN");
+    expect(cfg.allowed_user_ids).toEqual([101, 202]);
+    expect(cfg.default_status).toBe("todo");
+    expect(cfg.poll_interval_ms).toBe(3500);
+    expect(cfg.notify_on_completion).toBe(false);
+
+    // Toggle off via saveTelegramConfig targeting .env (no JSON file created)
+    const updated = saveTelegramConfig(
+      { enabled: false },
+      undefined,
+      testEnv,
+      envFile,
+    );
+    expect(updated.enabled).toBe(false);
+    expect(testEnv.KAJ_TELEGRAM_ENABLED).toBe("false");
+    const envContents = fs.readFileSync(envFile, "utf-8");
+    expect(envContents).toContain("KAJ_TELEGRAM_ENABLED=false");
+    expect(fs.existsSync(nonExistentJson)).toBe(false);
 
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
@@ -417,7 +462,7 @@ describe("Telegram Bot Integration (TG-001)", () => {
       "utf-8",
     );
 
-    const cfg = loadTelegramConfig(cfgPath);
+    const cfg = loadTelegramConfig(cfgPath, {});
     expect(cfg.user_names).toEqual({
       "111222333": "Alex",
       "444555666": "Sam",
@@ -526,7 +571,7 @@ describe("Telegram Bot Integration (TG-001)", () => {
       "utf-8",
     );
 
-    const cfg = loadTelegramConfig(cfgPath);
+    const cfg = loadTelegramConfig(cfgPath, {});
     expect(cfg.user_names).toEqual({
       "111": "Oblix",
       "222": "Asterix",
@@ -535,6 +580,55 @@ describe("Telegram Bot Integration (TG-001)", () => {
     expect(cfg.vip_users).toEqual(
       expect.arrayContaining(["Oblix", "Asterix", "111", "222"]),
     );
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  // [verifies: TG-001/AC-TG-001.7]
+  it("supports KAJ_TELEGRAM_USER_NAMES dictionary from environment variables without JSON file", () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "kaj-tg-env-names-"));
+    const missingCfg = path.join(tmpDir, "none.json");
+
+    const cfg = loadTelegramConfig(missingCfg, {
+      KAJ_TELEGRAM_ENABLED: "true",
+      KAJ_TELEGRAM_BOT_TOKEN: "123:ABC",
+      KAJ_TELEGRAM_USER_NAMES: JSON.stringify({
+        "111222333": "Alex",
+        "444555666": "Sam",
+      }),
+    });
+
+    expect(cfg.user_names).toEqual({
+      "111222333": "Alex",
+      "444555666": "Sam",
+    });
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  // [verifies: TG-001/AC-TG-001.8]
+  it("supports VIP designations from KAJ_TELEGRAM_USER_NAMES and KAJ_TELEGRAM_VIP_USERS env vars", () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "kaj-tg-env-vip-"));
+    const missingCfg = path.join(tmpDir, "none.json");
+
+    const cfg = loadTelegramConfig(missingCfg, {
+      KAJ_TELEGRAM_ENABLED: "true",
+      KAJ_TELEGRAM_BOT_TOKEN: "123:VIP",
+      KAJ_TELEGRAM_USER_NAMES: JSON.stringify({
+        "111": "Oblix [VIP]",
+        "222": { name: "Asterix", vip: true },
+        "333": "Panoramix",
+      }),
+      KAJ_TELEGRAM_VIP_USERS: "ChiefVIP, 999",
+    });
+
+    expect(cfg.user_names).toEqual({
+      "111": "Oblix",
+      "222": "Asterix",
+      "333": "Panoramix",
+    });
+    expect(cfg.vip_users).toEqual(
+      expect.arrayContaining(["Oblix", "Asterix", "111", "222", "ChiefVIP", "999"]),
+    );
+    fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
   // [verifies: NOTIF-001/AC-NOTIF-001.1]
