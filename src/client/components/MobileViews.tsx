@@ -1,5 +1,6 @@
 // [spec: UI-006]
 // [spec: UI-008]
+// [spec: UI-011]
 import { h } from "preact";
 import { useState, useMemo, useRef } from "preact/hooks";
 import type {
@@ -48,6 +49,9 @@ interface MobileViewsProps {
   onOpenReorderModal: () => void;
   onCreateTaskOnDate?: (dateStr: string) => void;
   onCreateTaskInColumn?: (status: TaskStatus, projectId: string | null) => void;
+  hideRepeatingTriage?: boolean;
+  hiddenRepeatingTriageCount?: number;
+  onToggleHideRepeatingTriage?: () => void;
 }
 
 export function MobileViews({
@@ -69,6 +73,9 @@ export function MobileViews({
   onOpenReorderModal,
   onCreateTaskOnDate,
   onCreateTaskInColumn,
+  hideRepeatingTriage = false,
+  hiddenRepeatingTriageCount = 0,
+  onToggleHideRepeatingTriage,
 }: MobileViewsProps) {
   // Action sheet state
   const [actionSheetTask, setActionSheetTask] = useState<Task | null>(null);
@@ -165,6 +172,9 @@ export function MobileViews({
           onReorderProjects={onReorderProjects}
           onOpenReorderModal={onOpenReorderModal}
           onCreateTaskInColumn={onCreateTaskInColumn}
+          hideRepeatingTriage={hideRepeatingTriage}
+          hiddenRepeatingTriageCount={hiddenRepeatingTriageCount}
+          onToggleHideRepeatingTriage={onToggleHideRepeatingTriage}
         />
       )}
 
@@ -204,6 +214,9 @@ export function MobileViews({
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
+          hideRepeatingTriage={hideRepeatingTriage}
+          hiddenRepeatingTriageCount={hiddenRepeatingTriageCount}
+          onToggleHideRepeatingTriage={onToggleHideRepeatingTriage}
         />
       )}
 

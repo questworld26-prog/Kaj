@@ -1,10 +1,16 @@
 // [spec: UI-006]
 // [spec: UI-008]
+// [spec: UI-011]
 import { h } from "preact";
 import { useState } from "preact/hooks";
-import type { Task, Project } from "../../../shared/types.js";
+import {
+  shouldShowTaskInBoardOrTriage,
+  type Task,
+  type Project,
+} from "../../../shared/types.js";
 import type { CardDensity } from "../TopBar.js";
 import { MobileTaskCard } from "./MobileTaskCard.js";
+import { RepeatingTriageToggle } from "../RepeatingTriageToggle.js";
 
 interface MobileTriageTabProps {
   tasks: Task[];
@@ -20,6 +26,9 @@ interface MobileTriageTabProps {
   onTouchStart: (taskId: string, e: TouchEvent | MouseEvent) => void;
   onTouchMove: (taskId: string, e: TouchEvent | MouseEvent) => void;
   onTouchEnd: (taskId: string) => void;
+  hideRepeatingTriage?: boolean;
+  hiddenRepeatingTriageCount?: number;
+  onToggleHideRepeatingTriage?: () => void;
 }
 
 export function MobileTriageTab({
@@ -36,6 +45,9 @@ export function MobileTriageTab({
   onTouchStart,
   onTouchMove,
   onTouchEnd,
+  hideRepeatingTriage = false,
+  hiddenRepeatingTriageCount = 0,
+  onToggleHideRepeatingTriage,
 }: MobileTriageTabProps) {
   const [triageSubTab, setTriageSubTab] = useState<"queue" | "archive">(
     "queue",
@@ -59,7 +71,9 @@ export function MobileTriageTab({
   );
 
   const queueTasks = tasks.filter(
-    (t) => t.status === "triage" || t.status === "todo",
+    (t) =>
+      (t.status === "triage" || t.status === "todo") &&
+      shouldShowTaskInBoardOrTriage(t, hideRepeatingTriage),
   );
 
   return (
@@ -95,6 +109,19 @@ export function MobileTriageTab({
 
       {triageSubTab === "queue" ? (
         <div className="space-y-2">
+          {onToggleHideRepeatingTriage && (
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] text-gray-400">
+                Filter across all projects
+              </span>
+              <RepeatingTriageToggle
+                hideRepeatingTriage={hideRepeatingTriage}
+                hiddenCount={hiddenRepeatingTriageCount}
+                onToggle={onToggleHideRepeatingTriage}
+                testId="mobile-hide-repeating-triage-toggle"
+              />
+            </div>
+          )}
           {queueTasks.length === 0 ? (
             <div className="text-xs text-gray-400 italic py-6 text-center">
               Inbox zero! No tasks awaiting triage or todo.

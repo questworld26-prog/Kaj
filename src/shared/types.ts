@@ -281,3 +281,18 @@ export function getTaskCardSurfaceClasses(
     ? "bg-[#4A1215] border-red-500/70"
     : `bg-[#1C2224] ${normalBorderClass}`;
 }
+
+export const HIDE_REPEATING_TRIAGE_STORAGE_KEY = "kaj_hide_repeating_triage";
+
+/**
+ * Determine whether a task should be visible in Board/Triage/Pods surfaces when
+ * hiding recurring triage items globally across all projects and unassigned inbox.
+ */
+// [spec: UI-011]
+export function shouldShowTaskInBoardOrTriage(
+  task: Pick<Task, "status" | "repeat_rule"> & { project_id?: string | null },
+  hideRepeatingTriage: boolean,
+): boolean {
+  if (!hideRepeatingTriage) return true;
+  return !(task.status === "triage" && task.repeat_rule !== "none");
+}

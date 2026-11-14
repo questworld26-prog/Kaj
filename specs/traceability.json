@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-13T11:39:36.880748+00:00",
-  "total_requirements": 28,
-  "active_requirements_count": 28,
+  "last_audited_at": "2026-11-14T05:10:02.524783+00:00",
+  "total_requirements": 29,
+  "active_requirements_count": 29,
   "planned_requirements_count": 0,
-  "active_criteria_count": 128,
-  "verified_criteria_count": 128,
+  "active_criteria_count": 132,
+  "verified_criteria_count": 132,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -801,6 +801,38 @@
         "src/client/components/SwimlaneBoard.tsx",
         "src/client/components/cockpit/CockpitExecutionDeck.tsx",
         "src/client/components/mobile/MobileTaskCard.tsx",
+        "src/shared/types.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "UI-011",
+      "title": "Global Repeating Triage Visibility Toggle Across All Projects",
+      "spec_file": "specs/ui.md",
+      "is_planned": false,
+      "sha256": "27fdeb5264587762f89d4a52f152bea044425b639d896fb00815ab2aa58ace52",
+      "verified_sha256": "27fdeb5264587762f89d4a52f152bea044425b639d896fb00815ab2aa58ace52",
+      "acceptance_criteria": [
+        "AC-UI-011.1",
+        "AC-UI-011.2",
+        "AC-UI-011.3",
+        "AC-UI-011.4"
+      ],
+      "verified_criteria": [
+        "AC-UI-011.1",
+        "AC-UI-011.2",
+        "AC-UI-011.3",
+        "AC-UI-011.4"
+      ],
+      "implementation_files": [
+        "src/client/App.tsx",
+        "src/client/components/DesktopCockpit.tsx",
+        "src/client/components/MobileViews.tsx",
+        "src/client/components/RepeatingTriageToggle.tsx",
+        "src/client/components/SwimlaneBoard.tsx",
+        "src/client/components/cockpit/CockpitExecutionDeck.tsx",
+        "src/client/components/mobile/MobilePodsTab.tsx",
+        "src/client/components/mobile/MobileTriageTab.tsx",
         "src/shared/types.ts"
       ],
       "status": "VERIFIED"

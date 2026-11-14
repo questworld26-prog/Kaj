@@ -1,5 +1,6 @@
 // [spec: UI-006]
 // [spec: UI-008]
+// [spec: UI-011]
 import { h } from "preact";
 import { useState } from "preact/hooks";
 import type {
@@ -11,6 +12,7 @@ import type {
 import type { CardDensity } from "../TopBar.js";
 import { MobileTaskCard } from "./MobileTaskCard.js";
 import { STATUS_LABELS } from "./types.js";
+import { RepeatingTriageToggle } from "../RepeatingTriageToggle.js";
 
 interface MobilePodsTabProps {
   swimlanes: SwimlaneGroup[];
@@ -28,6 +30,9 @@ interface MobilePodsTabProps {
   onReorderProjects: (projectIds: string[]) => void;
   onOpenReorderModal: () => void;
   onCreateTaskInColumn?: (status: TaskStatus, projectId: string | null) => void;
+  hideRepeatingTriage?: boolean;
+  hiddenRepeatingTriageCount?: number;
+  onToggleHideRepeatingTriage?: () => void;
 }
 
 export function MobilePodsTab({
@@ -46,6 +51,9 @@ export function MobilePodsTab({
   onReorderProjects,
   onOpenReorderModal,
   onCreateTaskInColumn,
+  hideRepeatingTriage = false,
+  hiddenRepeatingTriageCount = 0,
+  onToggleHideRepeatingTriage,
 }: MobilePodsTabProps) {
   const [selectedProjectId, setSelectedProjectId] = useState<string | "all">(
     "all",
@@ -135,6 +143,20 @@ export function MobilePodsTab({
           ⇅ Reorder
         </button>
       </div>
+
+      {onToggleHideRepeatingTriage && (
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] text-gray-400">
+            All project triage lanes
+          </span>
+          <RepeatingTriageToggle
+            hideRepeatingTriage={hideRepeatingTriage}
+            hiddenCount={hiddenRepeatingTriageCount}
+            onToggle={onToggleHideRepeatingTriage}
+            testId="mobile-pods-hide-repeating-triage-toggle"
+          />
+        </div>
+      )}
 
       {/* Project Swimlane Pods */}
       <div className="space-y-3">

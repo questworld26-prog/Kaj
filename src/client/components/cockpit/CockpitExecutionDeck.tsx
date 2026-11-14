@@ -1,5 +1,6 @@
 // [spec: UI-009]
 // [spec: UI-010]
+// [spec: UI-011]
 import { h } from "preact";
 import {
   type Task,
@@ -9,6 +10,7 @@ import {
   getTaskCardSurfaceClasses,
 } from "../../../shared/types.js";
 import { PRIORITY_STYLES } from "./types.js";
+import { RepeatingTriageToggle } from "../RepeatingTriageToggle.js";
 
 interface CockpitExecutionDeckProps {
   vipTriageTasks?: Task[];
@@ -16,6 +18,9 @@ interface CockpitExecutionDeckProps {
   trackingTasks: Task[];
   upcomingTasks: Task[];
   projectMap: Map<string, Project>;
+  hideRepeatingTriage?: boolean;
+  hiddenRepeatingTriageCount?: number;
+  onToggleHideRepeatingTriage?: () => void;
   onSelectTask: (task: Task) => void;
   onCompleteTask: (taskId: string) => void;
   onUpdateTaskStatus: (taskId: string, newStatus: TaskStatus) => void;
@@ -28,6 +33,9 @@ export function CockpitExecutionDeck({
   trackingTasks,
   upcomingTasks,
   projectMap,
+  hideRepeatingTriage = false,
+  hiddenRepeatingTriageCount = 0,
+  onToggleHideRepeatingTriage,
   onSelectTask,
   onCompleteTask,
   onUpdateTaskStatus,
@@ -50,9 +58,19 @@ export function CockpitExecutionDeck({
               {vipTriageTasks.length === 1 ? "Task" : "Tasks"}
             </span>
           </div>
-          <span className="text-[11px] text-purple-300/70 font-medium">
-            Unassigned Triage
-          </span>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {onToggleHideRepeatingTriage && (
+              <RepeatingTriageToggle
+                hideRepeatingTriage={hideRepeatingTriage}
+                hiddenCount={hiddenRepeatingTriageCount}
+                onToggle={onToggleHideRepeatingTriage}
+                testId="cockpit-hide-repeating-triage-toggle"
+              />
+            )}
+            <span className="text-[11px] text-purple-300/70 font-medium">
+              Unassigned Triage
+            </span>
+          </div>
         </div>
 
         <div className="space-y-2.5">

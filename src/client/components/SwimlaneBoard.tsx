@@ -2,6 +2,7 @@
 // [spec: UI-002]
 // [spec: UI-005]
 // [spec: UI-010]
+// [spec: UI-011]
 // [spec: TASK-006]
 import { h } from "preact";
 import { useState } from "preact/hooks";
@@ -13,10 +14,14 @@ import {
   isActionDateToday,
 } from "../../shared/types.js";
 import type { CardDensity } from "./TopBar.js";
+import { RepeatingTriageToggle } from "./RepeatingTriageToggle.js";
 
 interface SwimlaneBoardProps {
   swimlanes: SwimlaneGroup[];
   density?: CardDensity;
+  hideRepeatingTriage?: boolean;
+  hiddenRepeatingTriageCount?: number;
+  onToggleHideRepeatingTriage?: () => void;
   onSelectTask: (task: Task) => void;
   onUpdateTaskStatus: (taskId: string, newStatus: TaskStatus) => void;
   onMoveTask?: (
@@ -65,6 +70,9 @@ const PRIORITY_STYLES: Record<string, { label: string; badge: string }> = {
 export function SwimlaneBoard({
   swimlanes,
   density = "compact",
+  hideRepeatingTriage = false,
+  hiddenRepeatingTriageCount = 0,
+  onToggleHideRepeatingTriage,
   onSelectTask,
   onUpdateTaskStatus,
   onMoveTask,
@@ -505,9 +513,19 @@ export function SwimlaneBoard({
         {/* Triage */}
         <div
           data-testid="column-header"
-          className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#121718] border border-[#2A3235]"
+          className="flex items-center justify-between gap-1.5 px-3 py-1.5 rounded-lg bg-[#121718] border border-[#2A3235]"
         >
           <span className="text-xs font-semibold text-gray-200">Triage</span>
+          {onToggleHideRepeatingTriage && (
+            <RepeatingTriageToggle
+              hideRepeatingTriage={hideRepeatingTriage}
+              hiddenCount={hiddenRepeatingTriageCount}
+              onToggle={onToggleHideRepeatingTriage}
+              testId="hide-repeating-triage-toggle"
+              countTestId="hidden-repeating-triage-count"
+              compact
+            />
+          )}
         </div>
 
         {/* Todo */}

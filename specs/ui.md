@@ -126,6 +126,16 @@ Acceptance Criteria:
 - AC-UI-010.3: On any red-highlighted today-action task card, primary and secondary text foreground colors shall maintain a minimum WCAG contrast ratio of 4.5:1 against the red card background.
 - AC-UI-010.4: When a task has no action date or an action date different from today's local calendar date, the card shall retain the standard Chronos card surface background (`#1C2224`).
 
+## UI-011: Global Repeating Triage Visibility Toggle Across All Projects
+
+When the repeating-triage visibility toggle is enabled, the system shall hide recurring tasks in status `triage` across every project swimlane and the unassigned inbox while keeping non-repeating `triage` tasks, other workflow columns, and calendar views visible.
+
+Acceptance Criteria:
+- AC-UI-011.1: The system shall render an accessible toggle button with pressed-state semantics in the sticky Triage column header on desktop and in the mobile triage and pods views.
+- AC-UI-011.2: When the repeating-triage toggle is enabled, the system shall hide every task in status `triage` with a repeat rule other than `none` across all project swimlanes and the unassigned inbox while retaining non-repeating `triage` tasks.
+- AC-UI-011.3: While the repeating-triage toggle is enabled, the system shall keep recurring tasks in `todo`, In Progress (Today, This Week, and This Month), `tracking`, and Calendar views visible.
+- AC-UI-011.4: When the repeating-triage toggle is switched on or off, the system shall persist the active preference in browser local storage across page reloads and immediately restore hidden recurring `triage` tasks when disabled.
+
 
 
 

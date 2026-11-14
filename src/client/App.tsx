@@ -5,14 +5,17 @@
 // [spec: UI-006]
 // [spec: UI-007]
 // [spec: UI-009]
+// [spec: UI-011]
 import { h } from "preact";
 import { useState, useEffect, useCallback, useMemo } from "preact/hooks";
-import type {
-  Task,
-  Project,
-  SwimlaneGroup,
-  CalendarEvent,
-  TaskStatus,
+import {
+  HIDE_REPEATING_TRIAGE_STORAGE_KEY,
+  shouldShowTaskInBoardOrTriage,
+  type Task,
+  type Project,
+  type SwimlaneGroup,
+  type CalendarEvent,
+  type TaskStatus,
 } from "../shared/types.js";
 import * as api from "./api.js";
 import { TopBar, type CardDensity } from "./components/TopBar.js";
@@ -49,6 +52,17 @@ export function App() {
     }
     return "compact";
   });
+
+  const [hideRepeatingTriage, setHideRepeatingTriage] = useState<boolean>(
+    () => {
+      if (typeof window !== "undefined") {
+        return (
+          localStorage.getItem(HIDE_REPEATING_TRIAGE_STORAGE_KEY) === "true"
+        );
+      }
+      return false;
+    },
+  );
   const [projects, setProjects] = useState<Project[]>([]);
   const [swimlanes, setSwimlanes] = useState<SwimlaneGroup[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -326,6 +340,16 @@ export function App() {
     }
   };
 
+  const handleToggleHideRepeatingTriage = useCallback(() => {
+    setHideRepeatingTriage((prev) => {
+      const next = !prev;
+      if (typeof window !== "undefined") {
+        localStorage.setItem(HIDE_REPEATING_TRIAGE_STORAGE_KEY, String(next));
+      }
+      return next;
+    });
+  }, []);
+
   // [spec: TASK-006]
   // [spec: UI-005]
   const handleReorderTasks = async (taskIds: string[]) => {
@@ -368,13 +392,25 @@ export function App() {
     [tasks, searchQuery, filterTask],
   );
 
+  const hiddenRepeatingTriageCount = useMemo(
+    () =>
+      filteredTasks.filter(
+        (t) => t.status === "triage" && t.repeat_rule !== "none",
+      ).length,
+    [filteredTasks],
+  );
+
   const filteredSwimlanes = useMemo(
     () =>
       swimlanes.map((lane) => ({
         ...lane,
-        tasks: lane.tasks.filter((t) => filterTask(t, searchQuery)),
+        tasks: lane.tasks.filter(
+          (t) =>
+            filterTask(t, searchQuery) &&
+            shouldShowTaskInBoardOrTriage(t, hideRepeatingTriage),
+        ),
       })),
-    [swimlanes, searchQuery, filterTask],
+    [swimlanes, searchQuery, filterTask, hideRepeatingTriage],
   );
 
   const filteredCompletedTasks = useMemo(
@@ -427,6 +463,9 @@ export function App() {
           unscheduledTasks={filteredUnscheduledTasks}
           calendarEvents={filteredCalendarEvents}
           density={cardDensity}
+          hideRepeatingTriage={hideRepeatingTriage}
+          hiddenRepeatingTriageCount={hiddenRepeatingTriageCount}
+          onToggleHideRepeatingTriage={handleToggleHideRepeatingTriage}
           onSelectTask={handleSelectTask}
           onUpdateTaskStatus={handleUpdateTaskStatus}
           onMoveTask={handleMoveTask}
@@ -447,6 +486,9 @@ export function App() {
               projects={projects}
               completedTasks={filteredCompletedTasks}
               vipUsers={vipUsers}
+              hideRepeatingTriage={hideRepeatingTriage}
+              hiddenRepeatingTriageCount={hiddenRepeatingTriageCount}
+              onToggleHideRepeatingTriage={handleToggleHideRepeatingTriage}
               onSelectTask={handleSelectTask}
               onCompleteTask={handleCompleteTask}
               onUpdateTaskStatus={handleUpdateTaskStatus}
@@ -457,6 +499,9 @@ export function App() {
             <SwimlaneBoard
               swimlanes={filteredSwimlanes}
               density={cardDensity}
+              hideRepeatingTriage={hideRepeatingTriage}
+              hiddenRepeatingTriageCount={hiddenRepeatingTriageCount}
+              onToggleHideRepeatingTriage={handleToggleHideRepeatingTriage}
               onSelectTask={handleSelectTask}
               onUpdateTaskStatus={handleUpdateTaskStatus}
               onMoveTask={handleMoveTask}

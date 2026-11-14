@@ -1,7 +1,13 @@
 // [spec: UI-009]
+// [spec: UI-011]
 import { h } from "preact";
 import { useMemo } from "preact/hooks";
-import type { Task, Project, TaskStatus } from "../../shared/types.js";
+import {
+  shouldShowTaskInBoardOrTriage,
+  type Task,
+  type Project,
+  type TaskStatus,
+} from "../../shared/types.js";
 import { CockpitExecutionDeck } from "./cockpit/CockpitExecutionDeck.js";
 import { CockpitTelemetryDeck } from "./cockpit/CockpitTelemetryDeck.js";
 
@@ -10,6 +16,9 @@ interface DesktopCockpitProps {
   projects: Project[];
   completedTasks: Task[];
   vipUsers?: string[];
+  hideRepeatingTriage?: boolean;
+  hiddenRepeatingTriageCount?: number;
+  onToggleHideRepeatingTriage?: () => void;
   onSelectTask: (task: Task) => void;
   onCompleteTask: (taskId: string) => void;
   onUpdateTaskStatus: (taskId: string, newStatus: TaskStatus) => void;
@@ -21,6 +30,9 @@ export function DesktopCockpit({
   projects,
   completedTasks,
   vipUsers = [],
+  hideRepeatingTriage = false,
+  hiddenRepeatingTriageCount = 0,
+  onToggleHideRepeatingTriage,
   onSelectTask,
   onCompleteTask,
   onUpdateTaskStatus,
@@ -32,13 +44,14 @@ export function DesktopCockpit({
     return tasks.filter((t) => {
       // Must be triage and without project (project_id == null)
       if (t.status !== "triage") return false;
+      if (!shouldShowTaskInBoardOrTriage(t, hideRepeatingTriage)) return false;
       if (t.project_id !== null && t.project_id !== undefined && t.project_id !== "") return false;
       if (!t.created_by || !t.created_by.trim()) return false;
       const creator = t.created_by.trim();
       if (/\[vip\]|\(vip\)|\bvip\b/i.test(creator)) return true;
       return vipList.includes(creator.toLowerCase());
     });
-  }, [tasks, vipUsers]);
+  }, [tasks, vipUsers, hideRepeatingTriage]);
 
   // Today Focus tasks
 
@@ -84,6 +97,9 @@ export function DesktopCockpit({
           trackingTasks={trackingTasks}
           upcomingTasks={upcomingTasks}
           projectMap={projectMap}
+          hideRepeatingTriage={hideRepeatingTriage}
+          hiddenRepeatingTriageCount={hiddenRepeatingTriageCount}
+          onToggleHideRepeatingTriage={onToggleHideRepeatingTriage}
           onSelectTask={onSelectTask}
           onCompleteTask={onCompleteTask}
           onUpdateTaskStatus={onUpdateTaskStatus}
