@@ -29,6 +29,8 @@ This document records the foundational architectural decisions, technical trade-
 13. [ADR-013: Desktop Execution Cockpit & Lightweight SVG Weekly Telemetry](#adr-013-desktop-execution-cockpit--lightweight-svg-weekly-telemetry)
 14. [ADR-014: Automated Daily Encrypted Backups with Strict Directory Isolation](#adr-014-automated-daily-encrypted-backups-with-strict-directory-isolation)
 15. [ADR-015: Schema Versioning (`PRAGMA user_version`), Staged Migrations & WAL-Safe Recovery](#adr-015-schema-versioning-pragma-user_version-staged-migrations--wal-safe-recovery)
+16. [ADR-016: 90-Day Completed Task Retention Auto-Purge & Atomic Telemetry Snapshots](#adr-016-90-day-completed-task-retention-auto-purge--atomic-telemetry-snapshots)
+15. [ADR-015: Schema Versioning (`PRAGMA user_version`), Staged Migrations & WAL-Safe Recovery](#adr-015-schema-versioning-pragma-user_version-staged-migrations--wal-safe-recovery)
 
 ---
 
@@ -466,3 +468,31 @@ Chosen **Option 1**: Standardize `KAJ_DB_PATH` resolution via shared helpers in 
 - **Positive**: Incompatible future-version backups fail safely without corrupting the current workspace, while every restore remains reversible via the local `.pre-restore-*.bak` snapshot.
 - **Positive**: All database consumers (daemon, daily backup, MCP stdio adapter, recovery CLI) honor `KAJ_DB_PATH` from `.env` consistently.
 - **Negative**: Future schema alterations must increment the ordered migration list and `LATEST_SCHEMA_VERSION` in `src/server/db.ts`.
+
+---
+
+## ADR-016: 90-Day Completed Task Retention Auto-Purge & Atomic Telemetry Snapshots
+
+- **Status**: ACCEPTED
+- **Date**: 2026-11-14
+- **Deciders**: Systems Architect, Backend Engineering, Product Lead
+
+### Context & Problem Statement
+
+Keeping all completed (`status = 'done'`) task rows indefinitely inflates the `tasks` table and `/api/completed` payload. However, deleting old `done` tasks directly would shrink Desktop Cockpit telemetry charts (Weekly Velocity, Completed Tasks by Project, and Stacked Completed Tasks by Creator).
+
+### Considered Options
+
+1. **Atomic Telemetry Rollup Snapshot + Permanent Purge (`completed_telemetry_snapshots`)**: Add schema v2 table `completed_telemetry_snapshots(iso_week, project_key, creator_key, completed_count, updated_at)`. Inside a single `BEGIN IMMEDIATE` transaction, aggregate expired `done` rows older than `KAJ_DONE_RETENTION_DAYS` (default `90`, `0` disables), upsert buckets, and `DELETE` only snapshotted rows. Expose merged live + snapshot metrics via `GET /api/telemetry` and manual sweep via `POST /api/completed/purge`.
+2. **Soft-Delete Only (`deleted_at`)**: Retains expired rows on disk forever without bounding table size.
+3. **Un-snapshotted Hard Delete**: Shrinks database, but loses historical velocity and total completed counts on Cockpit telemetry.
+
+### Decision Outcome
+
+Chosen **Option 1**: Enforce a 90-day retention sweep (`src/server/retention.ts`) on daemon startup, hourly maintenance, and manual UI trigger, preserving exact historical chart totals without retaining stale task rows.
+
+### Consequences
+
+- **Positive**: `tasks` table and Completed Archive drawer stay bounded to the active retention window while historical Cockpit telemetry remains 100% accurate.
+- **Positive**: Atomic transaction prevents double-counting or orphaned telemetry drops on failure.
+- **Negative**: Individual task titles and descriptions older than the retention window are permanently removed from SQLite once purged (recoverable only from encrypted backups created prior to purge).

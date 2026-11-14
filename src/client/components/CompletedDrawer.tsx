@@ -1,29 +1,58 @@
 // [spec: UI-004]
+// [spec: UI-013]
 import { h } from "preact";
+import { useState } from "preact/hooks";
 import {
-  type Task,
-  type Project,
+  DEFAULT_DONE_RETENTION_DAYS,
   formatTimestampDMY,
+  type Project,
+  type PurgeCompletedResult,
+  type Task,
 } from "../../shared/types.js";
 
 interface CompletedDrawerProps {
   isOpen: boolean;
   tasks: Task[];
   projects: Project[];
+  retentionDays?: number;
   onClose: () => void;
   onRestoreTask: (taskId: string) => void;
+  onPurgeExpired?: () => Promise<PurgeCompletedResult | void>;
 }
 
 export function CompletedDrawer({
   isOpen,
   tasks,
   projects,
+  retentionDays = DEFAULT_DONE_RETENTION_DAYS,
   onClose,
   onRestoreTask,
+  onPurgeExpired,
 }: CompletedDrawerProps) {
+  const [isPurging, setIsPurging] = useState(false);
+  const [purgeStatus, setPurgeStatus] = useState<string | null>(null);
+
   if (!isOpen) return null;
 
   const projectMap = new Map(projects.map((p) => [p.id, p]));
+
+  const handleManualPurge = async () => {
+    if (!onPurgeExpired || isPurging || retentionDays <= 0) return;
+    setIsPurging(true);
+    setPurgeStatus(null);
+    try {
+      const res = await onPurgeExpired();
+      if (res) {
+        setPurgeStatus(
+          res.purged_count > 0
+            ? `Purged ${res.purged_count} expired task(s) (telemetry preserved).`
+            : `No completed tasks older than ${res.retention_days} days.`,
+        );
+      }
+    } finally {
+      setIsPurging(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm transition-opacity">
@@ -65,9 +94,45 @@ export function CompletedDrawer({
           </button>
         </div>
 
-        <p className="text-xs text-gray-400 my-3">
+        <p className="text-xs text-gray-400 mt-3 mb-2">
           Tasks completed and moved out of active Kanban swimlanes:
         </p>
+
+        {/* Retention Policy & Manual Purge Controls (UI-013) */}
+        <div
+          data-testid="completed-retention-bar"
+          className="mb-3 p-2.5 rounded-xl bg-[#1C2224] border border-[#2A3235] flex items-center justify-between gap-2"
+        >
+          <span className="text-[11px] text-gray-300 leading-snug">
+            {retentionDays > 0
+              ? `Retention: Auto-purged after ${retentionDays} days (telemetry preserved)`
+              : "Retention: Auto-purge disabled"}
+          </span>
+          {onPurgeExpired && (
+            <button
+              type="button"
+              data-testid="purge-expired-btn"
+              disabled={isPurging || retentionDays <= 0}
+              onClick={handleManualPurge}
+              className="shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isPurging
+                ? "Purging..."
+                : retentionDays > 0
+                  ? `Purge > ${retentionDays}d`
+                  : "Purge Off"}
+            </button>
+          )}
+        </div>
+
+        {purgeStatus && (
+          <div
+            data-testid="purge-status-msg"
+            className="mb-3 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-[11px] text-emerald-300"
+          >
+            {purgeStatus}
+          </div>
+        )}
 
         {/* Task List */}
         <div className="flex-1 overflow-y-auto space-y-3 pr-1">

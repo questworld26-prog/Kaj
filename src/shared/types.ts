@@ -296,3 +296,74 @@ export function shouldShowTaskInBoardOrTriage(
   if (!hideRepeatingTriage) return true;
   return !(task.status === "triage" && task.repeat_rule !== "none");
 }
+
+export const DEFAULT_DONE_RETENTION_DAYS = 90;
+
+/**
+ * Parse KAJ_DONE_RETENTION_DAYS: defaults to 90 days when unset/blank,
+ * allows 0 / "off" / "disabled" to disable retention purging.
+ */
+// [spec: TASK-010]
+export function parseDoneRetentionDays(raw?: string | null): number {
+  if (raw == null || raw.trim() === "") return DEFAULT_DONE_RETENTION_DAYS;
+  const normalized = raw.trim().toLowerCase();
+  if (normalized === "0" || normalized === "off" || normalized === "disabled" || normalized === "false") {
+    return 0;
+  }
+  const parsed = Number(normalized);
+  if (Number.isInteger(parsed) && parsed > 0) {
+    return parsed;
+  }
+  return DEFAULT_DONE_RETENTION_DAYS;
+}
+
+/**
+ * Format an ISO year-week key (`YYYY-Www`) using Monday-to-Sunday ISO week numbering.
+ */
+// [spec: TASK-010]
+export function getISOYearWeekKey(d: Date): string {
+  const target = new Date(d.valueOf());
+  const dayNr = (target.getDay() + 6) % 7;
+  target.setDate(target.getDate() - dayNr + 3);
+  const isoYear = target.getFullYear();
+  const firstThursday = target.valueOf();
+  target.setMonth(0, 1);
+  if (target.getDay() !== 4) {
+    target.setMonth(0, 1 + ((4 - target.getDay() + 7) % 7));
+  }
+  const weekNum = 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000);
+  return `${isoYear}-W${String(weekNum).padStart(2, "0")}`;
+}
+
+export interface TelemetryWeekEntry {
+  iso_week: string;
+  count: number;
+}
+
+export interface TelemetryProjectEntry {
+  project_key: string;
+  count: number;
+}
+
+export interface TelemetryWeekCreatorEntry {
+  iso_week: string;
+  creator: string;
+  count: number;
+}
+
+export interface TelemetrySummary {
+  retention_days: number;
+  total_completed: number;
+  live_completed: number;
+  snapshotted_completed: number;
+  by_week: TelemetryWeekEntry[];
+  by_project: TelemetryProjectEntry[];
+  by_week_creator: TelemetryWeekCreatorEntry[];
+}
+
+export interface PurgeCompletedResult {
+  retention_days: number;
+  purged_count: number;
+  snapshotted_count: number;
+  cutoff_iso: string | null;
+}

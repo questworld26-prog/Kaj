@@ -6,9 +6,11 @@
 // [spec: UI-007]
 // [spec: UI-009]
 // [spec: UI-011]
+// [spec: UI-013]
 import { h } from "preact";
 import { useState, useEffect, useCallback, useMemo } from "preact/hooks";
 import {
+  DEFAULT_DONE_RETENTION_DAYS,
   HIDE_REPEATING_TRIAGE_STORAGE_KEY,
   shouldShowTaskInBoardOrTriage,
   type Task,
@@ -16,6 +18,8 @@ import {
   type SwimlaneGroup,
   type CalendarEvent,
   type TaskStatus,
+  type TelemetrySummary,
+  type PurgeCompletedResult,
 } from "../shared/types.js";
 import * as api from "./api.js";
 import { TopBar, type CardDensity } from "./components/TopBar.js";
@@ -67,6 +71,7 @@ export function App() {
   const [swimlanes, setSwimlanes] = useState<SwimlaneGroup[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
+  const [telemetry, setTelemetry] = useState<TelemetrySummary | null>(null);
   const [unscheduledTasks, setUnscheduledTasks] = useState<Task[]>([]);
   const [vipUsers, setVipUsers] = useState<string[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
@@ -92,12 +97,13 @@ export function App() {
   // Reload all state
   const loadData = useCallback(async () => {
     try {
-      const [projs, board, allTasks, completed, unscheduled, vips] =
+      const [projs, board, allTasks, completed, tel, unscheduled, vips] =
         await Promise.all([
           api.getProjects(),
           api.getBoard(),
           api.getTasks(),
           api.getCompleted(),
+          api.getTelemetry(),
           api.getUnscheduled(),
           api.getVipUsers(),
         ]);
@@ -106,6 +112,7 @@ export function App() {
       setSwimlanes(board);
       setTasks(allTasks);
       setCompletedTasks(completed);
+      setTelemetry(tel);
       setUnscheduledTasks(unscheduled);
       setVipUsers(vips);
 
@@ -298,6 +305,16 @@ export function App() {
     }
   };
 
+  const handlePurgeCompleted = async (): Promise<PurgeCompletedResult | void> => {
+    try {
+      const result = await api.purgeCompleted();
+      await loadData();
+      return result;
+    } catch (err) {
+      setErrorMessage((err as Error).message);
+    }
+  };
+
   const handleScheduleTask = async (
     taskId: string,
     dateStr: string,
@@ -485,6 +502,7 @@ export function App() {
               tasks={filteredTasks}
               projects={projects}
               completedTasks={filteredCompletedTasks}
+              telemetry={searchQuery.trim() ? null : telemetry}
               vipUsers={vipUsers}
               hideRepeatingTriage={hideRepeatingTriage}
               hiddenRepeatingTriageCount={hiddenRepeatingTriageCount}
@@ -548,8 +566,10 @@ export function App() {
         isOpen={isArchiveOpen}
         tasks={completedTasks}
         projects={projects}
+        retentionDays={telemetry?.retention_days ?? DEFAULT_DONE_RETENTION_DAYS}
         onClose={() => setIsArchiveOpen(false)}
         onRestoreTask={handleRestoreTask}
+        onPurgeExpired={handlePurgeCompleted}
       />
 
       {/* Project Swimlane Reorder & Creation Modal */}

@@ -269,4 +269,65 @@ describe("Hono REST API & SSE Live Sync", () => {
     });
     expect(badRes2.status).toBe(400);
   });
+
+  // [verifies: TASK-010/AC-TASK-010.5]
+  it("POST /api/completed/purge executes retention sweep, emits event, and GET /api/telemetry returns combined totals", async () => {
+    const events: Array<{ type: string; action: string }> = [];
+    const unsubscribe = eventBus.subscribe((evt) => {
+      events.push({ type: evt.type, action: evt.action });
+    });
+
+    try {
+      const oldDate = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString();
+      const c1 = await app.request("/api/tasks", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ title: "Old API done", status: "todo", created_by: "Alice" }),
+      });
+      const expiredTask = (await c1.json()) as { id: string };
+      await app.request(`/api/tasks/${expiredTask.id}/complete`, { method: "POST" });
+      db.prepare("UPDATE tasks SET completed_at = ? WHERE id = ?").run(oldDate, expiredTask.id);
+
+      const c2 = await app.request("/api/tasks", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ title: "Recent API done", status: "todo", created_by: "Bob" }),
+      });
+      const recentTask = (await c2.json()) as { id: string };
+      await app.request(`/api/tasks/${recentTask.id}/complete`, { method: "POST" });
+
+      events.length = 0;
+
+      const purgeRes = await app.request("/api/completed/purge", { method: "POST" });
+      expect(purgeRes.status).toBe(200);
+      const purgeBody = (await purgeRes.json()) as {
+        retention_days: number;
+        purged_count: number;
+        snapshotted_count: number;
+      };
+      expect(purgeBody.retention_days).toBe(90);
+      expect(purgeBody.purged_count).toBe(1);
+      expect(purgeBody.snapshotted_count).toBe(1);
+      expect(events).toEqual([{ type: "task", action: "purged" }]);
+
+      const compRes = await app.request("/api/completed");
+      const completed = (await compRes.json()) as Array<{ id: string }>;
+      expect(completed.map((t) => t.id)).toEqual([recentTask.id]);
+
+      const telRes = await app.request("/api/telemetry");
+      expect(telRes.status).toBe(200);
+      const telemetry = (await telRes.json()) as {
+        retention_days: number;
+        total_completed: number;
+        live_completed: number;
+        snapshotted_completed: number;
+      };
+      expect(telemetry.retention_days).toBe(90);
+      expect(telemetry.total_completed).toBe(2);
+      expect(telemetry.live_completed).toBe(1);
+      expect(telemetry.snapshotted_completed).toBe(1);
+    } finally {
+      unsubscribe();
+    }
+  });
 });

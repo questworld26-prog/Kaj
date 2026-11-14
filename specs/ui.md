@@ -145,6 +145,15 @@ Acceptance Criteria:
 - AC-UI-012.2: In the stacked completed tasks by creator chart, the system shall order the weekly rows chronologically with the current latest week at the top row and older weeks below.
 - AC-UI-012.3: Within each weekly stacked bar, the system shall display each creator (`created_by`) completed task count inside that creator segment whenever its count is greater than zero.
 
+## UI-013: Telemetry Snapshot Integration and Retention Controls
+
+When historical completed tasks have been purged under retention, the system shall combine live completed tasks with stored telemetry snapshots across cockpit charts and expose manual purge controls with the active retention window in the completed archive.
+
+Acceptance Criteria:
+- AC-UI-013.1: When rendering the Desktop Cockpit telemetry charts, the system shall aggregate live completed tasks with persisted telemetry snapshot counts across weekly velocity, project distribution, and creator breakdown views.
+- AC-UI-013.2: When the Completed Archive opens, the system shall display the configured retention window notice alongside a manual purge trigger for expired completed tasks.
+- AC-UI-013.3: When the manual retention purge action completes, the system shall refresh completed tasks and telemetry metrics immediately without displaying console errors.
+
 
 
 

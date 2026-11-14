@@ -1,5 +1,6 @@
 // [spec: UI-009]
 // [spec: UI-011]
+// [spec: UI-013]
 import { h } from "preact";
 import { useMemo } from "preact/hooks";
 import {
@@ -7,6 +8,7 @@ import {
   type Task,
   type Project,
   type TaskStatus,
+  type TelemetrySummary,
 } from "../../shared/types.js";
 import { CockpitExecutionDeck } from "./cockpit/CockpitExecutionDeck.js";
 import { CockpitTelemetryDeck } from "./cockpit/CockpitTelemetryDeck.js";
@@ -15,6 +17,7 @@ interface DesktopCockpitProps {
   tasks: Task[];
   projects: Project[];
   completedTasks: Task[];
+  telemetry?: TelemetrySummary | null;
   vipUsers?: string[];
   hideRepeatingTriage?: boolean;
   hiddenRepeatingTriageCount?: number;
@@ -29,6 +32,7 @@ export function DesktopCockpit({
   tasks,
   projects,
   completedTasks,
+  telemetry = null,
   vipUsers = [],
   hideRepeatingTriage = false,
   hiddenRepeatingTriageCount = 0,
@@ -111,6 +115,7 @@ export function DesktopCockpit({
         <CockpitTelemetryDeck
           completedTasks={completedTasks}
           projects={projects}
+          telemetry={telemetry}
         />
       </div>
     </div>

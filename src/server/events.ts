@@ -11,7 +11,8 @@ export interface MutationEvent {
     | "deleted"
     | "restored"
     | "reordered"
-    | "triaged";
+    | "triaged"
+    | "purged";
 
   id: string;
   data?: unknown;

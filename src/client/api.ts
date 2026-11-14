@@ -3,6 +3,8 @@ import type {
   Project,
   SwimlaneGroup,
   CalendarEvent,
+  TelemetrySummary,
+  PurgeCompletedResult,
 } from "../shared/types.js";
 
 const API_BASE = "/api";
@@ -116,6 +118,23 @@ export async function reorderTasks(taskIds: string[]): Promise<void> {
 
 export async function getCompleted(): Promise<Task[]> {
   const res = await fetch(`${API_BASE}/completed`);
+  return res.json();
+}
+
+// [spec: TASK-010]
+// [spec: UI-013]
+export async function getTelemetry(): Promise<TelemetrySummary> {
+  const res = await fetch(`${API_BASE}/telemetry`);
+  return res.json();
+}
+
+// [spec: TASK-010]
+// [spec: UI-013]
+export async function purgeCompleted(): Promise<PurgeCompletedResult> {
+  const res = await fetch(`${API_BASE}/completed/purge`, { method: "POST" });
+  if (!res.ok) {
+    throw new Error((await res.json()).error || "Failed to purge completed tasks");
+  }
   return res.json();
 }
 

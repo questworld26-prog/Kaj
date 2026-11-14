@@ -559,6 +559,27 @@ export function createApp(options: AppOptions): Hono {
     return c.json(completed);
   });
 
+  // [spec: TASK-010]
+  // REST: Combined completed telemetry (live done + purged snapshots)
+  app.get("/api/telemetry", (c) => {
+    return c.json(taskRepo.getTelemetrySummary());
+  });
+
+  // [spec: TASK-010]
+  // REST: Manual retention purge trigger
+  app.post("/api/completed/purge", (c) => {
+    const result = taskRepo.purgeExpiredDoneTasks();
+    if (result.purged_count > 0) {
+      eventBus.broadcast({
+        type: "task",
+        action: "purged",
+        id: "retention",
+        data: result,
+      });
+    }
+    return c.json(result);
+  });
+
   // REST: Unscheduled tasks
   app.get("/api/unscheduled", (c) => {
     const unscheduled = taskRepo.listUnscheduledTasks();

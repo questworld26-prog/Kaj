@@ -105,5 +105,16 @@ Acceptance Criteria:
 - AC-TASK-009.3: When a new task is created in `triage` or an existing `triage` task is updated with an action date inside the current Monday-to-Sunday week, the system shall transition that task to `todo` automatically unless promoted further to In Progress (Today).
 - AC-TASK-009.4: While evaluating tasks for current-week triage promotion, the system shall exclude tasks outside `triage`, soft-deleted tasks, dateless tasks, and tasks scheduled for past or future Monday-to-Sunday weeks.
 
+## TASK-010: Automatic Completed Task Retention Purge and Telemetry Snapshot
+
+When completed tasks exceed the configured 90-day retention window, the system shall snapshot their weekly, project, and creator aggregate counts into persistent telemetry storage and permanently purge those expired records from the active task store.
+
+Acceptance Criteria:
+- AC-TASK-010.1: Where the done retention window is unconfigured, the system shall apply a default retention period of 90 days based on each task completion timestamp.
+- AC-TASK-010.2: Where the done retention environment setting specifies zero, the system shall disable automatic retention purging while retaining all completed tasks.
+- AC-TASK-010.3: When purging expired completed tasks, the system shall atomically record aggregate counts by ISO year-week, project identifier, and creator identity in persistent telemetry snapshot storage before deleting those rows.
+- AC-TASK-010.4: While evaluating completed tasks for retention purging, the system shall exclude non-completed tasks, already soft-deleted tasks, and completed tasks newer than the retention cutoff.
+- AC-TASK-010.5: When the background daemon starts, runs its periodic maintenance schedule, or receives a manual purge request, the system shall execute the retention sweep and emit synchronization events when rows are purged.
+
 
 

@@ -228,10 +228,13 @@ KAJ_DB_PATH="~/.local/share/kaj/tasks.db"
 # Target folder inside Google Drive (or other cloud sync folder)
 KAJ_BACKUP_DIR="~/Library/CloudStorage/GoogleDrive-you@gmail.com/My Drive/KajBackups"
 
-# Passphrase used to encrypt and decrypt daily backups
-# (Alternatively store passphrase in ~/.config/kaj/backup.key with chmod 600)
+# Encryption passphrase for daily backups (alternatively store passphrase in ~/.config/kaj/backup.key)
 KAJ_BACKUP_KEY="your-secret-passphrase-here"
 ```
+
+### Completed Task Auto-Purge & Telemetry Snapshots (`TASK-010` / `UI-013`)
+
+Kaj keeps active queries fast by auto-purging `done` tasks older than **90 days** (`KAJ_DONE_RETENTION_DAYS=90`, set `0` to disable) while atomically saving weekly, project, and creator aggregates in `completed_telemetry_snapshots` so Desktop Cockpit charts preserve full historical counts. Use the **Purge > 90d** button in the Completed Archive drawer (`POST /api/completed/purge`) to run the sweep manually at any time.
 
 ### 2. How Daily Automated Backups Work (`BACKUP-001`)
 
@@ -367,6 +370,7 @@ npm run audit:specs
 │   ├── server/                     # Backend daemon
 │   │   ├── db.ts                   # node:sqlite WAL initialization, KAJ_DB_PATH, & migrations
 │   │   ├── recurrence.ts           # Pure recurrence calculation and period tagging engine
+│   │   ├── retention.ts            # Done-task retention auto-purge and telemetry snapshots
 │   │   ├── repository.ts           # Task and Project SQLite repositories
 │   │   ├── events.ts               # In-memory SSE event bus
 │   │   ├── app.ts                  # Hono REST endpoints and route handlers

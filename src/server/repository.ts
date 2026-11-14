@@ -14,9 +14,15 @@ import {
   UpdateTaskInputSchema,
   CalendarEvent,
   RepeatRule,
+  TelemetrySummary,
+  PurgeCompletedResult,
   isActionDateToday,
   isDateInCurrentMondayWeek,
 } from "../shared/types.js";
+import {
+  getTelemetrySummary as computeTelemetrySummary,
+  purgeExpiredDoneTasks as runRetentionPurge,
+} from "./retention.js";
 
 function generateId(prefix: "prj" | "tsk"): string {
   return `${prefix}_${Date.now().toString(36)}_${crypto.randomBytes(4).toString("hex")}`;
@@ -822,5 +828,18 @@ export class TaskRepository {
       merged.set(task.id, task);
     }
     return Array.from(merged.values());
+  }
+
+  // [spec: TASK-010]
+  purgeExpiredDoneTasks(
+    retentionDays?: number,
+    now?: Date,
+  ): PurgeCompletedResult {
+    return runRetentionPurge(this.db, retentionDays, now);
+  }
+
+  // [spec: TASK-010]
+  getTelemetrySummary(retentionDays?: number): TelemetrySummary {
+    return computeTelemetrySummary(this.db, retentionDays);
   }
 }

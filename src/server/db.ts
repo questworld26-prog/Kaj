@@ -7,7 +7,8 @@ import fs from "node:fs";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
 
-export const LATEST_SCHEMA_VERSION = 1;
+// [spec: TASK-010]
+export const LATEST_SCHEMA_VERSION = 2;
 
 /**
  * Load environment variables from `.env` if present (cwd first, then project root).
@@ -127,6 +128,12 @@ export function migrateDatabaseSchema(
         }
       },
     },
+    {
+      version: 2,
+      up: () => {
+        ensureTelemetrySnapshotTableAndIndex(db);
+      },
+    },
   ];
 
   db.exec("BEGIN IMMEDIATE;");
@@ -190,6 +197,23 @@ function ensureBaseTablesAndIndices(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date);
     CREATE INDEX IF NOT EXISTS idx_tasks_deleted_at ON tasks(deleted_at);
     CREATE INDEX IF NOT EXISTS idx_projects_sort_order ON projects(sort_order);
+  `);
+  ensureTelemetrySnapshotTableAndIndex(db);
+}
+
+// [spec: TASK-010]
+function ensureTelemetrySnapshotTableAndIndex(db: DatabaseSync): void {
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_tasks_status_completed ON tasks(status, completed_at);
+
+    CREATE TABLE IF NOT EXISTS completed_telemetry_snapshots (
+      iso_week TEXT NOT NULL,
+      project_key TEXT NOT NULL,
+      creator_key TEXT NOT NULL,
+      completed_count INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (iso_week, project_key, creator_key)
+    );
   `);
 }
 

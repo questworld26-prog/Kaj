@@ -1,6 +1,12 @@
 // [spec: UI-009]
 // [spec: UI-012]
-import type { Task } from "../../../shared/types.js";
+// [spec: UI-013]
+import {
+  DEFAULT_DONE_RETENTION_DAYS,
+  getISOYearWeekKey,
+  type Task,
+  type TelemetrySummary,
+} from "../../../shared/types.js";
 export const PRIORITY_STYLES: Record<string, { label: string; badge: string }> =
   {
     today: {
@@ -111,4 +117,99 @@ export function buildCreatorStackData(
   });
 
   return { weeks, creatorList, creatorStyleMap };
+}
+
+/**
+ * Derive a TelemetrySummary solely from an in-memory array of tasks (e.g. search-filtered subset).
+ */
+// [spec: UI-013]
+export function buildTelemetrySummaryFromTasks(
+  completedTasks: ReadonlyArray<
+    Pick<Task, "completed_at" | "created_by" | "project_id">
+  >,
+  retentionDays: number = DEFAULT_DONE_RETENTION_DAYS,
+): TelemetrySummary {
+  const weekMap = new Map<string, number>();
+  const projectMap = new Map<string, number>();
+  const weekCreatorMap = new Map<string, number>();
+
+  for (const t of completedTasks) {
+    const projectKey = t.project_id || "unassigned";
+    projectMap.set(projectKey, (projectMap.get(projectKey) || 0) + 1);
+    if (!t.completed_at) continue;
+    const d = new Date(t.completed_at);
+    if (isNaN(d.getTime())) continue;
+    const isoWeek = getISOYearWeekKey(d);
+    const creator = t.created_by?.trim() || "Unspecified";
+    weekMap.set(isoWeek, (weekMap.get(isoWeek) || 0) + 1);
+    const wcKey = `${isoWeek}\0${creator}`;
+    weekCreatorMap.set(wcKey, (weekCreatorMap.get(wcKey) || 0) + 1);
+  }
+
+  return {
+    retention_days: retentionDays,
+    total_completed: completedTasks.length,
+    live_completed: completedTasks.length,
+    snapshotted_completed: 0,
+    by_week: Array.from(weekMap.entries()).map(([iso_week, count]) => ({
+      iso_week,
+      count,
+    })),
+    by_project: Array.from(projectMap.entries()).map(([project_key, count]) => ({
+      project_key,
+      count,
+    })),
+    by_week_creator: Array.from(weekCreatorMap.entries()).map(([k, count]) => {
+      const [iso_week, creator] = k.split("\0");
+      return { iso_week, creator, count };
+    }),
+  };
+}
+
+/**
+ * Build last-3-week stacked creator telemetry from merged TelemetrySummary (live + snapshots).
+ */
+// [spec: UI-013]
+export function buildCreatorStackDataFromSummary(
+  summary: TelemetrySummary,
+  now: Date = new Date(),
+): CreatorStackData {
+  const weeks: Array<CreatorWeekBucket & { yearWeek: string }> = [];
+
+  for (let i = 0; i <= 2; i++) {
+    const d = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
+    const yearWeek = getISOYearWeekKey(d);
+    const weekKey = getISOWeekKey(d);
+    weeks.push({
+      yearWeek,
+      weekKey,
+      label: i === 0 ? `${weekKey} (Current)` : weekKey,
+      isCurrent: i === 0,
+      total: 0,
+      creators: {},
+    });
+  }
+
+  const allCreators = new Set<string>();
+  for (const entry of summary.by_week_creator) {
+    const weekEntry = weeks.find((w) => w.yearWeek === entry.iso_week);
+    if (weekEntry && entry.count > 0) {
+      allCreators.add(entry.creator);
+      weekEntry.creators[entry.creator] =
+        (weekEntry.creators[entry.creator] || 0) + entry.count;
+      weekEntry.total += entry.count;
+    }
+  }
+
+  const creatorList = Array.from(allCreators);
+  const creatorStyleMap: Record<string, CreatorStackStyle> = {};
+  creatorList.forEach((creator, idx) => {
+    creatorStyleMap[creator] = CREATOR_PALETTE[idx % CREATOR_PALETTE.length];
+  });
+
+  return {
+    weeks: weeks.map(({ yearWeek: _yw, ...bucket }) => bucket),
+    creatorList,
+    creatorStyleMap,
+  };
 }

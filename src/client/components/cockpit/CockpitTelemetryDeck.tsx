@@ -1,42 +1,64 @@
 // [spec: UI-009]
 // [spec: UI-012]
+// [spec: UI-013]
 import { h } from "preact";
 import { useMemo } from "preact/hooks";
-import type { Task, Project } from "../../../shared/types.js";
-import { buildCreatorStackData, getISOWeekKey } from "./types.js";
+import {
+  getISOYearWeekKey,
+  type Project,
+  type Task,
+  type TelemetrySummary,
+} from "../../../shared/types.js";
+import {
+  buildCreatorStackDataFromSummary,
+  buildTelemetrySummaryFromTasks,
+  getISOWeekKey,
+} from "./types.js";
 
 interface CockpitTelemetryDeckProps {
   completedTasks: Task[];
   projects: Project[];
+  telemetry?: TelemetrySummary | null;
 }
 
 export function CockpitTelemetryDeck({
   completedTasks,
   projects,
+  telemetry = null,
 }: CockpitTelemetryDeckProps) {
+  const effectiveTelemetry = useMemo(
+    () => telemetry ?? buildTelemetrySummaryFromTasks(completedTasks),
+    [telemetry, completedTasks],
+  );
+
   // Telemetry 1: Tasks Completed by Week (last 6 ISO weeks)
   const weeklyVelocity = useMemo(() => {
     const now = new Date();
-    const weeks: Array<{ label: string; count: number; isCurrent: boolean }> =
-      [];
+    const weeks: Array<{
+      yearWeek: string;
+      label: string;
+      count: number;
+      isCurrent: boolean;
+    }> = [];
 
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
-      const label = getISOWeekKey(d);
-      weeks.push({ label, count: 0, isCurrent: i === 0 });
+      weeks.push({
+        yearWeek: getISOYearWeekKey(d),
+        label: getISOWeekKey(d),
+        count: 0,
+        isCurrent: i === 0,
+      });
     }
 
-    for (const t of completedTasks) {
-      if (!t.completed_at) continue;
-      const compDate = new Date(t.completed_at);
-      const wKey = getISOWeekKey(compDate);
-      const found = weeks.find((w) => w.label === wKey);
-      if (found) {
-        found.count += 1;
-      }
+    const weekCountMap = new Map(
+      effectiveTelemetry.by_week.map((w) => [w.iso_week, w.count]),
+    );
+    for (const w of weeks) {
+      w.count = weekCountMap.get(w.yearWeek) || 0;
     }
     return weeks;
-  }, [completedTasks]);
+  }, [effectiveTelemetry]);
 
   const maxWeeklyCount = useMemo(() => {
     const counts = weeklyVelocity.map((w) => w.count);
@@ -64,15 +86,15 @@ export function CockpitTelemetryDeck({
       count: 0,
     };
 
-    for (const t of completedTasks) {
-      const pid = t.project_id || "unassigned";
+    for (const entry of effectiveTelemetry.by_project) {
+      const pid = entry.project_key || "unassigned";
       if (countsByProj[pid]) {
-        countsByProj[pid].count += 1;
+        countsByProj[pid].count += entry.count;
       } else {
         countsByProj[pid] = {
           name: "Other Project",
           color: "#64748B",
-          count: 1,
+          count: entry.count,
         };
       }
     }
@@ -99,12 +121,12 @@ export function CockpitTelemetryDeck({
     });
 
     return { total, segments };
-  }, [completedTasks, projects]);
+  }, [effectiveTelemetry, projects]);
 
   // Telemetry 1: Stacked Completed by Creator (latest week on top, counts rendered inside bar)
   const creatorStackData = useMemo(
-    () => buildCreatorStackData(completedTasks),
-    [completedTasks],
+    () => buildCreatorStackDataFromSummary(effectiveTelemetry),
+    [effectiveTelemetry],
   );
 
   return (
@@ -216,7 +238,7 @@ export function CockpitTelemetryDeck({
               📈 Tasks Completed by Week
             </h3>
             <p className="text-xs text-gray-400 mt-0.5">
-              Recent 6 weeks completion velocity (Total: {completedTasks.length}{" "}
+              Recent 6 weeks completion velocity (Total: {effectiveTelemetry.total_completed}{" "}
               done)
             </p>
           </div>
@@ -275,6 +297,9 @@ export function CockpitTelemetryDeck({
             </h3>
             <p className="text-xs text-gray-400 mt-0.5">
               Distribution across active project swimlanes
+              {effectiveTelemetry.snapshotted_completed > 0
+                ? ` · Includes ${effectiveTelemetry.snapshotted_completed} archived snapshot(s)`
+                : ""}
             </p>
           </div>
           <span className="text-xs px-2 py-0.5 rounded bg-[#1C2224] text-gray-300 border border-[#2A3235]">

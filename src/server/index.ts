@@ -88,6 +88,20 @@ async function startDaemon() {
   telegramBot.start();
 
   // [spec: BACKUP-001]
+  // [spec: TASK-010]
+  const runDoneRetentionPurge = () => {
+    const purgeResult = taskRepo.purgeExpiredDoneTasks();
+    if (purgeResult.purged_count > 0) {
+      eventBus.broadcast({
+        type: "task",
+        action: "purged",
+        id: "retention",
+        data: purgeResult,
+      });
+    }
+  };
+  runDoneRetentionPurge();
+
   let lastFailureAlertDate = "";
   const runScheduledBackup = async () => {
     if (!process.env.KAJ_BACKUP_DIR) return;
@@ -110,6 +124,11 @@ async function startDaemon() {
 
   runScheduledBackup().catch(() => {});
   setInterval(() => {
+    try {
+      runDoneRetentionPurge();
+    } catch {
+      // Keep retention scheduler resilient
+    }
     runScheduledBackup().catch(() => {});
   }, 60 * 60 * 1000);
 

@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-14T06:44:13.959441+00:00",
-  "total_requirements": 30,
-  "active_requirements_count": 30,
+  "last_audited_at": "2026-11-14T06:55:02.578668+00:00",
+  "total_requirements": 32,
+  "active_requirements_count": 32,
   "planned_requirements_count": 0,
-  "active_criteria_count": 135,
-  "verified_criteria_count": 135,
+  "active_criteria_count": 143,
+  "verified_criteria_count": 143,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -463,6 +463,38 @@
       "status": "VERIFIED"
     },
     {
+      "requirement_id": "TASK-010",
+      "title": "Automatic Completed Task Retention Purge and Telemetry Snapshot",
+      "spec_file": "specs/tasks.md",
+      "is_planned": false,
+      "sha256": "ff67cd7d814f20c305ab20d15ddbab41806e0d1fef6d0489e68d210a4e137f7c",
+      "verified_sha256": "ff67cd7d814f20c305ab20d15ddbab41806e0d1fef6d0489e68d210a4e137f7c",
+      "acceptance_criteria": [
+        "AC-TASK-010.1",
+        "AC-TASK-010.2",
+        "AC-TASK-010.3",
+        "AC-TASK-010.4",
+        "AC-TASK-010.5"
+      ],
+      "verified_criteria": [
+        "AC-TASK-010.1",
+        "AC-TASK-010.2",
+        "AC-TASK-010.3",
+        "AC-TASK-010.4",
+        "AC-TASK-010.5"
+      ],
+      "implementation_files": [
+        "src/client/api.ts",
+        "src/server/app.ts",
+        "src/server/db.ts",
+        "src/server/index.ts",
+        "src/server/repository.ts",
+        "src/server/retention.ts",
+        "src/shared/types.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
       "requirement_id": "TG-001",
       "title": "Configurable Deterministic Telegram Bot for Task Creation, Search, and Quick Actions",
       "spec_file": "specs/telegram.md",
@@ -855,6 +887,33 @@
         "AC-UI-012.3"
       ],
       "implementation_files": [
+        "src/client/components/cockpit/CockpitTelemetryDeck.tsx",
+        "src/client/components/cockpit/types.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "UI-013",
+      "title": "Telemetry Snapshot Integration and Retention Controls",
+      "spec_file": "specs/ui.md",
+      "is_planned": false,
+      "sha256": "543cc804ad44147a80413a378a681016b8a08783d85192d410adacb9aa787765",
+      "verified_sha256": "543cc804ad44147a80413a378a681016b8a08783d85192d410adacb9aa787765",
+      "acceptance_criteria": [
+        "AC-UI-013.1",
+        "AC-UI-013.2",
+        "AC-UI-013.3"
+      ],
+      "verified_criteria": [
+        "AC-UI-013.1",
+        "AC-UI-013.2",
+        "AC-UI-013.3"
+      ],
+      "implementation_files": [
+        "src/client/App.tsx",
+        "src/client/api.ts",
+        "src/client/components/CompletedDrawer.tsx",
+        "src/client/components/DesktopCockpit.tsx",
         "src/client/components/cockpit/CockpitTelemetryDeck.tsx",
         "src/client/components/cockpit/types.ts"
       ],
