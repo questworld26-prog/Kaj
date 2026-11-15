@@ -1,5 +1,5 @@
 {
-  "last_audited_at": "2026-11-14T13:35:15.877119+00:00",
+  "last_audited_at": "2026-11-14T13:41:32.401813+00:00",
   "total_requirements": 33,
   "active_requirements_count": 33,
   "planned_requirements_count": 0,
@@ -43,7 +43,8 @@
         "src/server/backup/index.ts",
         "src/server/backup/service.ts",
         "src/server/index.ts",
-        "src/server/telegram.ts"
+        "src/server/telegram.ts",
+        "src/server/telegram/notifications.ts"
       ],
       "status": "VERIFIED"
     },
@@ -174,9 +175,12 @@
       ],
       "implementation_files": [
         "src/server/app.ts",
+        "src/server/routes/telegram-routes.ts",
         "src/server/telegram.ts",
         "src/server/telegram/digest.ts",
-        "src/server/telegram/formatters.ts"
+        "src/server/telegram/formatters.ts",
+        "src/server/telegram/handlers.ts",
+        "src/server/telegram/notifications.ts"
       ],
       "status": "VERIFIED"
     },
@@ -202,9 +206,9 @@
         "AC-NOTIF-002.5"
       ],
       "implementation_files": [
-        "src/server/app.ts",
         "src/server/db.ts",
         "src/server/index.ts",
+        "src/server/routes/telegram-routes.ts",
         "src/server/telegram.ts",
         "src/server/telegram/config.ts",
         "src/server/telegram/digest.ts",
@@ -235,7 +239,9 @@
       "implementation_files": [
         "src/server/db.ts",
         "src/server/events.ts",
-        "src/server/repository.ts",
+        "src/server/repositories/project-repository.ts",
+        "src/server/repositories/shared.ts",
+        "src/server/routes/task-routes.ts",
         "src/shared/types.ts"
       ],
       "status": "VERIFIED"
@@ -258,7 +264,8 @@
         "AC-PROJ-002.3"
       ],
       "implementation_files": [
-        "src/server/repository.ts"
+        "src/server/repository.ts",
+        "src/server/routes/task-routes.ts"
       ],
       "status": "VERIFIED"
     },
@@ -282,7 +289,8 @@
         "AC-TASK-001.4"
       ],
       "implementation_files": [
-        "src/server/repository.ts"
+        "src/server/repository.ts",
+        "src/server/routes/task-routes.ts"
       ],
       "status": "VERIFIED"
     },
@@ -311,7 +319,9 @@
       ],
       "implementation_files": [
         "src/server/db.ts",
+        "src/server/repositories/shared.ts",
         "src/server/repository.ts",
+        "src/server/routes/task-routes.ts",
         "src/shared/types.ts"
       ],
       "status": "VERIFIED"
@@ -334,7 +344,8 @@
         "AC-TASK-003.3"
       ],
       "implementation_files": [
-        "src/server/repository.ts"
+        "src/server/repository.ts",
+        "src/server/routes/task-routes.ts"
       ],
       "status": "VERIFIED"
     },
@@ -361,7 +372,9 @@
       ],
       "implementation_files": [
         "src/server/recurrence.ts",
-        "src/server/repository.ts"
+        "src/server/repositories/task-calendar.ts",
+        "src/server/repository.ts",
+        "src/server/routes/task-routes.ts"
       ],
       "status": "VERIFIED"
     },
@@ -385,7 +398,9 @@
         "AC-TASK-005.4"
       ],
       "implementation_files": [
-        "src/server/repository.ts"
+        "src/server/repositories/task-calendar.ts",
+        "src/server/repository.ts",
+        "src/server/routes/task-routes.ts"
       ],
       "status": "VERIFIED"
     },
@@ -407,11 +422,13 @@
         "AC-TASK-006.3"
       ],
       "implementation_files": [
-        "src/client/App.tsx",
         "src/client/api.ts",
         "src/client/components/SwimlaneBoard.tsx",
-        "src/server/app.ts",
-        "src/server/repository.ts"
+        "src/client/components/board/SwimlaneColumn.tsx",
+        "src/client/components/board/SwimlaneTaskCard.tsx",
+        "src/client/hooks/useKajApp.ts",
+        "src/server/repository.ts",
+        "src/server/routes/task-routes.ts"
       ],
       "status": "VERIFIED"
     },
@@ -435,10 +452,11 @@
         "AC-TASK-007.4"
       ],
       "implementation_files": [
-        "src/server/app.ts",
         "src/server/index.ts",
         "src/server/recurrence.ts",
-        "src/server/repository.ts"
+        "src/server/repositories/task-promotions.ts",
+        "src/server/repository.ts",
+        "src/server/routes/task-routes.ts"
       ],
       "status": "VERIFIED"
     },
@@ -462,9 +480,10 @@
         "AC-TASK-008.4"
       ],
       "implementation_files": [
-        "src/server/app.ts",
         "src/server/index.ts",
+        "src/server/repositories/task-promotions.ts",
         "src/server/repository.ts",
+        "src/server/routes/task-routes.ts",
         "src/shared/types.ts"
       ],
       "status": "VERIFIED"
@@ -489,9 +508,10 @@
         "AC-TASK-009.4"
       ],
       "implementation_files": [
-        "src/server/app.ts",
         "src/server/index.ts",
+        "src/server/repositories/task-promotions.ts",
         "src/server/repository.ts",
+        "src/server/routes/task-routes.ts",
         "src/shared/types.ts"
       ],
       "status": "VERIFIED"
@@ -519,11 +539,11 @@
       ],
       "implementation_files": [
         "src/client/api.ts",
-        "src/server/app.ts",
         "src/server/db.ts",
         "src/server/index.ts",
         "src/server/repository.ts",
         "src/server/retention.ts",
+        "src/server/routes/task-routes.ts",
         "src/shared/types.ts"
       ],
       "status": "VERIFIED"
@@ -559,10 +579,13 @@
         "src/client/api.ts",
         "src/server/app.ts",
         "src/server/index.ts",
+        "src/server/routes/telegram-routes.ts",
         "src/server/telegram.ts",
         "src/server/telegram/config.ts",
         "src/server/telegram/digest.ts",
         "src/server/telegram/formatters.ts",
+        "src/server/telegram/handlers.ts",
+        "src/server/telegram/notifications.ts",
         "src/server/telegram/parser.ts",
         "src/server/telegram/transport.ts",
         "src/server/telegram/types.ts"
@@ -599,6 +622,9 @@
         "src/client/components/ProjectReorderModal.tsx",
         "src/client/components/SwimlaneBoard.tsx",
         "src/client/components/TopBar.tsx",
+        "src/client/components/board/SwimlaneColumn.tsx",
+        "src/client/components/board/SwimlaneTaskCard.tsx",
+        "src/client/hooks/useKajApp.ts",
         "src/client/main.tsx",
         "src/server/app.ts",
         "src/server/events.ts"
@@ -626,6 +652,9 @@
         "src/client/App.tsx",
         "src/client/components/SwimlaneBoard.tsx",
         "src/client/components/TopBar.tsx",
+        "src/client/components/board/SwimlaneColumn.tsx",
+        "src/client/components/board/SwimlaneTaskCard.tsx",
+        "src/client/hooks/useKajApp.ts",
         "src/server/app.ts"
       ],
       "status": "VERIFIED"
@@ -655,7 +684,11 @@
       ],
       "implementation_files": [
         "src/client/App.tsx",
-        "src/client/components/CalendarView.tsx"
+        "src/client/components/CalendarView.tsx",
+        "src/client/components/calendar/CalendarGridViews.tsx",
+        "src/client/components/calendar/UnscheduledSidebar.tsx",
+        "src/client/components/calendar/calendar-helpers.ts",
+        "src/client/hooks/useKajApp.ts"
       ],
       "status": "VERIFIED"
     },
@@ -686,7 +719,8 @@
         "src/client/components/TaskModal.tsx",
         "src/client/components/task-modal/EmojiPickerPopover.tsx",
         "src/client/components/task-modal/FormatToolbar.tsx",
-        "src/client/components/task-modal/RecurrenceFields.tsx"
+        "src/client/components/task-modal/RecurrenceFields.tsx",
+        "src/client/hooks/useKajApp.ts"
       ],
       "status": "VERIFIED"
     },
@@ -712,9 +746,10 @@
         "AC-UI-005.5"
       ],
       "implementation_files": [
-        "src/client/App.tsx",
         "src/client/components/SwimlaneBoard.tsx",
-        "src/client/components/TopBar.tsx"
+        "src/client/components/TopBar.tsx",
+        "src/client/components/board/SwimlaneColumn.tsx",
+        "src/client/components/board/SwimlaneTaskCard.tsx"
       ],
       "status": "VERIFIED"
     },
@@ -750,7 +785,8 @@
         "src/client/components/mobile/MobilePodsTab.tsx",
         "src/client/components/mobile/MobileTaskCard.tsx",
         "src/client/components/mobile/MobileTriageTab.tsx",
-        "src/client/components/mobile/types.ts"
+        "src/client/components/mobile/types.ts",
+        "src/client/hooks/useKajApp.ts"
       ],
       "status": "VERIFIED"
     },
@@ -779,7 +815,8 @@
       ],
       "implementation_files": [
         "src/client/App.tsx",
-        "src/client/components/TopBar.tsx"
+        "src/client/components/TopBar.tsx",
+        "src/client/hooks/useKajApp.ts"
       ],
       "status": "VERIFIED"
     },
@@ -841,7 +878,8 @@
         "src/client/components/TopBar.tsx",
         "src/client/components/cockpit/CockpitExecutionDeck.tsx",
         "src/client/components/cockpit/CockpitTelemetryDeck.tsx",
-        "src/client/components/cockpit/types.ts"
+        "src/client/components/cockpit/types.ts",
+        "src/client/hooks/useKajApp.ts"
       ],
       "status": "VERIFIED"
     },
@@ -866,6 +904,8 @@
       ],
       "implementation_files": [
         "src/client/components/SwimlaneBoard.tsx",
+        "src/client/components/board/SwimlaneColumn.tsx",
+        "src/client/components/board/SwimlaneTaskCard.tsx",
         "src/client/components/cockpit/CockpitExecutionDeck.tsx",
         "src/client/components/mobile/MobileTaskCard.tsx",
         "src/shared/types.ts"
@@ -900,6 +940,7 @@
         "src/client/components/cockpit/CockpitExecutionDeck.tsx",
         "src/client/components/mobile/MobilePodsTab.tsx",
         "src/client/components/mobile/MobileTriageTab.tsx",
+        "src/client/hooks/useKajApp.ts",
         "src/shared/types.ts"
       ],
       "status": "VERIFIED"
@@ -950,7 +991,8 @@
         "src/client/components/CompletedDrawer.tsx",
         "src/client/components/DesktopCockpit.tsx",
         "src/client/components/cockpit/CockpitTelemetryDeck.tsx",
-        "src/client/components/cockpit/types.ts"
+        "src/client/components/cockpit/types.ts",
+        "src/client/hooks/useKajApp.ts"
       ],
       "status": "VERIFIED"
     }

@@ -1,171 +1,43 @@
 import { DatabaseSync } from "node:sqlite";
-import crypto from "node:crypto";
 import {
   Project,
   CreateProjectInput,
-  CreateProjectInputSchema,
   UpdateProjectInput,
-  UpdateProjectInputSchema,
   Task,
-  TaskStatus,
   CreateTaskInput,
   CreateTaskInputSchema,
   UpdateTaskInput,
   UpdateTaskInputSchema,
   CalendarEvent,
-  RepeatRule,
   TelemetrySummary,
   PurgeCompletedResult,
-  isActionDateToday,
-  isDateInCurrentMondayWeek,
 } from "../shared/types.js";
 import {
   getTelemetrySummary as computeTelemetrySummary,
   purgeExpiredDoneTasks as runRetentionPurge,
 } from "./retention.js";
-
-function generateId(prefix: "prj" | "tsk"): string {
-  return `${prefix}_${Date.now().toString(36)}_${crypto.randomBytes(4).toString("hex")}`;
-}
-
-function resolveAutoPromotionStatus(
-  status: TaskStatus,
-  actionDate: string | null,
-): TaskStatus {
-  if (
-    status === "done" ||
-    status === "tracking" ||
-    status === "in_progress_today"
-  ) {
-    return status;
-  }
-  if (isActionDateToday(actionDate)) {
-    return "in_progress_today";
-  }
-  if (status === "triage" && isDateInCurrentMondayWeek(actionDate)) {
-    return "todo";
-  }
-  return status;
-}
-
 import {
   type RecurrenceOptions,
   shiftDate,
   getISOWeekNumber,
   appendPeriodTag,
-  formatLocalDateYMD,
-  shouldPromoteRecurringTask,
 } from "./recurrence.js";
+import { generateId } from "./repositories/shared.js";
+import { ProjectRepository } from "./repositories/project-repository.js";
+import { queryCalendarEventsForDb } from "./repositories/task-calendar.js";
+import {
+  resolveAutoPromotionStatus,
+  promoteDueRecurringTasksForDb,
+  promoteTodayActionDateTasksForDb,
+  promoteThisWeekTriageTasksForDb,
+} from "./repositories/task-promotions.js";
 
-export type { RecurrenceOptions };
-export { shiftDate, getISOWeekNumber, appendPeriodTag };
-
-// [spec: PROJ-001]
-export class ProjectRepository {
-  constructor(private db: DatabaseSync) {}
-
-  createProject(input: CreateProjectInput): Project {
-    const validated = CreateProjectInputSchema.parse(input);
-    const id = generateId("prj");
-    const now = new Date().toISOString();
-
-    let sortOrder = validated.sort_order;
-    if (sortOrder === undefined) {
-      const row = this.db
-        .prepare(
-          "SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order FROM projects",
-        )
-        .get() as { next_order: number };
-      sortOrder = row.next_order;
-    }
-
-    this.db
-      .prepare(
-        `INSERT INTO projects (id, name, color, sort_order, archived, created_at, updated_at)
-         VALUES (?, ?, ?, ?, 0, ?, ?)`,
-      )
-      .run(id, validated.name, validated.color, sortOrder, now, now);
-
-    return this.getProject(id)!;
-  }
-
-  getProject(id: string): Project | null {
-    const row = this.db
-      .prepare("SELECT * FROM projects WHERE id = ?")
-      .get(id) as Project | undefined;
-    return row || null;
-  }
-
-  listProjects(includeArchived = false): Project[] {
-    const sql = includeArchived
-      ? "SELECT * FROM projects ORDER BY sort_order ASC, name ASC"
-      : "SELECT * FROM projects WHERE archived = 0 ORDER BY sort_order ASC, name ASC";
-    return this.db.prepare(sql).all() as unknown as Project[];
-  }
-
-  updateProject(id: string, input: UpdateProjectInput): Project {
-    const validated = UpdateProjectInputSchema.parse(input);
-    const existing = this.getProject(id);
-    if (!existing) {
-      throw new Error(`Project ${id} not found`);
-    }
-
-    const name = validated.name !== undefined ? validated.name : existing.name;
-    const color =
-      validated.color !== undefined ? validated.color : existing.color;
-    const sortOrder =
-      validated.sort_order !== undefined
-        ? validated.sort_order
-        : existing.sort_order;
-    const archived =
-      validated.archived !== undefined
-        ? validated.archived
-          ? 1
-          : 0
-        : existing.archived;
-    const now = new Date().toISOString();
-
-    this.db
-      .prepare(
-        `UPDATE projects
-         SET name = ?, color = ?, sort_order = ?, archived = ?, updated_at = ?
-         WHERE id = ?`,
-      )
-      .run(name, color, sortOrder, archived, now, id);
-
-    return this.getProject(id)!;
-  }
-
-  archiveProject(id: string, archived = true): Project {
-    return this.updateProject(id, { archived });
-  }
-
-  reorderProjects(projectIds: string[]): void {
-    if (projectIds.length === 0) return;
-    const placeholders = projectIds.map(() => "?").join(",");
-    const existingRows = this.db
-      .prepare(`SELECT id FROM projects WHERE id IN (${placeholders})`)
-      .all(...projectIds) as { id: string }[];
-    if (existingRows.length !== projectIds.length) {
-      throw new Error("One or more project IDs are invalid");
-    }
-
-    const now = new Date().toISOString();
-    this.db.exec("BEGIN TRANSACTION;");
-    try {
-      const stmt = this.db.prepare(
-        "UPDATE projects SET sort_order = ?, updated_at = ? WHERE id = ?",
-      );
-      for (let i = 0; i < projectIds.length; i++) {
-        stmt.run(i, now, projectIds[i]);
-      }
-      this.db.exec("COMMIT;");
-    } catch (err) {
-      this.db.exec("ROLLBACK;");
-      throw err;
-    }
-  }
-}
+export type {
+  RecurrenceOptions,
+  CreateProjectInput,
+  UpdateProjectInput,
+};
+export { ProjectRepository, shiftDate, getISOWeekNumber, appendPeriodTag };
 
 // [spec: TASK-001]
 // [spec: TASK-002]
@@ -624,132 +496,7 @@ export class TaskRepository {
   }
 
   queryCalendarEvents(startDate: string, endDate: string): CalendarEvent[] {
-    const activeTasks = this.db
-      .prepare("SELECT * FROM tasks WHERE status != ? AND deleted_at IS NULL")
-      .all("done") as unknown as Task[];
-
-    const events: CalendarEvent[] = [];
-
-    for (const task of activeTasks) {
-      // 1. Action date events (real)
-      if (task.action_date) {
-        if (task.action_date >= startDate && task.action_date <= endDate) {
-          events.push({
-            task_id: task.id,
-            title: task.title,
-            status: task.status,
-            project_id: task.project_id,
-            priority: task.priority,
-            date: task.action_date,
-            date_type: "action",
-            is_virtual: false,
-          });
-        }
-
-        // Virtual recurrence projections for action date
-        if (task.repeat_rule !== "none") {
-          const anchorDay = Number(task.action_date.split("-")[2]);
-          const opts: RecurrenceOptions = {
-            targetDay: anchorDay,
-            repeatDayOfWeek: task.repeat_day_of_week,
-            repeatDayOfMonth: task.repeat_day_of_month,
-            repeatDayOfYear: task.repeat_day_of_year,
-          };
-          let curr = shiftDate(task.action_date, task.repeat_rule, opts);
-          while (curr <= endDate) {
-            if (curr >= startDate) {
-              events.push({
-                task_id: task.id,
-                title: task.title,
-                status: task.status,
-                project_id: task.project_id,
-                priority: task.priority,
-                date: curr,
-                date_type: "action",
-                is_virtual: true,
-              });
-            }
-            curr = shiftDate(curr, task.repeat_rule, opts);
-          }
-        }
-      }
-
-      // 2. Due date events (real)
-      if (task.due_date) {
-        if (task.due_date >= startDate && task.due_date <= endDate) {
-          events.push({
-            task_id: task.id,
-            title: task.title,
-            status: task.status,
-            project_id: task.project_id,
-            priority: task.priority,
-            date: task.due_date,
-            date_type: "due",
-            is_virtual: false,
-          });
-        }
-
-        // Virtual recurrence projections for due date
-        if (task.repeat_rule !== "none") {
-          const anchorDay = Number(task.due_date.split("-")[2]);
-          const opts: RecurrenceOptions = {
-            targetDay: anchorDay,
-            repeatDayOfWeek: task.repeat_day_of_week,
-            repeatDayOfMonth: task.repeat_day_of_month,
-            repeatDayOfYear: task.repeat_day_of_year,
-          };
-          let curr = shiftDate(task.due_date, task.repeat_rule, opts);
-          while (curr <= endDate) {
-            if (curr >= startDate) {
-              events.push({
-                task_id: task.id,
-                title: task.title,
-                status: task.status,
-                project_id: task.project_id,
-                priority: task.priority,
-                date: curr,
-                date_type: "due",
-                is_virtual: true,
-              });
-            }
-            curr = shiftDate(curr, task.repeat_rule, opts);
-          }
-        }
-      }
-    }
-
-    return events;
-  }
-
-  private batchPromoteStatus(
-    candidates: Task[],
-    nextStatus: TaskStatus,
-    extraWhereClause: string,
-  ): Task[] {
-    if (candidates.length === 0) return [];
-    const now = new Date().toISOString();
-    const promoted: Task[] = [];
-
-    this.db.exec("BEGIN IMMEDIATE;");
-    try {
-      const stmt = this.db.prepare(
-        `UPDATE tasks SET status = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL AND ${extraWhereClause}`,
-      );
-      for (const task of candidates) {
-        stmt.run(nextStatus, now, task.id);
-        promoted.push({
-          ...task,
-          status: nextStatus,
-          updated_at: now,
-        });
-      }
-      this.db.exec("COMMIT;");
-    } catch (err) {
-      this.db.exec("ROLLBACK;");
-      throw err;
-    }
-
-    return promoted;
+    return queryCalendarEventsForDb(this.db, startDate, endDate);
   }
 
   /**
@@ -757,17 +504,7 @@ export class TaskRepository {
    * calendar week or month matches their scheduled period.
    */
   promoteDueRecurringTasks(todayDateStr?: string): Task[] {
-    const today = todayDateStr || formatLocalDateYMD();
-    const candidates = this.db
-      .prepare(
-        "SELECT * FROM tasks WHERE status = 'triage' AND deleted_at IS NULL AND repeat_rule != 'none'",
-      )
-      .all() as unknown as Task[];
-
-    const toPromote = candidates.filter((task) =>
-      shouldPromoteRecurringTask(task, today),
-    );
-    return this.batchPromoteStatus(toPromote, "todo", "status = 'triage'");
+    return promoteDueRecurringTasksForDb(this.db, todayDateStr);
   }
 
   /**
@@ -775,21 +512,7 @@ export class TaskRepository {
    * today's local calendar date into `in_progress_today`.
    */
   promoteTodayActionDateTasks(todayDateStr?: string): Task[] {
-    const today = todayDateStr || formatLocalDateYMD();
-    const candidates = this.db
-      .prepare(
-        `SELECT * FROM tasks
-         WHERE deleted_at IS NULL
-           AND action_date = ?
-           AND status NOT IN ('done', 'in_progress_today', 'tracking')`,
-      )
-      .all(today) as unknown as Task[];
-
-    return this.batchPromoteStatus(
-      candidates,
-      "in_progress_today",
-      "status NOT IN ('done', 'in_progress_today', 'tracking')",
-    );
+    return promoteTodayActionDateTasksForDb(this.db, todayDateStr);
   }
 
   /**
@@ -797,17 +520,7 @@ export class TaskRepository {
    * Monday-to-Sunday calendar week into `todo` (TASK-009).
    */
   promoteThisWeekTriageTasks(todayDateStr?: string): Task[] {
-    const today = todayDateStr || formatLocalDateYMD();
-    const candidates = this.db
-      .prepare(
-        "SELECT * FROM tasks WHERE status = 'triage' AND deleted_at IS NULL AND action_date IS NOT NULL",
-      )
-      .all() as unknown as Task[];
-
-    const toPromote = candidates.filter((task) =>
-      isDateInCurrentMondayWeek(task.action_date, today),
-    );
-    return this.batchPromoteStatus(toPromote, "todo", "status = 'triage'");
+    return promoteThisWeekTriageTasksForDb(this.db, todayDateStr);
   }
 
   /**
