@@ -155,6 +155,17 @@ Acceptance Criteria:
 - AC-UI-013.2: When the Completed Archive opens, the system shall display the configured retention window notice alongside a manual purge trigger for expired completed tasks.
 - AC-UI-013.3: When the manual retention purge action completes, the system shall refresh completed tasks and telemetry metrics immediately without displaying console errors.
 
+## UI-014: Desktop Cockpit Velocity Chart Week and Month Toggle
+
+When viewing the Desktop Cockpit velocity chart section, the system shall provide an accessible period toggle allowing users to switch between weekly and monthly stacked completion views with matching section headings.
+
+Acceptance Criteria:
+- AC-UI-014.1: When rendering the Desktop Cockpit velocity chart section, the system shall display a toggle control between weekly and monthly views with pressed-state accessibility semantics defaulting to weekly view.
+- AC-UI-014.2: When the monthly velocity view is selected, the system shall update the chart heading to Tasks Completed by Month along with monthly summary labels and restore weekly headings when switched back to weekly view.
+- AC-UI-014.3: When displaying the monthly velocity chart, the system shall render chronological bar columns for the recent 6 calendar months stacked by task creator attribution with unspecified tasks attributed to the configured non-VIP member.
+- AC-UI-014.4: While aggregating monthly completion velocity, the system shall combine live completed tasks with archived telemetry snapshot totals accurately without console or runtime errors.
+
+
 
 
 

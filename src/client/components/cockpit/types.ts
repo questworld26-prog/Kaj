@@ -1,35 +1,38 @@
 // [spec: UI-009]
 // [spec: UI-012]
 // [spec: UI-013]
+// [spec: UI-014]
 import {
   DEFAULT_DONE_RETENTION_DAYS,
   getISOYearWeekKey,
+  getYearMonthKey,
+  isoYearWeekToYearMonth,
   type Task,
   type TelemetrySummary,
 } from "../../../shared/types.js";
 export const PRIORITY_STYLES: Record<string, { label: string; badge: string }> =
-  {
-    today: {
-      label: "Today",
-      badge: "bg-rose-500/10 text-rose-400 border-rose-500/30",
-    },
-    week: {
-      label: "Week",
-      badge: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-    },
-    month: {
-      label: "Month",
-      badge: "bg-sky-500/10 text-sky-400 border-sky-500/30",
-    },
-    quarter: {
-      label: "Quarter",
-      badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
-    },
-    year: {
-      label: "Year",
-      badge: "bg-stone-500/10 text-stone-400 border-stone-500/30",
-    },
-  };
+{
+  today: {
+    label: "Today",
+    badge: "bg-rose-500/10 text-rose-400 border-rose-500/30",
+  },
+  week: {
+    label: "Week",
+    badge: "bg-amber-500/10 text-amber-400 border-amber-500/30",
+  },
+  month: {
+    label: "Month",
+    badge: "bg-sky-500/10 text-sky-400 border-sky-500/30",
+  },
+  quarter: {
+    label: "Quarter",
+    badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
+  },
+  year: {
+    label: "Year",
+    badge: "bg-stone-500/10 text-stone-400 border-stone-500/30",
+  },
+};
 
 export function getISOWeekKey(d: Date): string {
   const target = new Date(d.valueOf());
@@ -71,6 +74,33 @@ export const CREATOR_PALETTE: ReadonlyArray<CreatorStackStyle> = [
   { bg: "#F472B6", text: "#091310" }, // Pink 400 (>6.8:1 contrast)
   { bg: "#94A3B8", text: "#091310" }, // Slate 400 (>7.1:1 contrast)
 ];
+
+const MONTH_SHORT_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+function assignCreatorPalette(creators: Iterable<string>): {
+  creatorList: string[];
+  creatorStyleMap: Record<string, CreatorStackStyle>;
+} {
+  const creatorList = Array.from(creators);
+  const creatorStyleMap: Record<string, CreatorStackStyle> = {};
+  creatorList.forEach((creator, idx) => {
+    creatorStyleMap[creator] = CREATOR_PALETTE[idx % CREATOR_PALETTE.length];
+  });
+  return { creatorList, creatorStyleMap };
+}
 
 function resolveTelemetryCreator(
   creator?: string | null,
@@ -123,11 +153,7 @@ export function buildCreatorStackData(
     }
   }
 
-  const creatorList = Array.from(allCreators);
-  const creatorStyleMap: Record<string, CreatorStackStyle> = {};
-  creatorList.forEach((creator, idx) => {
-    creatorStyleMap[creator] = CREATOR_PALETTE[idx % CREATOR_PALETTE.length];
-  });
+  const { creatorList, creatorStyleMap } = assignCreatorPalette(allCreators);
 
   return { weeks, creatorList, creatorStyleMap };
 }
@@ -136,6 +162,7 @@ export function buildCreatorStackData(
  * Derive a TelemetrySummary solely from an in-memory array of tasks (e.g. search-filtered subset).
  */
 // [spec: UI-013]
+// [spec: UI-014]
 export function buildTelemetrySummaryFromTasks(
   completedTasks: ReadonlyArray<
     Pick<Task, "completed_at" | "created_by" | "project_id">
@@ -146,6 +173,7 @@ export function buildTelemetrySummaryFromTasks(
   const weekMap = new Map<string, number>();
   const projectMap = new Map<string, number>();
   const weekCreatorMap = new Map<string, number>();
+  const monthCreatorMap = new Map<string, number>();
 
   for (const t of completedTasks) {
     const projectKey = t.project_id || "unassigned";
@@ -154,10 +182,13 @@ export function buildTelemetrySummaryFromTasks(
     const d = new Date(t.completed_at);
     if (isNaN(d.getTime())) continue;
     const isoWeek = getISOYearWeekKey(d);
+    const yearMonth = getYearMonthKey(d);
     const creator = resolveTelemetryCreator(t.created_by, defaultCreatorName);
     weekMap.set(isoWeek, (weekMap.get(isoWeek) || 0) + 1);
     const wcKey = `${isoWeek}\0${creator}`;
     weekCreatorMap.set(wcKey, (weekCreatorMap.get(wcKey) || 0) + 1);
+    const mcKey = `${yearMonth}\0${creator}`;
+    monthCreatorMap.set(mcKey, (monthCreatorMap.get(mcKey) || 0) + 1);
   }
 
   return {
@@ -176,6 +207,10 @@ export function buildTelemetrySummaryFromTasks(
     by_week_creator: Array.from(weekCreatorMap.entries()).map(([k, count]) => {
       const [iso_week, creator] = k.split("\0");
       return { iso_week, creator, count };
+    }),
+    by_month_creator: Array.from(monthCreatorMap.entries()).map(([k, count]) => {
+      const [year_month, creator] = k.split("\0");
+      return { year_month, creator, count };
     }),
   };
 }
@@ -222,11 +257,7 @@ function buildCreatorStackWindowFromSummary(
     }
   }
 
-  const creatorList = Array.from(allCreators);
-  const creatorStyleMap: Record<string, CreatorStackStyle> = {};
-  creatorList.forEach((creator, idx) => {
-    creatorStyleMap[creator] = CREATOR_PALETTE[idx % CREATOR_PALETTE.length];
-  });
+  const { creatorList, creatorStyleMap } = assignCreatorPalette(allCreators);
 
   return {
     weeks: weeks.map(({ yearWeek: _yw, ...bucket }) => bucket),
@@ -270,4 +301,51 @@ export function buildWeeklyVelocityStackFromSummary(
     tagCurrentLabel: false,
     defaultCreatorName,
   });
+}
+
+/**
+ * Build last-6-month chronological stacked monthly velocity telemetry from merged TelemetrySummary.
+ */
+// [spec: UI-014]
+export function buildMonthlyVelocityStackFromSummary(
+  summary: TelemetrySummary,
+  now: Date = new Date(),
+  defaultCreatorName?: string | null,
+): CreatorStackData {
+  const monthCount = 6;
+  const buckets: CreatorWeekBucket[] = [];
+  for (let offset = monthCount - 1; offset >= 0; offset--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - offset, 1, 12, 0, 0);
+    const yearMonth = getYearMonthKey(d);
+    buckets.push({
+      weekKey: yearMonth,
+      label: MONTH_SHORT_NAMES[d.getMonth()],
+      isCurrent: offset === 0,
+      total: 0,
+      creators: {},
+    });
+  }
+
+  const entries =
+    summary.by_month_creator ??
+    summary.by_week_creator.flatMap((entry) => {
+      const yearMonth = isoYearWeekToYearMonth(entry.iso_week);
+      return yearMonth
+        ? [{ year_month: yearMonth, creator: entry.creator, count: entry.count }]
+        : [];
+    });
+
+  const allCreators = new Set<string>();
+  for (const entry of entries) {
+    if (entry.count <= 0) continue;
+    const bucket = buckets.find((m) => m.weekKey === entry.year_month);
+    if (!bucket) continue;
+    const creator = resolveTelemetryCreator(entry.creator, defaultCreatorName);
+    allCreators.add(creator);
+    bucket.creators[creator] = (bucket.creators[creator] || 0) + entry.count;
+    bucket.total += entry.count;
+  }
+
+  const { creatorList, creatorStyleMap } = assignCreatorPalette(allCreators);
+  return { weeks: buckets, creatorList, creatorStyleMap };
 }

@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-17T04:25:53.107099+00:00",
-  "total_requirements": 35,
-  "active_requirements_count": 35,
+  "last_audited_at": "2026-11-17T04:30:27.449092+00:00",
+  "total_requirements": 36,
+  "active_requirements_count": 36,
   "planned_requirements_count": 0,
-  "active_criteria_count": 156,
-  "verified_criteria_count": 156,
+  "active_criteria_count": 160,
+  "verified_criteria_count": 160,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -1052,6 +1052,32 @@
         "src/client/components/cockpit/CockpitTelemetryDeck.tsx",
         "src/client/components/cockpit/types.ts",
         "src/client/hooks/useKajApp.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "UI-014",
+      "title": "Desktop Cockpit Velocity Chart Week and Month Toggle",
+      "spec_file": "specs/ui.md",
+      "is_planned": false,
+      "sha256": "db7c92fa6286aa061de7decfd99c1bafb117065461f98f61ecc895058ea05e13",
+      "verified_sha256": "db7c92fa6286aa061de7decfd99c1bafb117065461f98f61ecc895058ea05e13",
+      "acceptance_criteria": [
+        "AC-UI-014.1",
+        "AC-UI-014.2",
+        "AC-UI-014.3",
+        "AC-UI-014.4"
+      ],
+      "verified_criteria": [
+        "AC-UI-014.1",
+        "AC-UI-014.2",
+        "AC-UI-014.3",
+        "AC-UI-014.4"
+      ],
+      "implementation_files": [
+        "src/client/components/cockpit/CockpitTelemetryDeck.tsx",
+        "src/client/components/cockpit/types.ts",
+        "src/server/retention.ts"
       ],
       "status": "VERIFIED"
     }

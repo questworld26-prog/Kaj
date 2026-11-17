@@ -1,4 +1,5 @@
 // [spec: UI-012]
+// [verifies: UI-014]
 import { test, expect, type APIRequestContext } from "@playwright/test";
 
 function getRelativeLuminance(rgbStr: string): number {
@@ -225,5 +226,68 @@ test.describe("Kaj (কাজ) Cockpit Creator Stacked Telemetry (UI-012)", () =
       );
       await expect(unspecifiedSeg).toHaveCount(0);
     }
+  });
+
+  // [verifies: UI-014/AC-UI-014.1]
+  test("renders Week and Month velocity toggle controls with accessible pressed state defaulting to Week", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.getByTestId("nav-cockpit-btn").click();
+
+    const velocityChart = page.getByTestId("cockpit-weekly-velocity-chart");
+    await expect(velocityChart).toBeVisible();
+    await expect(velocityChart).toContainText("Tasks Completed by Week");
+
+    const weekBtn = velocityChart.getByTestId("velocity-toggle-week");
+    const monthBtn = velocityChart.getByTestId("velocity-toggle-month");
+
+    await expect(weekBtn).toBeVisible();
+    await expect(monthBtn).toBeVisible();
+    await expect(weekBtn).toHaveAttribute("aria-pressed", "true");
+    await expect(monthBtn).toHaveAttribute("aria-pressed", "false");
+  });
+
+  // [verifies: UI-014/AC-UI-014.2]
+  test("toggles velocity chart title and monthly stacked bars between Week and Month views cleanly", async ({
+    page,
+    request,
+  }) => {
+    const suffix = Date.now().toString();
+    createdTaskIds.push(
+      await seedCompletedTask(request, `UI014 Monthly ${suffix}`, `Lead_${suffix}`),
+    );
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.getByTestId("nav-cockpit-btn").click();
+
+    const velocityChart = page.getByTestId("cockpit-weekly-velocity-chart");
+    const weekBtn = velocityChart.getByTestId("velocity-toggle-week");
+    const monthBtn = velocityChart.getByTestId("velocity-toggle-month");
+
+    await monthBtn.click();
+
+    await expect(monthBtn).toHaveAttribute("aria-pressed", "true");
+    await expect(weekBtn).toHaveAttribute("aria-pressed", "false");
+    await expect(velocityChart).toContainText("Tasks Completed by Month");
+    await expect(velocityChart).toContainText("Recent 6 months");
+    await expect(velocityChart).toContainText("this month");
+
+    const monthColumns = velocityChart.getByTestId("velocity-week-column");
+    await expect(monthColumns).toHaveCount(6);
+    await expect(
+      velocityChart.locator(
+        `[data-testid="velocity-bar-segment"][data-creator="Lead_${suffix}"]`,
+      ),
+    ).toBeVisible();
+
+    await weekBtn.click();
+    await expect(weekBtn).toHaveAttribute("aria-pressed", "true");
+    await expect(monthBtn).toHaveAttribute("aria-pressed", "false");
+    await expect(velocityChart).toContainText("Tasks Completed by Week");
+    await expect(velocityChart).toContainText("Recent 6 weeks");
+    await expect(velocityChart).toContainText("this week");
   });
 });

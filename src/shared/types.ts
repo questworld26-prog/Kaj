@@ -335,6 +335,24 @@ export function getISOYearWeekKey(d: Date): string {
   return `${isoYear}-W${String(weekNum).padStart(2, "0")}`;
 }
 
+export function getYearMonthKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export function isoYearWeekToYearMonth(isoYearWeek: string): string | null {
+  const match = /^(\d{4})-W(\d{2})$/.exec(isoYearWeek.trim());
+  if (!match) return null;
+  const isoYear = Number(match[1]);
+  const weekNum = Number(match[2]);
+  if (weekNum < 1 || weekNum > 53) return null;
+
+  const jan4 = new Date(isoYear, 0, 4, 12, 0, 0);
+  const jan4DayFromMon = (jan4.getDay() + 6) % 7;
+  const week1Thursday = new Date(jan4.getTime());
+  week1Thursday.setDate(jan4.getDate() - jan4DayFromMon + 3 + (weekNum - 1) * 7);
+  return getYearMonthKey(week1Thursday);
+}
+
 export interface TelemetryWeekEntry {
   iso_week: string;
   count: number;
@@ -351,6 +369,12 @@ export interface TelemetryWeekCreatorEntry {
   count: number;
 }
 
+export interface TelemetryMonthCreatorEntry {
+  year_month: string;
+  creator: string;
+  count: number;
+}
+
 export interface TelemetrySummary {
   retention_days: number;
   total_completed: number;
@@ -359,6 +383,7 @@ export interface TelemetrySummary {
   by_week: TelemetryWeekEntry[];
   by_project: TelemetryProjectEntry[];
   by_week_creator: TelemetryWeekCreatorEntry[];
+  by_month_creator?: TelemetryMonthCreatorEntry[];
 }
 
 export interface PurgeCompletedResult {

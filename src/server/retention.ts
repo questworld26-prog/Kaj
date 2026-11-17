@@ -1,9 +1,13 @@
 // [spec: TASK-010]
+// [spec: UI-014]
 import type { DatabaseSync } from "node:sqlite";
 import {
   getISOYearWeekKey,
+  getYearMonthKey,
+  isoYearWeekToYearMonth,
   parseDoneRetentionDays,
   type PurgeCompletedResult,
+  type TelemetryMonthCreatorEntry,
   type TelemetryProjectEntry,
   type TelemetrySummary,
   type TelemetryWeekCreatorEntry,
@@ -155,6 +159,7 @@ export function purgeExpiredDoneTasks(
  * Combine live non-deleted `done` tasks with persisted telemetry snapshots.
  */
 // [spec: TASK-010]
+// [spec: UI-014]
 export function getTelemetrySummary(
   db: DatabaseSync,
   retentionDays: number = getConfiguredDoneRetentionDays(),
@@ -164,9 +169,11 @@ export function getTelemetrySummary(
   const weekMap = new Map<string, number>();
   const projectMap = new Map<string, number>();
   const weekCreatorMap = new Map<string, number>();
+  const monthCreatorMap = new Map<string, number>();
 
   const addBucket = (
     isoWeek: string | null,
+    yearMonth: string | null,
     projectKey: string,
     creatorKey: string,
     count: number,
@@ -176,6 +183,10 @@ export function getTelemetrySummary(
       weekMap.set(isoWeek, (weekMap.get(isoWeek) || 0) + count);
       const wcKey = `${isoWeek}\0${creatorKey}`;
       weekCreatorMap.set(wcKey, (weekCreatorMap.get(wcKey) || 0) + count);
+    }
+    if (yearMonth) {
+      const mcKey = `${yearMonth}\0${creatorKey}`;
+      monthCreatorMap.set(mcKey, (monthCreatorMap.get(mcKey) || 0) + count);
     }
   };
 
@@ -195,13 +206,15 @@ export function getTelemetrySummary(
     const projectKey = row.project_id || "unassigned";
     const creatorKey = row.created_by?.trim() || fallbackCreator;
     let isoWeek: string | null = null;
+    let yearMonth: string | null = null;
     if (row.completed_at) {
       const d = new Date(row.completed_at);
       if (!isNaN(d.getTime())) {
         isoWeek = getISOYearWeekKey(d);
+        yearMonth = getYearMonthKey(d);
       }
     }
-    addBucket(isoWeek, projectKey, creatorKey, 1);
+    addBucket(isoWeek, yearMonth, projectKey, creatorKey, 1);
   }
 
   const snapshotRows = db
@@ -221,7 +234,8 @@ export function getTelemetrySummary(
       !rawCreator || rawCreator === "Unspecified"
         ? fallbackCreator
         : rawCreator;
-    addBucket(row.iso_week, row.project_key, creatorKey, count);
+    const yearMonth = isoYearWeekToYearMonth(row.iso_week);
+    addBucket(row.iso_week, yearMonth, row.project_key, creatorKey, count);
   }
 
   const byWeek: TelemetryWeekEntry[] = Array.from(weekMap.entries())
@@ -241,6 +255,15 @@ export function getTelemetrySummary(
       return { iso_week, creator, count };
     });
 
+  const byMonthCreator: TelemetryMonthCreatorEntry[] = Array.from(
+    monthCreatorMap.entries(),
+  )
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, count]) => {
+      const [year_month, creator] = key.split("\0");
+      return { year_month, creator, count };
+    });
+
   return {
     retention_days: retentionDays,
     total_completed: liveRows.length + snapshottedCompleted,
@@ -249,5 +272,6 @@ export function getTelemetrySummary(
     by_week: byWeek,
     by_project: byProject,
     by_week_creator: byWeekCreator,
+    by_month_creator: byMonthCreator,
   };
 }
