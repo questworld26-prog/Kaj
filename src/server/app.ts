@@ -212,7 +212,7 @@ export function createApp(options: AppOptions): Hono {
   });
 
   registerTelegramRoutes(app, telegramBot);
-  registerTaskRoutes(app, { db, eventBus, taskRepo, projectRepo });
+  registerTaskRoutes(app, { db, eventBus, taskRepo, projectRepo, telegramBot });
 
   // SSE: Live event broadcast for UI clients
   app.get("/events", (c) => {

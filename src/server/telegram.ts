@@ -24,6 +24,7 @@ import { createFetchTelegramTransport } from "./telegram/transport.js";
 import {
   dispatchDailyNonVipDigest,
   isVipUser,
+  resolveDefaultNonVipCreatorName,
   resolveNonVipRecipients,
   selectDailyDigestTasks,
 } from "./telegram/digest.js";
@@ -54,6 +55,7 @@ export {
   parseTelegramTaskInput,
   createFetchTelegramTransport,
   isVipUser,
+  resolveDefaultNonVipCreatorName,
   resolveNonVipRecipients,
   selectDailyDigestTasks,
   resolveUserIdForCreator,

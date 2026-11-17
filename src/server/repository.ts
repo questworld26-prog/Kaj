@@ -552,7 +552,10 @@ export class TaskRepository {
   }
 
   // [spec: TASK-010]
-  getTelemetrySummary(retentionDays?: number): TelemetrySummary {
-    return computeTelemetrySummary(this.db, retentionDays);
+  getTelemetrySummary(
+    retentionDays?: number,
+    defaultCreatorName?: string | null,
+  ): TelemetrySummary {
+    return computeTelemetrySummary(this.db, retentionDays, defaultCreatorName);
   }
 }

@@ -69,6 +69,37 @@ export function resolveNonVipRecipients(config: TelegramConfig): number[] {
 }
 
 /**
+ * Resolve the display name of the primary configured non-VIP Telegram member
+ * for attributing unspecified creator entries on telemetry charts.
+ */
+// [spec: UI-012]
+export function resolveDefaultNonVipCreatorName(
+  config: TelegramConfig,
+): string | null {
+  const nonVipIds = resolveNonVipRecipients(config);
+  for (const uid of nonVipIds) {
+    const mapped = config.user_names?.[String(uid)]?.trim();
+    if (mapped) return mapped;
+  }
+  if (config.user_names) {
+    for (const [k, v] of Object.entries(config.user_names)) {
+      const name = v?.trim();
+      if (
+        name &&
+        !isVipUser(k, config.vip_users) &&
+        !isVipUser(name, config.vip_users)
+      ) {
+        return name;
+      }
+    }
+  }
+  if (nonVipIds.length > 0) {
+    return String(nonVipIds[0]);
+  }
+  return null;
+}
+
+/**
  * Parse local wall-clock digest threshold `HH:mm` into minutes since midnight (defaults to 08:00 = 480).
  */
 // [spec: NOTIF-002]

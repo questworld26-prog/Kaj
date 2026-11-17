@@ -22,7 +22,7 @@ function getContrastRatio(c1: string, c2: string): number {
 async function seedCompletedTask(
   request: APIRequestContext,
   title: string,
-  createdBy: string,
+  createdBy: string | null,
 ): Promise<string> {
   const createRes = await request.post("/api/tasks", {
     data: {
@@ -177,6 +177,53 @@ test.describe("Kaj (কাজ) Cockpit Creator Stacked Telemetry (UI-012)", () =
       expect(
         getContrastRatio(styles.color, styles.backgroundColor),
       ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  // [verifies: UI-012/AC-UI-012.4]
+  test("attributes completed tasks without creator to the configured non-VIP member on the stacked creator chart", async ({
+    page,
+    request,
+  }) => {
+    const suffix = Date.now().toString();
+    const vipRes = await request.get("/api/vip-users");
+    expect(vipRes.ok()).toBeTruthy();
+    const vipBody = (await vipRes.json()) as {
+      vip_users: string[];
+      default_creator?: string | null;
+    };
+    const expectedFallback = vipBody.default_creator || "Unspecified";
+
+    createdTaskIds.push(
+      await seedCompletedTask(request, `UI012 Unspecified ${suffix}`, null),
+    );
+    createdTaskIds.push(
+      await seedCompletedTask(
+        request,
+        `UI012 Named ${suffix}`,
+        `Named_${suffix}`,
+      ),
+    );
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.getByTestId("nav-cockpit-btn").click();
+
+    const currentRow = page
+      .getByTestId("cockpit-creator-stacked-chart")
+      .getByTestId("creator-stacked-week-row")
+      .nth(0);
+
+    const fallbackSeg = currentRow.locator(
+      `[data-testid="creator-bar-segment"][data-creator="${expectedFallback}"]`,
+    );
+    await expect(fallbackSeg).toBeVisible();
+
+    if (vipBody.default_creator) {
+      const unspecifiedSeg = currentRow.locator(
+        '[data-testid="creator-bar-segment"][data-creator="Unspecified"]',
+      );
+      await expect(unspecifiedSeg).toHaveCount(0);
     }
   });
 });

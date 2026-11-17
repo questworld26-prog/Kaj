@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-17T03:33:58.091233+00:00",
+  "last_audited_at": "2026-11-17T03:45:25.281149+00:00",
   "total_requirements": 33,
   "active_requirements_count": 33,
   "planned_requirements_count": 0,
-  "active_criteria_count": 148,
-  "verified_criteria_count": 148,
+  "active_criteria_count": 149,
+  "verified_criteria_count": 149,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -854,8 +854,8 @@
       "title": "Desktop Cockpit Execution Screen with Performance Telemetry Charts",
       "spec_file": "specs/ui.md",
       "is_planned": false,
-      "sha256": "2a4fcc899d870494afd968cea5abcc0d6623ea68a9821d526078a62513505d3e",
-      "verified_sha256": "2a4fcc899d870494afd968cea5abcc0d6623ea68a9821d526078a62513505d3e",
+      "sha256": "0a53f63aedeeb03b97318761fa74c14628d1f799c539dc062b8aadb8b66307d3",
+      "verified_sha256": "0a53f63aedeeb03b97318761fa74c14628d1f799c539dc062b8aadb8b66307d3",
       "acceptance_criteria": [
         "AC-UI-009.1",
         "AC-UI-009.2",
@@ -950,21 +950,26 @@
       "title": "Desktop Cockpit Creator Stacked Chart Order and Segment Counts",
       "spec_file": "specs/ui.md",
       "is_planned": false,
-      "sha256": "34be1aab8aa2d80530ea8fa9d47db61400458db2243ca9cc1da3b493d1605518",
-      "verified_sha256": "34be1aab8aa2d80530ea8fa9d47db61400458db2243ca9cc1da3b493d1605518",
+      "sha256": "8b14ad441a3ed88a20561be92f8934b7afd811834493b1804865df33681d574a",
+      "verified_sha256": "8b14ad441a3ed88a20561be92f8934b7afd811834493b1804865df33681d574a",
       "acceptance_criteria": [
         "AC-UI-012.1",
         "AC-UI-012.2",
-        "AC-UI-012.3"
+        "AC-UI-012.3",
+        "AC-UI-012.4"
       ],
       "verified_criteria": [
         "AC-UI-012.1",
         "AC-UI-012.2",
-        "AC-UI-012.3"
+        "AC-UI-012.3",
+        "AC-UI-012.4"
       ],
       "implementation_files": [
+        "src/client/api.ts",
         "src/client/components/cockpit/CockpitTelemetryDeck.tsx",
-        "src/client/components/cockpit/types.ts"
+        "src/client/components/cockpit/types.ts",
+        "src/server/routes/task-routes.ts",
+        "src/server/telegram/digest.ts"
       ],
       "status": "VERIFIED"
     },

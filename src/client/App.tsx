@@ -33,6 +33,7 @@ export function App() {
     completedTasks,
     telemetry,
     vipUsers,
+    defaultCreator,
     memoryMb,
     errorMessage,
     setErrorMessage,
@@ -127,6 +128,7 @@ export function App() {
               completedTasks={filteredCompletedTasks}
               telemetry={searchQuery.trim() ? null : telemetry}
               vipUsers={vipUsers}
+              defaultCreator={defaultCreator}
               hideRepeatingTriage={hideRepeatingTriage}
               hiddenRepeatingTriageCount={hiddenRepeatingTriageCount}
               onToggleHideRepeatingTriage={handleToggleHideRepeatingTriage}

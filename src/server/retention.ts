@@ -158,7 +158,9 @@ export function purgeExpiredDoneTasks(
 export function getTelemetrySummary(
   db: DatabaseSync,
   retentionDays: number = getConfiguredDoneRetentionDays(),
+  defaultCreatorName?: string | null,
 ): TelemetrySummary {
+  const fallbackCreator = defaultCreatorName?.trim() || "Unspecified";
   const weekMap = new Map<string, number>();
   const projectMap = new Map<string, number>();
   const weekCreatorMap = new Map<string, number>();
@@ -191,7 +193,7 @@ export function getTelemetrySummary(
 
   for (const row of liveRows) {
     const projectKey = row.project_id || "unassigned";
-    const creatorKey = row.created_by?.trim() || "Unspecified";
+    const creatorKey = row.created_by?.trim() || fallbackCreator;
     let isoWeek: string | null = null;
     if (row.completed_at) {
       const d = new Date(row.completed_at);
@@ -214,7 +216,12 @@ export function getTelemetrySummary(
     const count = Number(row.completed_count || 0);
     if (count <= 0) continue;
     snapshottedCompleted += count;
-    addBucket(row.iso_week, row.project_key, row.creator_key, count);
+    const rawCreator = row.creator_key?.trim();
+    const creatorKey =
+      !rawCreator || rawCreator === "Unspecified"
+        ? fallbackCreator
+        : rawCreator;
+    addBucket(row.iso_week, row.project_key, creatorKey, count);
   }
 
   const byWeek: TelemetryWeekEntry[] = Array.from(weekMap.entries())

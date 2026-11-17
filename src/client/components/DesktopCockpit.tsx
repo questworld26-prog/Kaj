@@ -19,6 +19,7 @@ interface DesktopCockpitProps {
   completedTasks: Task[];
   telemetry?: TelemetrySummary | null;
   vipUsers?: string[];
+  defaultCreator?: string | null;
   hideRepeatingTriage?: boolean;
   hiddenRepeatingTriageCount?: number;
   onToggleHideRepeatingTriage?: () => void;
@@ -34,6 +35,7 @@ export function DesktopCockpit({
   completedTasks,
   telemetry = null,
   vipUsers = [],
+  defaultCreator = null,
   hideRepeatingTriage = false,
   hiddenRepeatingTriageCount = 0,
   onToggleHideRepeatingTriage,
@@ -116,6 +118,7 @@ export function DesktopCockpit({
           completedTasks={completedTasks}
           projects={projects}
           telemetry={telemetry}
+          defaultCreator={defaultCreator}
         />
       </div>
     </div>

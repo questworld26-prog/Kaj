@@ -3,67 +3,52 @@
 // [spec: UI-013]
 import { h } from "preact";
 import { useMemo } from "preact/hooks";
-import {
-  getISOYearWeekKey,
-  type Project,
-  type Task,
-  type TelemetrySummary,
+import type {
+  Project,
+  Task,
+  TelemetrySummary,
 } from "../../../shared/types.js";
 import {
   buildCreatorStackDataFromSummary,
   buildTelemetrySummaryFromTasks,
-  getISOWeekKey,
+  buildWeeklyVelocityStackFromSummary,
 } from "./types.js";
 
 interface CockpitTelemetryDeckProps {
   completedTasks: Task[];
   projects: Project[];
   telemetry?: TelemetrySummary | null;
+  defaultCreator?: string | null;
 }
 
 export function CockpitTelemetryDeck({
   completedTasks,
   projects,
   telemetry = null,
+  defaultCreator = null,
 }: CockpitTelemetryDeckProps) {
   const effectiveTelemetry = useMemo(
-    () => telemetry ?? buildTelemetrySummaryFromTasks(completedTasks),
-    [telemetry, completedTasks],
+    () =>
+      telemetry ??
+      buildTelemetrySummaryFromTasks(completedTasks, undefined, defaultCreator),
+    [telemetry, completedTasks, defaultCreator],
   );
 
-  // Telemetry 1: Tasks Completed by Week (last 6 ISO weeks)
-  const weeklyVelocity = useMemo(() => {
-    const now = new Date();
-    const weeks: Array<{
-      yearWeek: string;
-      label: string;
-      count: number;
-      isCurrent: boolean;
-    }> = [];
-
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
-      weeks.push({
-        yearWeek: getISOYearWeekKey(d),
-        label: getISOWeekKey(d),
-        count: 0,
-        isCurrent: i === 0,
-      });
-    }
-
-    const weekCountMap = new Map(
-      effectiveTelemetry.by_week.map((w) => [w.iso_week, w.count]),
-    );
-    for (const w of weeks) {
-      w.count = weekCountMap.get(w.yearWeek) || 0;
-    }
-    return weeks;
-  }, [effectiveTelemetry]);
+  // Telemetry 2: Tasks Completed by Week (last 6 ISO weeks stacked by creator)
+  const weeklyVelocityStack = useMemo(
+    () =>
+      buildWeeklyVelocityStackFromSummary(
+        effectiveTelemetry,
+        undefined,
+        defaultCreator,
+      ),
+    [effectiveTelemetry, defaultCreator],
+  );
 
   const maxWeeklyCount = useMemo(() => {
-    const counts = weeklyVelocity.map((w) => w.count);
+    const counts = weeklyVelocityStack.weeks.map((w) => w.total);
     return Math.max(...counts, 1);
-  }, [weeklyVelocity]);
+  }, [weeklyVelocityStack]);
 
   // Telemetry 2: Completed Tasks by Project (Pie / Donut)
   const projectDistribution = useMemo(() => {
@@ -125,8 +110,13 @@ export function CockpitTelemetryDeck({
 
   // Telemetry 1: Stacked Completed by Creator (latest week on top, counts rendered inside bar)
   const creatorStackData = useMemo(
-    () => buildCreatorStackDataFromSummary(effectiveTelemetry),
-    [effectiveTelemetry],
+    () =>
+      buildCreatorStackDataFromSummary(
+        effectiveTelemetry,
+        undefined,
+        defaultCreator,
+      ),
+    [effectiveTelemetry, defaultCreator],
   );
 
   return (
@@ -182,6 +172,7 @@ export function CockpitTelemetryDeck({
                       const pct = (count / w.total) * 100;
                       const roundedPct = Math.round(pct);
                       const segmentStyle =
+                        weeklyVelocityStack.creatorStyleMap[creator] ||
                         creatorStackData.creatorStyleMap[creator];
                       return (
                         <div
@@ -216,8 +207,10 @@ export function CockpitTelemetryDeck({
                   <span
                     className="w-2 h-2 rounded-full"
                     style={{
-                      backgroundColor:
-                        creatorStackData.creatorStyleMap[creator].bg,
+                      backgroundColor: (
+                        weeklyVelocityStack.creatorStyleMap[creator] ||
+                        creatorStackData.creatorStyleMap[creator]
+                      ).bg,
                     }}
                   />
                   <span>{creator}</span>
@@ -228,7 +221,7 @@ export function CockpitTelemetryDeck({
         )}
       </section>
 
-      {/* Chart 2: Tasks Completed by Week (Velocity Bar Chart) */}
+      {/* Chart 2: Tasks Completed by Week (Stacked by Creator) */}
       <section
         data-testid="cockpit-weekly-velocity-chart"
         className="rounded-2xl bg-[#121718] border border-[#2A3235] p-5 shadow-sm"
@@ -239,43 +232,81 @@ export function CockpitTelemetryDeck({
               📈 Tasks Completed by Week
             </h3>
             <p className="text-xs text-gray-400 mt-0.5">
-              Recent 6 weeks completion velocity (Total: {effectiveTelemetry.total_completed}{" "}
-              done)
+              Recent 6 weeks stacked by creator (Total:{" "}
+              {effectiveTelemetry.total_completed} done)
             </p>
           </div>
           <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold">
-            {weeklyVelocity[weeklyVelocity.length - 1]?.count || 0} this week
+            {weeklyVelocityStack.weeks[weeklyVelocityStack.weeks.length - 1]
+              ?.total || 0}{" "}
+            this week
           </span>
         </div>
 
         <div className="grid grid-cols-6 gap-2 items-end h-32 pt-2 px-1 border-b border-[#2A3235]">
-          {weeklyVelocity.map((w) => {
-            const heightPct = Math.max(
-              Math.round((w.count / maxWeeklyCount) * 100),
-              8,
-            );
+          {weeklyVelocityStack.weeks.map((w) => {
+            const heightPct =
+              w.total === 0
+                ? 8
+                : Math.max(Math.round((w.total / maxWeeklyCount) * 100), 12);
             return (
               <div
                 key={w.label}
+                data-testid="velocity-week-column"
                 className="flex flex-col items-center gap-1.5 h-full justify-end"
               >
                 <span className="text-xs font-semibold text-gray-300">
-                  {w.count}
+                  {w.total}
                 </span>
-                <div
-                  style={{ height: `${heightPct}%` }}
-                  className={`w-full rounded-t-md transition-all ${
-                    w.isCurrent
-                      ? "bg-[#10B981] shadow-md shadow-emerald-950"
-                      : "bg-[#1C2224] border border-emerald-500/40 hover:bg-emerald-500/20"
-                  }`}
-                />
+                {w.total === 0 ? (
+                  <div
+                    style={{ height: `${heightPct}%` }}
+                    className={`w-full rounded-t-md ${
+                      w.isCurrent
+                        ? "bg-[#1C2224] border border-emerald-500/40"
+                        : "bg-[#1C2224] border border-[#2A3235]"
+                    }`}
+                  />
+                ) : (
+                  <div
+                    style={{ height: `${heightPct}%` }}
+                    className={`w-full rounded-t-md overflow-hidden flex flex-col-reverse ${
+                      w.isCurrent
+                        ? "ring-1 ring-emerald-400/70 shadow-md shadow-emerald-950"
+                        : ""
+                    }`}
+                  >
+                    {weeklyVelocityStack.creatorList.map((creator) => {
+                      const count = w.creators[creator] || 0;
+                      if (count === 0) return null;
+                      const segPct = (count / w.total) * 100;
+                      const segStyle =
+                        weeklyVelocityStack.creatorStyleMap[creator];
+                      return (
+                        <div
+                          key={creator}
+                          data-testid="velocity-bar-segment"
+                          data-creator={creator}
+                          style={{
+                            height: `${segPct}%`,
+                            backgroundColor: segStyle.bg,
+                            color: segStyle.text,
+                          }}
+                          className="w-full flex items-center justify-center text-[10px] font-bold leading-none tabular-nums overflow-hidden hover:brightness-110 transition-all"
+                          title={`${creator}: ${count} (${Math.round(segPct)}%)`}
+                        >
+                          {segPct >= 25 && heightPct >= 28 ? count : null}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
         <div className="grid grid-cols-6 gap-2 text-center text-xs text-gray-400 pt-2">
-          {weeklyVelocity.map((w) => (
+          {weeklyVelocityStack.weeks.map((w) => (
             <span
               key={w.label}
               className={w.isCurrent ? "text-emerald-400 font-bold" : ""}
@@ -284,6 +315,26 @@ export function CockpitTelemetryDeck({
             </span>
           ))}
         </div>
+
+        {weeklyVelocityStack.creatorList.length > 0 && (
+          <div className="flex flex-wrap items-center gap-3 text-xs border-t border-[#2A3235] pt-3 mt-3">
+            {weeklyVelocityStack.creatorList.map((creator) => (
+              <span
+                key={creator}
+                className="flex items-center gap-1.5 text-gray-300"
+              >
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{
+                    backgroundColor:
+                      weeklyVelocityStack.creatorStyleMap[creator].bg,
+                  }}
+                />
+                <span>{creator}</span>
+              </span>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Chart 2: Completed Tasks by Project (Pie / Donut Chart) */}

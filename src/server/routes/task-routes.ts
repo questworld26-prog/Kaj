@@ -15,6 +15,11 @@ import type { Hono } from "hono";
 import type { EventBus } from "../events.js";
 import type { ProjectRepository, TaskRepository } from "../repository.js";
 import {
+  TelegramBotService,
+  loadTelegramConfig,
+  resolveDefaultNonVipCreatorName,
+} from "../telegram.js";
+import {
   CreateProjectInputSchema,
   CreateTaskInputSchema,
   UpdateProjectInputSchema,
@@ -26,10 +31,11 @@ export interface TaskRoutesContext {
   eventBus: EventBus;
   taskRepo: TaskRepository;
   projectRepo: ProjectRepository;
+  telegramBot?: TelegramBotService;
 }
 
 export function registerTaskRoutes(app: Hono, ctx: TaskRoutesContext): void {
-  const { db, eventBus, taskRepo, projectRepo } = ctx;
+  const { db, eventBus, taskRepo, projectRepo, telegramBot } = ctx;
 
   // REST: Projects
   app.get("/api/projects", (c) => {
@@ -323,9 +329,12 @@ export function registerTaskRoutes(app: Hono, ctx: TaskRoutesContext): void {
   });
 
   // [spec: TASK-010]
+  // [spec: UI-012]
   // REST: Combined completed telemetry (live done + purged snapshots)
   app.get("/api/telemetry", (c) => {
-    return c.json(taskRepo.getTelemetrySummary());
+    const cfg = telegramBot ? telegramBot.getConfig() : loadTelegramConfig();
+    const defaultCreator = resolveDefaultNonVipCreatorName(cfg);
+    return c.json(taskRepo.getTelemetrySummary(undefined, defaultCreator));
   });
 
   // [spec: TASK-010]

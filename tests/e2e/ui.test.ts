@@ -1233,14 +1233,48 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
   });
 
   // [verifies: UI-009/AC-UI-009.3]
-  test("desktop cockpit renders weekly velocity telemetry bar chart", async ({
+  test("desktop cockpit renders stacked weekly velocity telemetry bar chart by creator", async ({
     page,
   }) => {
+    const vipRes = await page.request.get("/api/vip-users");
+    const vipBody = (await vipRes.json()) as {
+      vip_users: string[];
+      default_creator?: string | null;
+    };
+    const expectedFallback = vipBody.default_creator || "Unspecified";
+    const vipCreator =
+      vipBody.vip_users && vipBody.vip_users.length > 0
+        ? vipBody.vip_users[0]
+        : "VIPSeedCreator";
+
+    const c1 = await page.request.post("/api/tasks", {
+      data: { title: "Velocity Unspecified Done", status: "todo", created_by: null },
+    });
+    const t1 = (await c1.json()) as { id: string };
+    await page.request.post(`/api/tasks/${t1.id}/complete`);
+
+    const c2 = await page.request.post("/api/tasks", {
+      data: { title: "Velocity VIP Done", status: "todo", created_by: vipCreator },
+    });
+    const t2 = (await c2.json()) as { id: string };
+    await page.request.post(`/api/tasks/${t2.id}/complete`);
+
     await page.goto("/");
     await page.locator('[data-testid="nav-cockpit-btn"]').click();
     const cockpitView = page.locator('[data-testid="desktop-cockpit-view"]');
+    const velocityChart = cockpitView.locator(
+      '[data-testid="cockpit-weekly-velocity-chart"]',
+    );
+    await expect(velocityChart).toBeVisible();
     await expect(
-      cockpitView.locator('[data-testid="cockpit-weekly-velocity-chart"]'),
+      velocityChart.locator(
+        `[data-testid="velocity-bar-segment"][data-creator="${expectedFallback}"]`,
+      ),
+    ).toBeVisible();
+    await expect(
+      velocityChart.locator(
+        `[data-testid="velocity-bar-segment"][data-creator="${vipCreator}"]`,
+      ),
     ).toBeVisible();
   });
 

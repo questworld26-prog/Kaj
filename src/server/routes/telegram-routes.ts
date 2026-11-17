@@ -5,6 +5,7 @@ import type { Hono } from "hono";
 import {
   TelegramBotService,
   loadTelegramConfig,
+  resolveDefaultNonVipCreatorName,
   saveTelegramConfig,
 } from "../telegram.js";
 
@@ -50,11 +51,12 @@ export function registerTelegramRoutes(
     return c.json(result);
   });
 
-  // REST: VIP users list (TG-001)
+  // REST: VIP users list & default non-VIP creator attribution (TG-001, UI-012)
   app.get("/api/vip-users", (c) => {
     const cfg = telegramBot ? telegramBot.getConfig() : loadTelegramConfig();
     return c.json({
       vip_users: cfg.vip_users || [],
+      default_creator: resolveDefaultNonVipCreatorName(cfg),
     });
   });
 

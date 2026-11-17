@@ -61,6 +61,7 @@ export function useKajApp() {
   const [telemetry, setTelemetry] = useState<TelemetrySummary | null>(null);
   const [unscheduledTasks, setUnscheduledTasks] = useState<Task[]>([]);
   const [vipUsers, setVipUsers] = useState<string[]>([]);
+  const [defaultCreator, setDefaultCreator] = useState<string | null>(null);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
 
   const [memoryMb, setMemoryMb] = useState<number | undefined>(undefined);
@@ -106,7 +107,7 @@ export function useKajApp() {
 
   const loadData = useCallback(async () => {
     try {
-      const [projs, board, allTasks, completed, tel, unscheduled, vips] =
+      const [projs, board, allTasks, completed, tel, unscheduled, identity] =
         await Promise.all([
           api.getProjects(),
           api.getBoard(),
@@ -114,7 +115,7 @@ export function useKajApp() {
           api.getCompleted(),
           api.getTelemetry(),
           api.getUnscheduled(),
-          api.getVipUsers(),
+          api.getIdentityInfo(),
         ]);
 
       setProjects(projs);
@@ -123,7 +124,8 @@ export function useKajApp() {
       setCompletedTasks(completed);
       setTelemetry(tel);
       setUnscheduledTasks(unscheduled);
-      setVipUsers(vips);
+      setVipUsers(identity.vip_users);
+      setDefaultCreator(identity.default_creator);
 
       let start: string;
       let end: string;
@@ -429,6 +431,7 @@ export function useKajApp() {
     completedTasks,
     telemetry,
     vipUsers,
+    defaultCreator,
     memoryMb,
     errorMessage,
     setErrorMessage,

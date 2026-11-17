@@ -152,11 +152,24 @@ export async function getCalendar(
 }
 
 // [spec: TG-001]
-export async function getVipUsers(): Promise<string[]> {
+// [spec: UI-012]
+export async function getIdentityInfo(): Promise<{
+  vip_users: string[];
+  default_creator: string | null;
+}> {
   const res = await fetch(`${API_BASE}/vip-users`);
-  if (!res.ok) return [];
+  if (!res.ok) return { vip_users: [], default_creator: null };
   const data = await res.json();
-  return Array.isArray(data.vip_users) ? data.vip_users : [];
+  return {
+    vip_users: Array.isArray(data.vip_users) ? data.vip_users : [],
+    default_creator:
+      typeof data.default_creator === "string" ? data.default_creator : null,
+  };
+}
+
+export async function getVipUsers(): Promise<string[]> {
+  const info = await getIdentityInfo();
+  return info.vip_users;
 }
 
 

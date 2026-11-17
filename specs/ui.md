@@ -109,7 +109,7 @@ The system shall provide a dedicated Cockpit view for desktop viewports (>= 768p
 Acceptance Criteria:
 - AC-UI-009.1: The desktop top command bar navigation switcher shall provide Cockpit, Kanban Board, and Calendar options, persisting view changes and navigating to the Desktop Cockpit.
 - AC-UI-009.2: The Desktop Cockpit shall render a 2-column split layout with execution focus on the left (featuring an accented Today Focus Plate, dashed Tracking & Waiting On container, and upcoming horizon tasks) and a telemetry analytics column on the right.
-- AC-UI-009.3: The Desktop Cockpit telemetry section shall render a weekly completion velocity chart displaying completed tasks grouped across the recent 6 weeks.
+- AC-UI-009.3: The Desktop Cockpit telemetry section shall render a stacked weekly completion bar chart across the recent 6 weeks segmented by creator (`created_by`), attributing any task without a creator to the configured non-VIP member.
 - AC-UI-009.4: The Desktop Cockpit telemetry section shall render a project distribution chart displaying completed tasks proportioned across projects.
 - AC-UI-009.5: The Desktop Cockpit telemetry section shall render a horizontal stacked bar chart showing completed tasks segmented by creator (`created_by`) across weeks.
 - AC-UI-009.6: The Desktop Cockpit execution column shall render a dedicated VIP Triage Plate (`cockpit-vip-triage-plate`) positioned directly above the Today Focus Plate, displaying all tasks created by a configured VIP user that are in status `triage` without an assigned project (`project_id == null`).
@@ -144,6 +144,7 @@ Acceptance Criteria:
 - AC-UI-012.1: When the Desktop Cockpit telemetry column renders, the system shall position the stacked completed tasks by creator chart above the Tasks Completed by Week velocity chart.
 - AC-UI-012.2: In the stacked completed tasks by creator chart, the system shall order the weekly rows chronologically with the current latest week at the top row and older weeks below.
 - AC-UI-012.3: Within each weekly stacked bar, the system shall display each creator (`created_by`) completed task count followed by its rounded percentage in parentheses inside that creator segment whenever its count is greater than zero.
+- AC-UI-012.4: When a completed task lacks a creator (`created_by`) or carries an `Unspecified` creator bucket, the system shall attribute it to the primary configured non-VIP member in the stacked completed tasks by creator chart whenever a non-VIP member is configured.
 
 ## UI-013: Telemetry Snapshot Integration and Retention Controls
 

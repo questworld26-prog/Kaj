@@ -72,6 +72,18 @@ export const CREATOR_PALETTE: ReadonlyArray<CreatorStackStyle> = [
   { bg: "#94A3B8", text: "#091310" }, // Slate 400 (>7.1:1 contrast)
 ];
 
+function resolveTelemetryCreator(
+  creator?: string | null,
+  defaultCreatorName?: string | null,
+): string {
+  const cleaned = creator?.trim();
+  const fallback = defaultCreatorName?.trim() || "Unspecified";
+  if (!cleaned || cleaned === "Unspecified") {
+    return fallback;
+  }
+  return cleaned;
+}
+
 /**
  * Aggregate completed tasks across the last 3 ISO weeks ordered newest-first
  * (current week on top), segmented by `created_by`.
@@ -80,6 +92,7 @@ export const CREATOR_PALETTE: ReadonlyArray<CreatorStackStyle> = [
 export function buildCreatorStackData(
   completedTasks: ReadonlyArray<Pick<Task, "completed_at" | "created_by">>,
   now: Date = new Date(),
+  defaultCreatorName?: string | null,
 ): CreatorStackData {
   const weeks: CreatorWeekBucket[] = [];
 
@@ -103,7 +116,7 @@ export function buildCreatorStackData(
     const wKey = getISOWeekKey(compDate);
     const weekEntry = weeks.find((w) => w.weekKey === wKey);
     if (weekEntry) {
-      const creator = t.created_by?.trim() || "Unspecified";
+      const creator = resolveTelemetryCreator(t.created_by, defaultCreatorName);
       allCreators.add(creator);
       weekEntry.creators[creator] = (weekEntry.creators[creator] || 0) + 1;
       weekEntry.total += 1;
@@ -128,6 +141,7 @@ export function buildTelemetrySummaryFromTasks(
     Pick<Task, "completed_at" | "created_by" | "project_id">
   >,
   retentionDays: number = DEFAULT_DONE_RETENTION_DAYS,
+  defaultCreatorName?: string | null,
 ): TelemetrySummary {
   const weekMap = new Map<string, number>();
   const projectMap = new Map<string, number>();
@@ -140,7 +154,7 @@ export function buildTelemetrySummaryFromTasks(
     const d = new Date(t.completed_at);
     if (isNaN(d.getTime())) continue;
     const isoWeek = getISOYearWeekKey(d);
-    const creator = t.created_by?.trim() || "Unspecified";
+    const creator = resolveTelemetryCreator(t.created_by, defaultCreatorName);
     weekMap.set(isoWeek, (weekMap.get(isoWeek) || 0) + 1);
     const wcKey = `${isoWeek}\0${creator}`;
     weekCreatorMap.set(wcKey, (weekCreatorMap.get(wcKey) || 0) + 1);
@@ -166,25 +180,31 @@ export function buildTelemetrySummaryFromTasks(
   };
 }
 
-/**
- * Build last-3-week stacked creator telemetry from merged TelemetrySummary (live + snapshots).
- */
-// [spec: UI-013]
-export function buildCreatorStackDataFromSummary(
+function buildCreatorStackWindowFromSummary(
   summary: TelemetrySummary,
-  now: Date = new Date(),
+  options: {
+    now: Date;
+    weekCount: number;
+    newestFirst: boolean;
+    tagCurrentLabel: boolean;
+    defaultCreatorName?: string | null;
+  },
 ): CreatorStackData {
+  const { now, weekCount, newestFirst, tagCurrentLabel, defaultCreatorName } =
+    options;
   const weeks: Array<CreatorWeekBucket & { yearWeek: string }> = [];
 
-  for (let i = 0; i <= 2; i++) {
-    const d = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
+  for (let idx = 0; idx < weekCount; idx++) {
+    const offsetWeeks = newestFirst ? idx : weekCount - 1 - idx;
+    const d = new Date(now.getTime() - offsetWeeks * 7 * 24 * 60 * 60 * 1000);
     const yearWeek = getISOYearWeekKey(d);
     const weekKey = getISOWeekKey(d);
+    const isCurrent = offsetWeeks === 0;
     weeks.push({
       yearWeek,
       weekKey,
-      label: i === 0 ? `${weekKey} (Current)` : weekKey,
-      isCurrent: i === 0,
+      label: isCurrent && tagCurrentLabel ? `${weekKey} (Current)` : weekKey,
+      isCurrent,
       total: 0,
       creators: {},
     });
@@ -194,9 +214,10 @@ export function buildCreatorStackDataFromSummary(
   for (const entry of summary.by_week_creator) {
     const weekEntry = weeks.find((w) => w.yearWeek === entry.iso_week);
     if (weekEntry && entry.count > 0) {
-      allCreators.add(entry.creator);
-      weekEntry.creators[entry.creator] =
-        (weekEntry.creators[entry.creator] || 0) + entry.count;
+      const creator = resolveTelemetryCreator(entry.creator, defaultCreatorName);
+      allCreators.add(creator);
+      weekEntry.creators[creator] =
+        (weekEntry.creators[creator] || 0) + entry.count;
       weekEntry.total += entry.count;
     }
   }
@@ -212,4 +233,41 @@ export function buildCreatorStackDataFromSummary(
     creatorList,
     creatorStyleMap,
   };
+}
+
+/**
+ * Build last-3-week stacked creator telemetry from merged TelemetrySummary (live + snapshots).
+ */
+// [spec: UI-013]
+export function buildCreatorStackDataFromSummary(
+  summary: TelemetrySummary,
+  now: Date = new Date(),
+  defaultCreatorName?: string | null,
+): CreatorStackData {
+  return buildCreatorStackWindowFromSummary(summary, {
+    now,
+    weekCount: 3,
+    newestFirst: true,
+    tagCurrentLabel: true,
+    defaultCreatorName,
+  });
+}
+
+/**
+ * Build last-6-week chronological stacked weekly velocity telemetry from merged TelemetrySummary.
+ */
+// [spec: UI-009]
+// [spec: UI-013]
+export function buildWeeklyVelocityStackFromSummary(
+  summary: TelemetrySummary,
+  now: Date = new Date(),
+  defaultCreatorName?: string | null,
+): CreatorStackData {
+  return buildCreatorStackWindowFromSummary(summary, {
+    now,
+    weekCount: 6,
+    newestFirst: false,
+    tagCurrentLabel: false,
+    defaultCreatorName,
+  });
 }
