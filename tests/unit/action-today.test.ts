@@ -1,5 +1,5 @@
 // [verifies: TASK-008]
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { DatabaseSync } from "node:sqlite";
 import { createDatabase, initSchema } from "../../src/server/db.js";
 import {
@@ -14,10 +14,16 @@ describe("Automatic In-Progress-Today Promotion for Action Date Today (TASK-008)
   let projectRepo: ProjectRepository;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 14, 12, 0, 0));
     db = createDatabase(":memory:");
     initSchema(db);
     taskRepo = new TaskRepository(db);
     projectRepo = new ProjectRepository(db);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   // [verifies: TASK-008/AC-TASK-008.1]

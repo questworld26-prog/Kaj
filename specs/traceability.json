@@ -1,5 +1,5 @@
 {
-  "last_audited_at": "2026-11-14T13:41:32.401813+00:00",
+  "last_audited_at": "2026-11-17T03:31:29.691301+00:00",
   "total_requirements": 33,
   "active_requirements_count": 33,
   "planned_requirements_count": 0,
@@ -22,8 +22,8 @@
       "title": "Automated Daily Encrypted Database Backup and Telegram Status Notifications",
       "spec_file": "specs/backup.md",
       "is_planned": false,
-      "sha256": "528849aabf94aba5247e0d27dbd87494c68dd707562757ca3b53eb53693ec637",
-      "verified_sha256": "528849aabf94aba5247e0d27dbd87494c68dd707562757ca3b53eb53693ec637",
+      "sha256": "8b6b91ea1b33760babb26b2353e92b0e1f6037f64b386cc6cf0045f57f474f3d",
+      "verified_sha256": "8b6b91ea1b33760babb26b2353e92b0e1f6037f64b386cc6cf0045f57f474f3d",
       "acceptance_criteria": [
         "AC-BACKUP-001.1",
         "AC-BACKUP-001.2",

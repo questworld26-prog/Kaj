@@ -248,7 +248,7 @@ Kaj keeps active queries fast by auto-purging `done` tasks older than **90 days*
 - **Non-Locking Hot Snapshot**: Uses `VACUUM INTO` to consolidate active WAL transactions into a single temporary snapshot without locking live operations, encrypts it via AES-256-GCM, and removes the temporary unencrypted file immediately.
 - **7-Day Rolling Retention**: Deletes only `kaj-backup-*.db.enc` files older than 7 calendar days inside `KAJ_BACKUP_DIR`, leaving all other files untouched.
 - **Strict Directory Isolation**: Kaj **never** scans, lists, or traverses parent or sibling folders outside `KAJ_BACKUP_DIR`.
-- **Brief Telegram Alerts**: When Telegram is enabled, Kaj sends a brief pathless confirmation (`✅ Kaj Backup Successful: kaj-backup-DD-MM-YYYY.db.enc`) or failure alert (`⚠️ Kaj Backup Failed: Backup directory not accessible or not found. Please check Google Drive.`).
+- **Brief Telegram Alerts**: When Telegram is enabled, Kaj sends a brief pathless confirmation (`✅ Kaj Backup Successful: kaj-backup-DD-MM-YYYY.db.enc`) or failure alert (`⚠️ Kaj Backup Failed: Backup directory not accessible or not found. Please check Google Drive.`) exclusively to non-VIP members.
 
 ### 3. Restoring Your Database (`BACKUP-002`)
 

@@ -145,7 +145,9 @@ describe("Automated Encrypted Daily Backup (BACKUP-001)", () => {
       config: {
         enabled: true,
         bot_token: "123456:TEST",
-        allowed_user_ids: [424242],
+        allowed_user_ids: [424242, 928147325],
+        user_names: { "424242": "Oblix", "928147325": "Asterix [VIP]" },
+        vip_users: ["Asterix", "928147325"],
         default_status: "triage",
         poll_interval_ms: 1000,
       },
@@ -184,7 +186,9 @@ describe("Automated Encrypted Daily Backup (BACKUP-001)", () => {
       config: {
         enabled: true,
         bot_token: "123456:TEST",
-        allowed_user_ids: [424242],
+        allowed_user_ids: [424242, 928147325],
+        user_names: { "424242": "Oblix", "928147325": "Asterix [VIP]" },
+        vip_users: ["Asterix", "928147325"],
         default_status: "triage",
         poll_interval_ms: 1000,
       },

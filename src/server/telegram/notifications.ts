@@ -7,7 +7,7 @@ import {
   formatTaskCompletedNotification,
   formatTaskTriagedNotification,
 } from "./formatters.js";
-import { isVipUser } from "./digest.js";
+import { isVipUser, resolveNonVipRecipients } from "./digest.js";
 import type { TelegramApiTransport, TelegramConfig } from "./types.js";
 
 export function hasValidBotToken(config: TelegramConfig): boolean {
@@ -167,17 +167,7 @@ export async function broadcastBackupMessage(
 ): Promise<void> {
   if (!config.enabled || !hasValidBotToken(config)) return;
 
-  const recipients: number[] = [];
-  if (config.allowed_user_ids.length > 0) {
-    recipients.push(...config.allowed_user_ids);
-  } else if (config.user_names) {
-    for (const idStr of Object.keys(config.user_names)) {
-      const parsed = parseInt(idStr, 10);
-      if (!isNaN(parsed) && parsed > 0 && !recipients.includes(parsed)) {
-        recipients.push(parsed);
-      }
-    }
-  }
+  const recipients = resolveNonVipRecipients(config);
 
   for (const chatId of recipients) {
     try {
