@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-17T04:03:12.127502+00:00",
-  "total_requirements": 34,
-  "active_requirements_count": 34,
+  "last_audited_at": "2026-11-17T04:25:53.107099+00:00",
+  "total_requirements": 35,
+  "active_requirements_count": 35,
   "planned_requirements_count": 0,
-  "active_criteria_count": 153,
-  "verified_criteria_count": 153,
+  "active_criteria_count": 156,
+  "verified_criteria_count": 156,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -574,6 +574,31 @@
         "src/server/retention.ts",
         "src/server/routes/task-routes.ts",
         "src/shared/types.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "TASK-011",
+      "title": "Automatic Roll-Forward of Past Action Dates for Incomplete Tasks",
+      "spec_file": "specs/tasks.md",
+      "is_planned": false,
+      "sha256": "a6e11307d2d65e0cf826d44d663b0376fd0b5bba1124ca61dd6bd22169f279ea",
+      "verified_sha256": "a6e11307d2d65e0cf826d44d663b0376fd0b5bba1124ca61dd6bd22169f279ea",
+      "acceptance_criteria": [
+        "AC-TASK-011.1",
+        "AC-TASK-011.2",
+        "AC-TASK-011.3"
+      ],
+      "verified_criteria": [
+        "AC-TASK-011.1",
+        "AC-TASK-011.2",
+        "AC-TASK-011.3"
+      ],
+      "implementation_files": [
+        "src/server/index.ts",
+        "src/server/repositories/task-promotions.ts",
+        "src/server/repository.ts",
+        "src/server/routes/task-routes.ts"
       ],
       "status": "VERIFIED"
     },

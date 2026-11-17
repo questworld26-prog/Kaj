@@ -3,10 +3,17 @@ import { test, expect, type APIRequestContext } from "@playwright/test";
 
 function getSafeNonCurrentWeekSameMonthDateStr(): string {
   const now = new Date();
-  const targetDay = now.getDate() <= 14 ? 28 : 1;
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(targetDay).padStart(2, "0");
+  const dayOfWeek = now.getDay(); // 0 = Sun, 1 = Mon ...
+  const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+  // Pick the Monday right after the current Monday-Sunday week so it is strictly future & outside this week
+  const nextWeekMonday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + daysUntilSunday + 1,
+  );
+  const year = nextWeekMonday.getFullYear();
+  const month = String(nextWeekMonday.getMonth() + 1).padStart(2, "0");
+  const day = String(nextWeekMonday.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 

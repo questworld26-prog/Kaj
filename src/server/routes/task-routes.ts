@@ -294,6 +294,7 @@ export function registerTaskRoutes(app: Hono, ctx: TaskRoutesContext): void {
   // [spec: TASK-007]
   // [spec: TASK-008]
   // [spec: TASK-009]
+  // [spec: TASK-011]
   app.get("/api/board", (c) => {
     const promoted = taskRepo.runScheduledPromotions();
     for (const task of promoted) {

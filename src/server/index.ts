@@ -58,6 +58,7 @@ async function startDaemon() {
   // [spec: TASK-007]
   // [spec: TASK-008]
   // [spec: TASK-009]
+  // [spec: TASK-011]
   // [spec: NOTIF-002]
   const telegramConfig = loadTelegramConfig();
   const telegramBot = new TelegramBotService({

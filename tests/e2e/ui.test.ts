@@ -585,10 +585,12 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     await expect(unschedCard).toBeVisible();
 
     const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, "0");
-    const date1 = `${y}-${m}-10`;
-    const date2 = `${y}-${m}-15`;
+    const d1 = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const d2 = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2);
+    const toYmd = (dt: Date) =>
+      `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    const date1 = toYmd(d1);
+    const date2 = toYmd(d2);
 
     const targetDayCell1 = page.locator(
       `[data-testid="calendar-day-cell"][data-date="${date1}"]`,
@@ -1027,8 +1029,8 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
         title: "Density Benchmark Task for Compact Measurement",
         status: "todo",
         priority: "week",
-        action_date: "2026-11-01",
-        due_date: "2026-11-05",
+        action_date: "2099-11-01",
+        due_date: "2099-11-05",
       },
     });
     const task = (await createRes.json()) as { id: string };
@@ -1048,8 +1050,8 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     ).toBeHidden();
 
     // Action and due date indicators should be visible inline in DD-MM-YYYY format
-    await expect(card.locator("text=01-11-2026")).toBeVisible();
-    await expect(card.locator("text=05-11-2026")).toBeVisible();
+    await expect(card.locator("text=01-11-2099")).toBeVisible();
+    await expect(card.locator("text=05-11-2099")).toBeVisible();
   });
 
   // [verifies: UI-005/AC-UI-005.3]

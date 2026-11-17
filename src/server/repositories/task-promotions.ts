@@ -1,6 +1,7 @@
 // [spec: TASK-007]
 // [spec: TASK-008]
 // [spec: TASK-009]
+// [spec: TASK-011]
 import { DatabaseSync } from "node:sqlite";
 import {
   type Task,
@@ -119,4 +120,58 @@ export function promoteThisWeekTriageTasksForDb(
     isDateInCurrentMondayWeek(task.action_date, today),
   );
   return batchPromoteStatus(db, toPromote, "todo", "status = 'triage'");
+}
+
+/**
+ * Roll forward past `action_date` (< `todayDateStr`) on all active incomplete tasks to today.
+ */
+// [spec: TASK-011]
+export function rollForwardPastActionDatesForDb(
+  db: DatabaseSync,
+  todayDateStr?: string,
+): Task[] {
+  const today = todayDateStr || formatLocalDateYMD();
+  const candidates = (
+    db
+      .prepare(
+        `SELECT * FROM tasks
+         WHERE deleted_at IS NULL
+           AND status != 'done'
+           AND action_date IS NOT NULL
+           AND action_date != ''
+           AND action_date < ?`,
+      )
+      .all(today) as unknown as Task[]
+  ).filter(
+    (task) =>
+      typeof task.action_date === "string" &&
+      /^\d{4}-\d{2}-\d{2}$/.test(task.action_date),
+  );
+
+  if (candidates.length === 0) return [];
+  const now = new Date().toISOString();
+  const rolled: Task[] = [];
+
+  db.exec("BEGIN IMMEDIATE;");
+  try {
+    const stmt = db.prepare(
+      `UPDATE tasks
+       SET action_date = ?, updated_at = ?
+       WHERE id = ? AND deleted_at IS NULL AND status != 'done'`,
+    );
+    for (const task of candidates) {
+      stmt.run(today, now, task.id);
+      rolled.push({
+        ...task,
+        action_date: today,
+        updated_at: now,
+      });
+    }
+    db.exec("COMMIT;");
+  } catch (err) {
+    db.exec("ROLLBACK;");
+    throw err;
+  }
+
+  return rolled;
 }

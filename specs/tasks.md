@@ -116,5 +116,14 @@ Acceptance Criteria:
 - AC-TASK-010.4: While evaluating completed tasks for retention purging, the system shall exclude non-completed tasks, already soft-deleted tasks, and completed tasks newer than the retention cutoff.
 - AC-TASK-010.5: When the background daemon starts, runs its periodic maintenance schedule, or receives a manual purge request, the system shall execute the retention sweep and emit synchronization events when rows are purged.
 
+## TASK-011: Automatic Roll-Forward of Past Action Dates for Incomplete Tasks
+
+When scheduled maintenance executes or board state is fetched, the system shall update past action dates on active incomplete tasks to today's local calendar date.
+
+Acceptance Criteria:
+- AC-TASK-011.1: When scheduled maintenance or a board fetch executes, the system shall update the action date of any active non-completed task with an action date earlier than today's local calendar date to today's local calendar date.
+- AC-TASK-011.2: When rolling forward an incomplete task with a past action date, the system shall preserve priority, project assignment, and due date and allow today-action promotion into In Progress (Today).
+- AC-TASK-011.3: While evaluating tasks for past action-date roll-forward, the system shall exclude completed tasks, soft-deleted tasks, dateless tasks, and tasks whose action date equals or follows today.
+
 
 
