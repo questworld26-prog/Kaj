@@ -192,8 +192,8 @@ npm run daemon:install
    ```env
    KAJ_TELEGRAM_ENABLED=true
    KAJ_TELEGRAM_BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
-   KAJ_TELEGRAM_ALLOWED_USER_IDS="123456789"
-   KAJ_TELEGRAM_USER_NAMES='{"123456789":"Alex [VIP]"}'
+   KAJ_TELEGRAM_ALLOWED_USER_IDS="123456789,987654321"
+   KAJ_TELEGRAM_USER_NAMES='{"123456789":{"name":"Alex","vip":true,"notifications":["task_completed","task_triaged"]},"987654321":{"name":"Sam","notifications":["task_completed","daily_digest","backup_status"]}}'
    KAJ_TELEGRAM_DEFAULT_STATUS="triage"
    KAJ_TELEGRAM_POLL_INTERVAL_MS=2000
    KAJ_TELEGRAM_DAILY_DIGEST_ENABLED=true
@@ -208,7 +208,9 @@ npm run daemon:install
    npm run telegram:status  # Check bot status
    ```
 
-   **Daily Non-VIP Task Digest (`NOTIF-002`)**: When `KAJ_TELEGRAM_DAILY_DIGEST_ENABLED=true`, Kaj sends each non-VIP allowed user a brief numbered Telegram list once per calendar day at `KAJ_TELEGRAM_DAILY_DIGEST_TIME` (default `"08:00"` local time, with sleep-safe catch-up persisted in SQLite). Tasks are drawn from active `in_progress_today` (In Progress Today) items, ordered with `action_date === today` at top (capped via `KAJ_TELEGRAM_DAILY_DIGEST_MAX_ITEMS=15`), and skipped on empty days when `KAJ_TELEGRAM_DAILY_DIGEST_SKIP_EMPTY=true`. Trigger manually via `POST /api/telegram/daily-digest`.
+   **Per-User Notification Subscriptions (`NOTIF-003`)**: Map each user in `KAJ_TELEGRAM_USER_NAMES` to a `"notifications"` array using keys `task_completed`, `task_triaged`, `daily_digest`, and `backup_status` (or `[]` to mute all). If omitted, VIP users default to `["task_completed", "task_triaged"]` and non-VIP users default to `["task_completed", "daily_digest", "backup_status"]`.
+
+   **Daily Non-VIP Task Digest (`NOTIF-002`)**: When `KAJ_TELEGRAM_DAILY_DIGEST_ENABLED=true`, Kaj sends subscribed users (default: non-VIP members) a brief numbered Telegram list once per calendar day at `KAJ_TELEGRAM_DAILY_DIGEST_TIME` (default `"08:00"` local time, with sleep-safe catch-up persisted in SQLite). Tasks are drawn from active `in_progress_today` (In Progress Today) items, ordered with `action_date === today` at top (capped via `KAJ_TELEGRAM_DAILY_DIGEST_MAX_ITEMS=15`), and skipped on empty days when `KAJ_TELEGRAM_DAILY_DIGEST_SKIP_EMPTY=true`. Trigger manually via `POST /api/telegram/daily-digest`.
 
 ---
 

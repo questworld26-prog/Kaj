@@ -1,5 +1,6 @@
 // [spec: TG-001]
 // [spec: NOTIF-001]
+// [spec: NOTIF-003]
 // [spec: BACKUP-001]
 import type { Task } from "../../shared/types.js";
 import type { ProjectRepository } from "../repository.js";
@@ -7,7 +8,10 @@ import {
   formatTaskCompletedNotification,
   formatTaskTriagedNotification,
 } from "./formatters.js";
-import { isVipUser, resolveNonVipRecipients } from "./digest.js";
+import {
+  resolveNotificationRecipients,
+  userReceivesNotification,
+} from "./digest.js";
 import type { TelegramApiTransport, TelegramConfig } from "./types.js";
 
 export function hasValidBotToken(config: TelegramConfig): boolean {
@@ -97,6 +101,7 @@ export async function notifyTaskCompleted(
     config.allowed_user_ids,
   );
   if (!recipientId || !isAuthorizedTelegramUser(config, recipientId)) return;
+  if (!userReceivesNotification(config, recipientId, "task_completed")) return;
 
   const completedKey = `${task.id}:${recipientId}`;
   if (inTelegramCompletedTaskIds.has(completedKey)) {
@@ -127,7 +132,6 @@ export async function notifyVipTaskTriaged(
   const previous = payload?.previous;
 
   if (!task || !task.created_by) return;
-  if (!isVipUser(task.created_by, config.vip_users)) return;
 
   if (
     previous &&
@@ -149,6 +153,7 @@ export async function notifyVipTaskTriaged(
     config.allowed_user_ids,
   );
   if (!recipientId || !isAuthorizedTelegramUser(config, recipientId)) return;
+  if (!userReceivesNotification(config, recipientId, "task_triaged")) return;
 
   try {
     const projects = projectRepo.listProjects(true);
@@ -167,7 +172,7 @@ export async function broadcastBackupMessage(
 ): Promise<void> {
   if (!config.enabled || !hasValidBotToken(config)) return;
 
-  const recipients = resolveNonVipRecipients(config);
+  const recipients = resolveNotificationRecipients(config, "backup_status");
 
   for (const chatId of recipients) {
     try {

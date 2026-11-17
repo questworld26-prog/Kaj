@@ -1,15 +1,27 @@
 // [spec: TG-001]
 // [spec: NOTIF-002]
+// [spec: NOTIF-003]
 import type { DatabaseSync } from "node:sqlite";
 import type { TaskPriority, TaskStatus } from "../../shared/types.js";
 import type { TaskRepository, ProjectRepository } from "../repository.js";
 import type { EventBus } from "../events.js";
+
+export const TELEGRAM_NOTIFICATION_TYPES = [
+  "task_completed",
+  "task_triaged",
+  "daily_digest",
+  "backup_status",
+] as const;
+
+export type TelegramNotificationType =
+  (typeof TELEGRAM_NOTIFICATION_TYPES)[number];
 
 export interface TelegramConfig {
   enabled: boolean;
   bot_token: string;
   allowed_user_ids: number[];
   user_names?: Record<string, string>;
+  user_notifications?: Record<string, TelegramNotificationType[]>;
   vip_users?: string[];
   notify_on_completion?: boolean;
   daily_digest_enabled?: boolean;

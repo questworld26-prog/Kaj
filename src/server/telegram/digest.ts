@@ -1,6 +1,7 @@
 // [spec: TG-001]
 // [spec: NOTIF-001]
 // [spec: NOTIF-002]
+// [spec: NOTIF-003]
 import type { DatabaseSync } from "node:sqlite";
 import {
   formatLocalDateYMD,
@@ -13,6 +14,7 @@ import type {
   DailyDigestResult,
   TelegramApiTransport,
   TelegramConfig,
+  TelegramNotificationType,
 } from "./types.js";
 
 /**
@@ -33,11 +35,7 @@ export function isVipUser(
   return vipUsers.some((v) => v.toLowerCase() === lower);
 }
 
-/**
- * Collect allowed Telegram numeric recipient IDs excluding all VIP users.
- */
-// [spec: NOTIF-002]
-export function resolveNonVipRecipients(config: TelegramConfig): number[] {
+function collectCandidateUserIds(config: TelegramConfig): number[] {
   const candidates: number[] = [];
   if (config.allowed_user_ids.length > 0) {
     for (const uid of config.allowed_user_ids) {
@@ -57,8 +55,56 @@ export function resolveNonVipRecipients(config: TelegramConfig): number[] {
       }
     }
   }
+  return candidates;
+}
 
-  return candidates.filter((uid) => {
+/**
+ * Determine whether a Telegram user ID is subscribed to a given notification type.
+ */
+// [spec: NOTIF-003]
+export function userReceivesNotification(
+  config: TelegramConfig,
+  userId: number,
+  type: TelegramNotificationType,
+): boolean {
+  const idStr = String(userId);
+  const explicitList = config.user_notifications?.[idStr];
+  if (Array.isArray(explicitList)) {
+    return explicitList.includes(type);
+  }
+  const mappedName = config.user_names?.[idStr];
+  const isVip =
+    isVipUser(idStr, config.vip_users) ||
+    isVipUser(mappedName, config.vip_users);
+  if (isVip) {
+    return type === "task_completed" || type === "task_triaged";
+  }
+  return (
+    type === "task_completed" ||
+    type === "daily_digest" ||
+    type === "backup_status"
+  );
+}
+
+/**
+ * Resolve all allowed Telegram numeric recipient IDs subscribed to a notification type.
+ */
+// [spec: NOTIF-003]
+export function resolveNotificationRecipients(
+  config: TelegramConfig,
+  type: TelegramNotificationType,
+): number[] {
+  return collectCandidateUserIds(config).filter((uid) =>
+    userReceivesNotification(config, uid, type),
+  );
+}
+
+/**
+ * Collect allowed Telegram numeric recipient IDs excluding all VIP users.
+ */
+// [spec: NOTIF-002]
+export function resolveNonVipRecipients(config: TelegramConfig): number[] {
+  return collectCandidateUserIds(config).filter((uid) => {
     const idStr = String(uid);
     const mappedName = config.user_names?.[idStr];
     return (
@@ -237,7 +283,7 @@ export async function dispatchDailyNonVipDigest(
     };
   }
 
-  const nonVipRecipients = resolveNonVipRecipients(config);
+  const nonVipRecipients = resolveNotificationRecipients(config, "daily_digest");
   if (nonVipRecipients.length === 0) {
     return {
       dispatched_count: 0,

@@ -1,18 +1,21 @@
 // [spec: TG-001]
 // [spec: NOTIF-001]
 // [spec: NOTIF-002]
+// [spec: NOTIF-003]
 import type { DatabaseSync } from "node:sqlite";
 import { TaskRepository, ProjectRepository } from "./repository.js";
 import { EventBus } from "./events.js";
-import type {
-  TelegramConfig,
-  TelegramInlineButton,
-  TelegramInlineKeyboardMarkup,
-  TelegramUpdate,
-  TelegramApiTransport,
-  ParsedTelegramTask,
-  TelegramBotServiceOptions,
-  DailyDigestResult,
+import {
+  TELEGRAM_NOTIFICATION_TYPES,
+  type TelegramConfig,
+  type TelegramNotificationType,
+  type TelegramInlineButton,
+  type TelegramInlineKeyboardMarkup,
+  type TelegramUpdate,
+  type TelegramApiTransport,
+  type ParsedTelegramTask,
+  type TelegramBotServiceOptions,
+  type DailyDigestResult,
 } from "./telegram/types.js";
 import {
   resolveTelegramConfigPath,
@@ -26,7 +29,9 @@ import {
   isVipUser,
   resolveDefaultNonVipCreatorName,
   resolveNonVipRecipients,
+  resolveNotificationRecipients,
   selectDailyDigestTasks,
+  userReceivesNotification,
 } from "./telegram/digest.js";
 import {
   broadcastBackupMessage,
@@ -40,6 +45,7 @@ import { handleTelegramUpdate } from "./telegram/handlers.js";
 // Re-export for seamless backward compatibility
 export type {
   TelegramConfig,
+  TelegramNotificationType,
   TelegramInlineButton,
   TelegramInlineKeyboardMarkup,
   TelegramUpdate,
@@ -49,6 +55,7 @@ export type {
   DailyDigestResult,
 };
 export {
+  TELEGRAM_NOTIFICATION_TYPES,
   resolveTelegramConfigPath,
   loadTelegramConfig,
   saveTelegramConfig,
@@ -57,8 +64,10 @@ export {
   isVipUser,
   resolveDefaultNonVipCreatorName,
   resolveNonVipRecipients,
+  resolveNotificationRecipients,
   selectDailyDigestTasks,
   resolveUserIdForCreator,
+  userReceivesNotification,
 };
 
 // [spec: TG-001]

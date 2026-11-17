@@ -1,9 +1,14 @@
 // [spec: TG-001]
 // [spec: NOTIF-002]
+// [spec: NOTIF-003]
 import fs from "node:fs";
 import path from "node:path";
 import { TASK_STATUSES, type TaskStatus } from "../../shared/types.js";
-import type { TelegramConfig } from "./types.js";
+import {
+  TELEGRAM_NOTIFICATION_TYPES,
+  type TelegramConfig,
+  type TelegramNotificationType,
+} from "./types.js";
 
 export const DEFAULT_CONFIG: TelegramConfig = {
   enabled: false,
@@ -81,10 +86,29 @@ function addExplicitVips(explicitVips: unknown, vipUsersSet: Set<string>): void 
   }
 }
 
+function normalizeNotificationList(
+  rawList: unknown[],
+): TelegramNotificationType[] {
+  const valid = new Set<string>(TELEGRAM_NOTIFICATION_TYPES);
+  const result: TelegramNotificationType[] = [];
+  for (const item of rawList) {
+    if (typeof item !== "string") continue;
+    const key = item.trim();
+    if (
+      valid.has(key) &&
+      !result.includes(key as TelegramNotificationType)
+    ) {
+      result.push(key as TelegramNotificationType);
+    }
+  }
+  return result;
+}
+
 function mergeUserNamesAndVips(
   rawMap: unknown,
   userNames: Record<string, string>,
   vipUsersSet: Set<string>,
+  userNotifications: Record<string, TelegramNotificationType[]>,
 ): void {
   if (!rawMap || typeof rawMap !== "object" || Array.isArray(rawMap)) return;
 
@@ -115,15 +139,64 @@ function mergeUserNamesAndVips(
       "name" in v &&
       typeof (v as { name: unknown }).name === "string"
     ) {
-      const obj = v as { name: string; vip?: boolean; is_vip?: boolean };
+      const obj = v as {
+        name: string;
+        vip?: boolean;
+        is_vip?: boolean;
+        notifications?: unknown;
+      };
       const cleanName = obj.name.trim();
       userNames[keyStr] = cleanName;
       if (obj.vip === true || obj.is_vip === true) {
         vipUsersSet.add(cleanName);
         vipUsersSet.add(keyStr);
       }
+      if (Array.isArray(obj.notifications)) {
+        userNotifications[keyStr] = normalizeNotificationList(obj.notifications);
+      }
     }
   }
+}
+
+function isVipIdentity(
+  keyStr: string,
+  userNames: Record<string, string>,
+  vipUsersSet: Set<string>,
+): boolean {
+  const mappedName = userNames[keyStr];
+  const vipLower = new Set(Array.from(vipUsersSet).map((v) => v.toLowerCase()));
+  if (vipLower.has(keyStr.toLowerCase())) return true;
+  if (mappedName) {
+    if (/\[vip\]|\(vip\)|\bvip\b/i.test(mappedName)) return true;
+    if (vipLower.has(mappedName.toLowerCase())) return true;
+  }
+  return false;
+}
+
+function finalizeUserNotifications(
+  allowedUserIds: number[],
+  userNames: Record<string, string>,
+  vipUsersSet: Set<string>,
+  explicitNotifications: Record<string, TelegramNotificationType[]>,
+): Record<string, TelegramNotificationType[]> | undefined {
+  const keys = new Set<string>([
+    ...allowedUserIds.map((id) => String(id)),
+    ...Object.keys(userNames),
+    ...Object.keys(explicitNotifications),
+  ]);
+  if (keys.size === 0) return undefined;
+
+  const resolved: Record<string, TelegramNotificationType[]> = {};
+  for (const keyStr of keys) {
+    if (Object.prototype.hasOwnProperty.call(explicitNotifications, keyStr)) {
+      resolved[keyStr] = [...explicitNotifications[keyStr]];
+    } else if (isVipIdentity(keyStr, userNames, vipUsersSet)) {
+      resolved[keyStr] = ["task_completed", "task_triaged"];
+    } else {
+      resolved[keyStr] = ["task_completed", "daily_digest", "backup_status"];
+    }
+  }
+  return resolved;
 }
 
 function upsertEnvFileVars(
@@ -192,21 +265,43 @@ export function loadTelegramConfig(
 
   const userNames: Record<string, string> = {};
   const vipUsersSet = new Set<string>();
+  const explicitNotifications: Record<string, TelegramNotificationType[]> = {};
 
   const legacyFile = fileData as {
     vip_users?: unknown[];
     vip_user_names?: unknown[];
+    user_notifications?: Record<string, unknown>;
   };
   addExplicitVips(
     legacyFile.vip_users || legacyFile.vip_user_names,
     vipUsersSet,
   );
-  mergeUserNamesAndVips(fileData.user_names, userNames, vipUsersSet);
+  mergeUserNamesAndVips(
+    fileData.user_names,
+    userNames,
+    vipUsersSet,
+    explicitNotifications,
+  );
+  if (
+    legacyFile.user_notifications &&
+    typeof legacyFile.user_notifications === "object"
+  ) {
+    for (const [k, rawList] of Object.entries(legacyFile.user_notifications)) {
+      if (Array.isArray(rawList)) {
+        explicitNotifications[k.trim()] = normalizeNotificationList(rawList);
+      }
+    }
+  }
 
   if (env.KAJ_TELEGRAM_USER_NAMES) {
     try {
       const parsedNames = JSON.parse(env.KAJ_TELEGRAM_USER_NAMES);
-      mergeUserNamesAndVips(parsedNames, userNames, vipUsersSet);
+      mergeUserNamesAndVips(
+        parsedNames,
+        userNames,
+        vipUsersSet,
+        explicitNotifications,
+      );
     } catch {
       // Ignore malformed KAJ_TELEGRAM_USER_NAMES JSON
     }
@@ -240,6 +335,13 @@ export function loadTelegramConfig(
     }
   }
 
+  const resolvedUserNotifications = finalizeUserNotifications(
+    allowedUserIds,
+    userNames,
+    vipUsersSet,
+    explicitNotifications,
+  );
+
   const config: TelegramConfig = {
     enabled:
       typeof fileData.enabled === "boolean"
@@ -251,6 +353,7 @@ export function loadTelegramConfig(
         : DEFAULT_CONFIG.bot_token,
     allowed_user_ids: allowedUserIds,
     user_names: Object.keys(userNames).length > 0 ? userNames : undefined,
+    user_notifications: resolvedUserNotifications,
     vip_users: vipUsersSet.size > 0 ? Array.from(vipUsersSet) : undefined,
     notify_on_completion:
       typeof fileData.notify_on_completion === "boolean"

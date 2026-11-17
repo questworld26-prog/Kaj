@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-17T03:45:25.281149+00:00",
-  "total_requirements": 33,
-  "active_requirements_count": 33,
+  "last_audited_at": "2026-11-17T04:03:12.127502+00:00",
+  "total_requirements": 34,
+  "active_requirements_count": 34,
   "planned_requirements_count": 0,
-  "active_criteria_count": 149,
-  "verified_criteria_count": 149,
+  "active_criteria_count": 153,
+  "verified_criteria_count": 153,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -22,8 +22,8 @@
       "title": "Automated Daily Encrypted Database Backup and Telegram Status Notifications",
       "spec_file": "specs/backup.md",
       "is_planned": false,
-      "sha256": "8b6b91ea1b33760babb26b2353e92b0e1f6037f64b386cc6cf0045f57f474f3d",
-      "verified_sha256": "8b6b91ea1b33760babb26b2353e92b0e1f6037f64b386cc6cf0045f57f474f3d",
+      "sha256": "29e11aaed26d425e32c25f46b5bff5884d1b3f86c6cbe83023266676ef1f9306",
+      "verified_sha256": "29e11aaed26d425e32c25f46b5bff5884d1b3f86c6cbe83023266676ef1f9306",
       "acceptance_criteria": [
         "AC-BACKUP-001.1",
         "AC-BACKUP-001.2",
@@ -163,8 +163,8 @@
       "title": "Automated Telegram Notifications for Task Lifecycle Events",
       "spec_file": "specs/notifications.md",
       "is_planned": false,
-      "sha256": "63419e31af44b4167194f509e78776074f31354d41c5c5ab1e909b94eebeca74",
-      "verified_sha256": "63419e31af44b4167194f509e78776074f31354d41c5c5ab1e909b94eebeca74",
+      "sha256": "75c3601b9ac6008c31627250428922d5738420a73c1623328c1e2935424378e1",
+      "verified_sha256": "75c3601b9ac6008c31627250428922d5738420a73c1623328c1e2935424378e1",
       "acceptance_criteria": [
         "AC-NOTIF-001.1",
         "AC-NOTIF-001.2"
@@ -189,8 +189,8 @@
       "title": "Scheduled Daily Brief Task Digest for Non-VIP Telegram Members",
       "spec_file": "specs/notifications.md",
       "is_planned": false,
-      "sha256": "569b44d90c8aa15324e563e28859b5e218d08eebc08679f60682d31047f8b3cf",
-      "verified_sha256": "569b44d90c8aa15324e563e28859b5e218d08eebc08679f60682d31047f8b3cf",
+      "sha256": "0d8bc1acdeae574ba570867f2bd8e76c93a060eab607ea8cf8e56e437228b48e",
+      "verified_sha256": "0d8bc1acdeae574ba570867f2bd8e76c93a060eab607ea8cf8e56e437228b48e",
       "acceptance_criteria": [
         "AC-NOTIF-002.1",
         "AC-NOTIF-002.2",
@@ -213,6 +213,35 @@
         "src/server/telegram/config.ts",
         "src/server/telegram/digest.ts",
         "src/server/telegram/formatters.ts",
+        "src/server/telegram/types.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "NOTIF-003",
+      "title": "Per-User Telegram Notification Subscriptions",
+      "spec_file": "specs/notifications.md",
+      "is_planned": false,
+      "sha256": "3cecd681eb37f4174abe6753a0a3cfe7d95b1eca2daa4f220b1385b162aebcd2",
+      "verified_sha256": "3cecd681eb37f4174abe6753a0a3cfe7d95b1eca2daa4f220b1385b162aebcd2",
+      "acceptance_criteria": [
+        "AC-NOTIF-003.1",
+        "AC-NOTIF-003.2",
+        "AC-NOTIF-003.3",
+        "AC-NOTIF-003.4"
+      ],
+      "verified_criteria": [
+        "AC-NOTIF-003.1",
+        "AC-NOTIF-003.2",
+        "AC-NOTIF-003.3",
+        "AC-NOTIF-003.4"
+      ],
+      "implementation_files": [
+        "src/server/routes/telegram-routes.ts",
+        "src/server/telegram.ts",
+        "src/server/telegram/config.ts",
+        "src/server/telegram/digest.ts",
+        "src/server/telegram/notifications.ts",
         "src/server/telegram/types.ts"
       ],
       "status": "VERIFIED"

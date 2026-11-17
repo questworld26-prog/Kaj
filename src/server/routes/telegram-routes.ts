@@ -1,6 +1,7 @@
 // [spec: TG-001]
 // [spec: NOTIF-001]
 // [spec: NOTIF-002]
+// [spec: NOTIF-003]
 import type { Hono } from "hono";
 import {
   TelegramBotService,
@@ -13,7 +14,7 @@ export function registerTelegramRoutes(
   app: Hono,
   telegramBot?: TelegramBotService,
 ): void {
-  // REST: Telegram integration status & feature toggle (TG-001)
+  // REST: Telegram integration status & feature toggle (TG-001, NOTIF-003)
   app.get("/api/telegram/status", (c) => {
     const cfg = telegramBot ? telegramBot.getConfig() : loadTelegramConfig();
     return c.json({
@@ -24,6 +25,7 @@ export function registerTelegramRoutes(
       ),
       allowed_user_ids: cfg.allowed_user_ids,
       vip_users: cfg.vip_users || [],
+      user_notifications: cfg.user_notifications || {},
       daily_digest_enabled: Boolean(cfg.daily_digest_enabled),
       daily_digest_time: cfg.daily_digest_time || "08:00",
       default_status: cfg.default_status,
