@@ -12,6 +12,16 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v3.3.0`: Non-VIP Backup Alert Filtering, Codebase Modularization & Deterministic Promotion Tests
+
+- **Status**: ✅ RELEASED
+- **Focus**: Restricts automated daily backup Telegram alerts (`BACKUP-001`) exclusively to non-VIP recipients while keeping creator-only completion and inbox `Seen/Triaged` alerts intact for VIP members, decomposes all 6 `>600-line` source modules below the modularity threshold with zero code-review warnings, and eliminates wall-clock flakiness across promotion tests.
+- **Deliverables**:
+  - [x] **BACKUP-001 / VIP Exclusion for Backup Status Alerts**: Updated `broadcastBackupMessage` in `src/server/telegram/notifications.ts` to reuse `resolveNonVipRecipients`, ensuring daily backup success and failure messages never go to VIP members while preserving creator-scoped completion and inbox `Seen/Triaged` alerts.
+  - [x] **Core Modularization (`< 600` Lines Across All `src/` Files)**: Decomposed `src/server/repository.ts` (`src/server/repositories/`), `src/server/app.ts` (`src/server/routes/`), `src/server/telegram.ts` (`telegram/notifications.ts` & `telegram/handlers.ts`), `src/client/App.tsx` (`useKajApp.ts`), `src/client/components/CalendarView.tsx` (`calendar/`), and `src/client/components/SwimlaneBoard.tsx` (`board/`), eliminating all Senior Engineer modularity warnings.
+  - [x] **Deterministic Promotion Tests**: Added fake wall-clock fixtures (`vi.useFakeTimers()`) to `week-promotion.test.ts`, `action-today.test.ts`, and `recurrence-promotion.test.ts` so `TASK-007`, `TASK-008`, and `TASK-009` suites pass independently of calendar week transitions.
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (148/148 across 33 active specs), 0 Quad-Persona code-review warnings, 111 unit/integration tests + 61 Playwright E2E tests passing, clean working tree, version bumped to `3.3.0`.
+
 ### Release `v3.2.0`: Daily Non-VIP Telegram Digest, 90-Day Auto-Purge Telemetry Snapshots & Cockpit Creator Percentages
 
 - **Status**: ✅ RELEASED
