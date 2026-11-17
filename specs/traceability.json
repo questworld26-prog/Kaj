@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-17T04:30:27.449092+00:00",
-  "total_requirements": 36,
-  "active_requirements_count": 36,
+  "last_audited_at": "2026-11-17T04:44:29.051380+00:00",
+  "total_requirements": 37,
+  "active_requirements_count": 37,
   "planned_requirements_count": 0,
-  "active_criteria_count": 160,
-  "verified_criteria_count": 160,
+  "active_criteria_count": 163,
+  "verified_criteria_count": 163,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -771,6 +771,7 @@
         "src/client/App.tsx",
         "src/client/components/CompletedDrawer.tsx",
         "src/client/components/TaskModal.tsx",
+        "src/client/components/task-modal/DetailsNotesField.tsx",
         "src/client/components/task-modal/EmojiPickerPopover.tsx",
         "src/client/components/task-modal/FormatToolbar.tsx",
         "src/client/components/task-modal/RecurrenceFields.tsx",
@@ -1078,6 +1079,30 @@
         "src/client/components/cockpit/CockpitTelemetryDeck.tsx",
         "src/client/components/cockpit/types.ts",
         "src/server/retention.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "UI-015",
+      "title": "Task Modal Formatted Notes Preview and Click-to-Edit",
+      "spec_file": "specs/ui.md",
+      "is_planned": false,
+      "sha256": "d89d1084cf83d6a0049d8c8014751811c8296e79a8869420ca711a511ad4de3a",
+      "verified_sha256": "d89d1084cf83d6a0049d8c8014751811c8296e79a8869420ca711a511ad4de3a",
+      "acceptance_criteria": [
+        "AC-UI-015.1",
+        "AC-UI-015.2",
+        "AC-UI-015.3"
+      ],
+      "verified_criteria": [
+        "AC-UI-015.1",
+        "AC-UI-015.2",
+        "AC-UI-015.3"
+      ],
+      "implementation_files": [
+        "src/client/components/TaskModal.tsx",
+        "src/client/components/task-modal/DetailsNotesField.tsx",
+        "src/client/components/task-modal/format-renderer.tsx"
       ],
       "status": "VERIFIED"
     }

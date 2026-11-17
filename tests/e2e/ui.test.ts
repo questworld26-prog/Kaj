@@ -1535,5 +1535,83 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     );
     expect(bg).toBe("rgb(28, 34, 36)");
   });
+
+  // [verifies: UI-015/AC-UI-015.1]
+  test("renders formatted task details when formatting toolbar is collapsed", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.locator('[data-testid="add-task-btn"]').click();
+    const dialog = page.locator("dialog#task-dialog");
+    await expect(dialog).toBeVisible();
+
+    const formatToggleBtn = dialog.locator(
+      '[data-testid="details-format-toggle-btn"]',
+    );
+    await formatToggleBtn.click();
+
+    const detailsTextarea = dialog.locator('textarea[name="details"]');
+    await detailsTextarea.fill(
+      "Alpha **bold** *italic* ***both*** <u>underlined</u>\n- First bullet\n- Second bullet\n1. Step one\n2. Step two",
+    );
+
+    // Collapse the formatting toolbar -> raw textarea switches to rendered formatted preview
+    await formatToggleBtn.click();
+
+    await expect(
+      dialog.locator('[data-testid="details-format-toolbar"]'),
+    ).not.toBeVisible();
+    const preview = dialog.locator('[data-testid="details-rendered-preview"]');
+    await expect(preview).toBeVisible();
+    await expect(preview.locator("strong", { hasText: "bold" })).toBeVisible();
+    await expect(preview.locator("em", { hasText: "italic" })).toBeVisible();
+    await expect(preview.locator("strong em", { hasText: "both" })).toBeVisible();
+    await expect(preview.locator("u", { hasText: "underlined" })).toBeVisible();
+    await expect(preview.locator("ul li")).toHaveCount(2);
+    await expect(preview.locator("ol li")).toHaveCount(2);
+  });
+
+  // [verifies: UI-015/AC-UI-015.2]
+  test("switches rendered Task Details & Notes preview to focused edit mode on click", async ({
+    page,
+  }) => {
+    const createRes = await page.request.post("/api/tasks", {
+      data: {
+        title: "UI015 Click To Edit Notes Task",
+        status: "todo",
+        details: "Check **deploy** <u>steps</u>",
+      },
+    });
+    expect(createRes.ok()).toBeTruthy();
+    const created = (await createRes.json()) as { id: string };
+
+    await page.goto("/");
+    await page
+      .locator(`[data-testid="task-card"][data-task-id="${created.id}"]`)
+      .first()
+      .click();
+
+    const dialog = page.locator("dialog#task-dialog");
+    await expect(dialog).toBeVisible();
+
+    const preview = dialog.locator('[data-testid="details-rendered-preview"]');
+    await expect(preview).toBeVisible();
+    await expect(preview.locator("strong", { hasText: "deploy" })).toBeVisible();
+    await expect(preview.locator("u", { hasText: "steps" })).toBeVisible();
+
+    // Clicking the rendered notes area opens the editable textarea with raw markup focused
+    await preview.click();
+    const detailsTextarea = dialog.locator('textarea[name="details"]');
+    await expect(detailsTextarea).toBeVisible();
+    await expect(detailsTextarea).toHaveValue("Check **deploy** <u>steps</u>");
+    await expect(detailsTextarea).toBeFocused();
+
+    // Editing notes and blurring back out returns to updated rendered preview
+    await detailsTextarea.fill("Check **release** *ready*");
+    await dialog.locator('input[name="title"]').focus();
+    await expect(preview).toBeVisible();
+    await expect(preview.locator("strong", { hasText: "release" })).toBeVisible();
+    await expect(preview.locator("em", { hasText: "ready" })).toBeVisible();
+  });
 });
 

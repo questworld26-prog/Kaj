@@ -1,5 +1,6 @@
 // [spec: UI-004]
 // [spec: UI-008]
+// [spec: UI-015]
 import { h } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import {
@@ -10,11 +11,11 @@ import {
   type RecurrenceRule,
   formatDisplayDateDMY,
 } from "../../shared/types.js";
+import { DetailsNotesField } from "./task-modal/DetailsNotesField.js";
 import {
   EmojiPickerPopover,
   EMOJI_PREFIX_REGEX,
 } from "./task-modal/EmojiPickerPopover.js";
-import { FormatToolbar } from "./task-modal/FormatToolbar.js";
 import { RecurrenceFields } from "./task-modal/RecurrenceFields.js";
 
 interface TaskModalProps {
@@ -43,9 +44,7 @@ export function TaskModal({
   onComplete,
 }: TaskModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const detailsTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [isEmojiPaletteOpen, setIsEmojiPaletteOpen] = useState(false);
-  const [showFormatToolbar, setShowFormatToolbar] = useState(false);
 
   const [formData, setFormData] = useState<Partial<Task>>({
     title: "",
@@ -66,7 +65,6 @@ export function TaskModal({
   // Sync state when task prop changes
   useEffect(() => {
     setIsEmojiPaletteOpen(false);
-    setShowFormatToolbar(false);
     if (task) {
       setFormData({
         title: task.title,
@@ -475,63 +473,15 @@ export function TaskModal({
             />
           </div>
 
-          {/* Details / Description with Format Toolbar */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-semibold text-gray-300">
-                Task Details & Notes
-              </label>
-              <button
-                type="button"
-                data-testid="details-format-toggle-btn"
-                onClick={() => setShowFormatToolbar(!showFormatToolbar)}
-                title={
-                  showFormatToolbar
-                    ? "Hide formatting menu"
-                    : "Show formatting menu"
-                }
-                aria-label="Toggle text formatting menu"
-                aria-pressed={showFormatToolbar}
-                className={`px-2 py-0.5 rounded text-[11px] font-medium flex items-center gap-1 border transition-colors ${
-                  showFormatToolbar
-                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
-                    : "bg-[#1C2224] text-gray-400 border-[#2A3235] hover:text-gray-200 hover:border-gray-600"
-                }`}
-              >
-                <span className="font-serif font-bold text-xs leading-none">
-                  Format
-                </span>
-                <span className="text-[10px] leading-none opacity-80">
-                  {showFormatToolbar ? "▲" : "▼"}
-                </span>
-              </button>
-            </div>
-
-            {showFormatToolbar && (
-              <FormatToolbar
-                textareaRef={detailsTextareaRef}
-                details={formData.details || ""}
-                onDetailsChange={(nextDetails) =>
-                  setFormData({ ...formData, details: nextDetails })
-                }
-              />
-            )}
-
-            <textarea
-              ref={detailsTextareaRef}
-              name="details"
-              rows={3}
-              placeholder="Full markdown notes, links, acceptance criteria..."
-              value={formData.details}
-              onInput={(e) =>
-                setFormData({
-                  ...formData,
-                  details: (e.target as HTMLTextAreaElement).value,
-                })
-              }
-              className="w-full px-3 py-2 rounded-xl bg-[#1C2224] border border-[#2A3235] text-xs text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none"
-            />
-          </div>
+          {/* Details / Description with Format Toolbar & Rendered Preview */}
+          <DetailsNotesField
+            details={formData.details || ""}
+            isOpen={isOpen}
+            taskKey={task?.id || "__new__"}
+            onDetailsChange={(nextDetails) =>
+              setFormData({ ...formData, details: nextDetails })
+            }
+          />
         </div>
 
         {/* Modal Footer */}

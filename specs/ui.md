@@ -165,6 +165,16 @@ Acceptance Criteria:
 - AC-UI-014.3: When displaying the monthly velocity chart, the system shall render chronological bar columns for the recent 6 calendar months stacked by task creator attribution with unspecified tasks attributed to the configured non-VIP member.
 - AC-UI-014.4: While aggregating monthly completion velocity, the system shall combine live completed tasks with archived telemetry snapshot totals accurately without console or runtime errors.
 
+## UI-015: Task Modal Formatted Notes Preview and Click-to-Edit
+
+When viewing non-empty task details inside the task editor modal with the formatting toolbar collapsed, the system shall render the formatted notes visually and switch to the editable text area when the notes area or format toggle is activated.
+
+Acceptance Criteria:
+- AC-UI-015.1: When the formatting toolbar is collapsed and task details contain non-empty text, the system shall render bold, italic, bold-italic, underlined text, bulleted lists, and numbered lists inside the Task Details & Notes container.
+- AC-UI-015.2: When the user clicks or activates the rendered Task Details & Notes preview, the system shall switch immediately into edit mode and focus the editable notes input with the raw markup text intact.
+- AC-UI-015.3: While rendering formatted Task Details & Notes in preview mode, the system shall safely neutralize untrusted markup as plain text without executing embedded scripts or applying formatting outside the task modal notes container.
+
+
 
 
 
