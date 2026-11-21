@@ -1,4 +1,5 @@
 // [spec: TG-001]
+// [spec: TG-002]
 // [spec: NOTIF-001]
 // [spec: NOTIF-002]
 // [spec: NOTIF-003]
@@ -145,6 +146,10 @@ export class TelegramBotService {
         {
           command: "today",
           description: "View today tasks with quick actions",
+        },
+        {
+          command: "updates",
+          description: "Get clean task status updates (supports keyword queries)",
         },
         {
           command: "search",

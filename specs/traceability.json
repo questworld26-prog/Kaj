@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-21T05:39:14.469037+00:00",
-  "total_requirements": 39,
-  "active_requirements_count": 39,
+  "last_audited_at": "2026-11-21T07:32:44.139905+00:00",
+  "total_requirements": 40,
+  "active_requirements_count": 40,
   "planned_requirements_count": 0,
-  "active_criteria_count": 168,
-  "verified_criteria_count": 168,
+  "active_criteria_count": 172,
+  "verified_criteria_count": 172,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -643,6 +643,33 @@
         "src/server/telegram/parser.ts",
         "src/server/telegram/transport.ts",
         "src/server/telegram/types.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "TG-002",
+      "title": "Deterministic Task Update Inquiries with VIP Scoping and Cosine Similarity",
+      "spec_file": "specs/telegram.md",
+      "is_planned": false,
+      "sha256": "a3745fc5bab221e25e331335bbbb695cb548a0495c477a4942714fed8e8e6c88",
+      "verified_sha256": "a3745fc5bab221e25e331335bbbb695cb548a0495c477a4942714fed8e8e6c88",
+      "acceptance_criteria": [
+        "AC-TG-002.1",
+        "AC-TG-002.2",
+        "AC-TG-002.3",
+        "AC-TG-002.4"
+      ],
+      "verified_criteria": [
+        "AC-TG-002.1",
+        "AC-TG-002.2",
+        "AC-TG-002.3",
+        "AC-TG-002.4"
+      ],
+      "implementation_files": [
+        "src/server/telegram.ts",
+        "src/server/telegram/formatters.ts",
+        "src/server/telegram/handlers.ts",
+        "src/server/telegram/matcher.ts"
       ],
       "status": "VERIFIED"
     },

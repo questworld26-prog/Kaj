@@ -30,6 +30,7 @@ This document records the foundational architectural decisions, technical trade-
 14. [ADR-014: Automated Daily Encrypted Backups with Strict Directory Isolation](#adr-014-automated-daily-encrypted-backups-with-strict-directory-isolation)
 15. [ADR-015: Schema Versioning (`PRAGMA user_version`), Staged Migrations & WAL-Safe Recovery](#adr-015-schema-versioning-pragma-user_version-staged-migrations--wal-safe-recovery)
 16. [ADR-016: 90-Day Completed Task Retention Auto-Purge & Atomic Telemetry Snapshots](#adr-016-90-day-completed-task-retention-auto-purge--atomic-telemetry-snapshots)
+17. [ADR-017: Deterministic Word + Character Trigram TF-IDF Cosine Similarity for Telegram Task Updates](#adr-017-deterministic-word--character-trigram-tf-idf-cosine-similarity-for-telegram-task-updates)
 15. [ADR-015: Schema Versioning (`PRAGMA user_version`), Staged Migrations & WAL-Safe Recovery](#adr-015-schema-versioning-pragma-user_version-staged-migrations--wal-safe-recovery)
 
 ---
@@ -496,3 +497,32 @@ Chosen **Option 1**: Enforce a 90-day retention sweep (`src/server/retention.ts`
 - **Positive**: `tasks` table and Completed Archive drawer stay bounded to the active retention window while historical Cockpit telemetry remains 100% accurate.
 - **Positive**: Atomic transaction prevents double-counting or orphaned telemetry drops on failure.
 - **Negative**: Individual task titles and descriptions older than the retention window are permanently removed from SQLite once purged (recoverable only from encrypted backups created prior to purge).
+
+---
+
+## ADR-017: Deterministic Word + Character Trigram TF-IDF Cosine Similarity for Telegram Task Updates
+
+- **Status**: ACCEPTED
+- **Date**: 2026-11-21
+- **Deciders**: Systems Architect, Backend Engineering, Product Lead
+
+### Context & Problem Statement
+
+VIP and regular members frequently ask the Telegram bot for status updates using conversational phrases or multi-item numbered lists whose wording differs slightly from stored task titles (for example, `"Boubou land Christmas lunch reservation"` vs. `"Boubou land Christmas lunch"`, or `"Singapore airlines membership and app"` vs. `"Singapore Airlines membership sign up"`). Existing Telegram `/search` uses a plain substring check (`.includes()`) limited to incomplete tasks, so conversational queries either fail to match, omit completed (`done`) items, or accidentally create new triage tasks.
+
+### Considered Options
+
+1. **Pure-TypeScript TF-IDF Cosine Similarity (Word Tokens + Character 3-Grams, Exact-Substring Tie-Breaker)**: Compute length-normalized cosine similarity in-memory over lowercase stopword-filtered words combined with 3-character n-grams weighted by corpus IDF (`Math.log((N + 1) / (df + 1)) + 1`), enforcing a similarity cutoff (`>= 0.25`), querying active and completed (`done`) tasks, and strictly filtering candidates by `created_by` for VIP requesters.
+2. **Whole-Phrase Substring / Levenshtein Fuzzy Matching**: Substring checks break on reordered or extra words; character edit distance penalizes legitimate multi-word additions of differing lengths.
+3. **Local Neural Embeddings or Cloud LLM Calls**: Adds either heavy model runtime memory exceeding Kaj's ~95 MB RSS budget (see ADR-001 / ADR-012) or external API latency, rate limits, and credential requirements.
+
+### Decision Outcome
+
+Chosen **Option 1**: Implement deterministic word + character trigram TF-IDF cosine similarity (`src/server/telegram/matcher.ts`, `specs/telegram.md` `TG-002`) for `/updates` and `"any update"` Telegram inquiries without inline action buttons.
+
+### Consequences
+
+- **Positive**: Zero external dependencies, sub-millisecond evaluation, and ~0 MB persistent RSS overhead in the background daemon.
+- **Positive**: Accurately matches reworded titles and minor typos while rejecting unrelated queries below the cosine threshold and scoping VIP requests strictly to their own `created_by` tasks.
+- **Negative**: Handles lexical similarity, word variations, and typos rather than deep semantic synonyms across completely distinct vocabulary (e.g., `"Xmas"` vs. `"Christmas"`).
+

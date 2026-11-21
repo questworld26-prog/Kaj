@@ -1,13 +1,18 @@
 // [spec: TG-001]
+// [spec: TG-002]
 // [spec: NOTIF-001]
 import { TASK_STATUSES, type TaskStatus } from "../../shared/types.js";
 import type { EventBus } from "../events.js";
 import type { ProjectRepository, TaskRepository } from "../repository.js";
+import { isVipUser } from "./digest.js";
 import {
   buildNewTaskActionKeyboard,
   buildTaskActionKeyboard,
+  formatQueriedTaskUpdates,
+  formatTaskOverviewByStage,
   formatTaskSummary,
 } from "./formatters.js";
+import { parseUpdateInquiry, rankTasksByCosineSimilarity } from "./matcher.js";
 import { isAuthorizedTelegramUser } from "./notifications.js";
 import { parseTelegramTaskInput } from "./parser.js";
 import type {
@@ -50,6 +55,49 @@ function resolveTelegramCreatorName(
     return from.username.trim();
   }
   return userId !== undefined ? `Telegram User ${userId}` : "Telegram User";
+}
+
+function normalizeCreatorIdentity(raw: string): string {
+  return raw
+    .replace(/\[\s*vip\s*\]/gi, "")
+    .replace(/\(\s*vip\s*\)/gi, "")
+    .replace(/^vip[:\s-]+/gi, "")
+    .replace(/[\s-]+vip$/gi, "")
+    .trim()
+    .toLowerCase();
+}
+
+function resolveRequesterScope(
+  config: TelegramConfig,
+  userId?: number,
+  from?: { id: number; first_name?: string; username?: string },
+): { requesterName: string; isVip: boolean; creatorAliases: Set<string> } {
+  const mappedName = resolveTelegramCreatorName(config, userId, from);
+  const requesterName =
+    mappedName
+      .replace(/\[\s*vip\s*\]/gi, "")
+      .replace(/\(\s*vip\s*\)/gi, "")
+      .trim() || mappedName;
+
+  const isVip =
+    (userId !== undefined && isVipUser(String(userId), config.vip_users)) ||
+    isVipUser(mappedName, config.vip_users) ||
+    isVipUser(requesterName, config.vip_users) ||
+    Boolean(from?.username && isVipUser(from.username, config.vip_users));
+
+  const creatorAliases = new Set<string>();
+  const addAlias = (val?: string | number | null) => {
+    if (val === undefined || val === null) return;
+    const norm = normalizeCreatorIdentity(String(val));
+    if (norm) creatorAliases.add(norm);
+  };
+  addAlias(mappedName);
+  addAlias(requesterName);
+  addAlias(from?.first_name);
+  addAlias(from?.username);
+  if (userId !== undefined) addAlias(String(userId));
+
+  return { requesterName, isVip, creatorAliases };
 }
 
 async function handleCallbackQuery(
@@ -169,9 +217,57 @@ export async function handleTelegramUpdate(
         "Commands:",
         "• Send any text or /add <title> [#Project] [!today|!week|!todo] [@today|@tomorrow|@DD-MM|@DD-MM-YYYY] [due:DD-MM|due:DD-MM-YYYY] [wait:Person]",
         "• /search <query> (or /s <query> or ? <query>) — Search tasks by title & details",
+        "• /updates [query] (or 'Any updates on ...') — Get clean status updates across all stages",
         "• /today — List tasks in Today",
       ].join("\n"),
     );
+    return;
+  }
+
+  // 1b. /updates or natural-language update inquiry ("Any updates on...")
+  const updateInquiry = parseUpdateInquiry(text);
+  if (updateInquiry) {
+    const { requesterName, isVip, creatorAliases } = resolveRequesterScope(
+      config,
+      userId,
+      msg.from,
+    );
+    const projects = projectRepo.listProjects(true);
+    const projectNamesById = new Map(projects.map((p) => [p.id, p.name]));
+
+    const allTasks = taskRepo.listTasks(true);
+    const scopedTasks = isVip
+      ? allTasks.filter((t) => {
+          const creator = t.created_by ? normalizeCreatorIdentity(t.created_by) : "";
+          return creator.length > 0 && creatorAliases.has(creator);
+        })
+      : allTasks;
+
+    const replyChunks =
+      updateInquiry.items.length === 0
+        ? formatTaskOverviewByStage(scopedTasks, projectNamesById, {
+            requesterName,
+            isVip,
+          })
+        : formatQueriedTaskUpdates(
+            updateInquiry.items.map((queryItem) => ({
+              query: queryItem,
+              matches: rankTasksByCosineSimilarity(
+                queryItem,
+                scopedTasks,
+                projectNamesById,
+                {
+                  maxResults: updateInquiry.items.length > 1 ? 1 : 5,
+                },
+              ),
+            })),
+            projectNamesById,
+            { requesterName, isVip },
+          );
+
+    for (const chunk of replyChunks) {
+      await transport.sendMessage(chatId, chunk);
+    }
     return;
   }
 

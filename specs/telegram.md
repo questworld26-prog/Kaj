@@ -18,5 +18,16 @@ Acceptance Criteria:
 - AC-TG-001.7: The system shall support a `user_names` dictionary via `KAJ_TELEGRAM_USER_NAMES` (or JSON config) mapping user IDs or usernames to names, attributing tasks to the configured creator name (falling back to Telegram username or user ID) in `created_by`.
 - AC-TG-001.8: When loading configuration, the system shall support designating VIP users via `KAJ_TELEGRAM_USER_NAMES` (`[VIP]` suffix or `{ "name": "...", "vip": true }` object) or `KAJ_TELEGRAM_VIP_USERS`, exposing the resolved VIP user identities via `GET /api/vip-users`.
 
+## TG-002: Deterministic Task Update Inquiries with VIP Scoping and Cosine Similarity
+
+When an authorized Telegram user sends a task update command or natural-language update inquiry, the system shall match queried items using deterministic TF-IDF cosine similarity across active and completed task stages and reply with a read-only formatted summary scoped by VIP creator permissions.
+
+Acceptance Criteria:
+- AC-TG-002.1: When an authorized Telegram message invokes the updates command or starts with an update-inquiry phrase, the system shall answer with task status updates without creating a new task.
+- AC-TG-002.2: While resolving queried task names from single-line or multi-line numbered inquiries, the system shall rank matches using word and character trigram TF-IDF cosine similarity across every stage including completed tasks.
+- AC-TG-002.3: When a configured VIP user requests task updates, the system shall restrict candidate matching and overview summaries strictly to tasks whose creator attribution matches that VIP identity.
+- AC-TG-002.4: When a non-VIP user requests task updates, the system shall search across all task creators and deliver a clean read-only status summary without inline action buttons.
+
+
 
 
