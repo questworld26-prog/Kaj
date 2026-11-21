@@ -12,6 +12,19 @@
 
 ## Roadmap & Milestones (Latest at Top)
 
+### Release `v3.4.0`: Cosine-Matched Telegram Task Updates, Per-User Notification Subscriptions, Tracking & Calendar Visual Refinement & Rich Modal Notes
+
+- **Status**: ✅ RELEASED
+- **Focus**: Introduces deterministic word + character-trigram TF-IDF cosine similarity `/updates` and `"any update"` Telegram inquiries scoped strictly by VIP `created_by` identity (`TG-002`, `ADR-017`), adds per-user Telegram notification subscription routing (`NOTIF-003`), automatically rolls forward past action dates for incomplete tasks (`TASK-011`), stacks Weekly Velocity by creator with a Week/Month cockpit toggle (`UI-012`, `UI-014`), adds formatted task notes preview with click-to-edit (`UI-015`), and refines Tracking visuals across board/cockpit/mobile (`UI-016`) and Calendar Month/Week views (`UI-017`).
+- **Deliverables**:
+  - [x] **TG-002 & ADR-017 / Cosine-Matched Telegram Task Updates & VIP Scoping**: Added pure-TypeScript TF-IDF cosine similarity matcher (`src/server/telegram/matcher.ts`) supporting `/updates` and conversational `"any update"` multi-line inquiries across all workflow stages (including `done`), strictly scoped to matching VIP `created_by` attribution with clean read-only replies.
+  - [x] **NOTIF-003 / Per-User Telegram Notification Subscriptions**: Enabled per-user subscription arrays (`task_completed`, `task_triaged`, `daily_digest`, `backup_status`) in `KAJ_TELEGRAM_USER_NAMES` config (`config.ts`, `digest.ts`, `notifications.ts`).
+  - [x] **TASK-011 / Automatic Past Action Date Roll-Forward**: Automatically rolls forward `< today` `action_date` values on incomplete active tasks to today on daemon startup, 15-minute scheduler runs, and `GET /api/board` (`task-promotions.ts`).
+  - [x] **UI-012 & UI-014 / Cockpit Velocity Stacked Creator & Month/Week Toggle**: Stacked the Desktop Cockpit Weekly Velocity chart by `created_by` attributing unspecified creators to the configured non-VIP default, and added an accessible `Week`/`Month` segmented toggle combining live + archived telemetry snapshots (`CockpitTelemetryDeck.tsx`, `retention.ts`).
+  - [x] **UI-015 / Formatted Task Details Preview & Click-to-Edit**: Added XSS-safe VDOM rendering (`format-renderer.tsx`, `DetailsNotesField.tsx`) for bold, italic, bold-italic, underline, bullet lists, and numbered lists when **Format** is collapsed, switching seamlessly into focused edit mode on click.
+  - [x] **UI-016 & UI-017 / Tracking Red-Overdue & Calendar Yellow Highlights**: Restricted `tracking` crimson highlight (`#4A1215`) across Kanban, Cockpit, and Mobile exclusively to overdue `due_date < today` tasks (`shouldHighlightTaskCardRed`), and styled Calendar Month/Week badges for `tracking` tasks with dark yellow (`#4A3B09`).
+- **Exit Criteria**: 100% active criteria verified in Spec Guardian (172/172 across 40 active specs), 0 Quad-Persona code-review warnings, 128 unit/integration tests + 70 Playwright E2E tests passing, clean working tree, version bumped to `3.4.0`.
+
 ### Release `v3.3.0`: Non-VIP Backup Alert Filtering, Codebase Modularization & Deterministic Promotion Tests
 
 - **Status**: ✅ RELEASED
