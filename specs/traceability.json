@@ -1,10 +1,10 @@
 {
-  "last_audited_at": "2026-11-17T04:44:29.051380+00:00",
-  "total_requirements": 37,
-  "active_requirements_count": 37,
+  "last_audited_at": "2026-11-21T05:39:14.469037+00:00",
+  "total_requirements": 39,
+  "active_requirements_count": 39,
   "planned_requirements_count": 0,
-  "active_criteria_count": 163,
-  "verified_criteria_count": 163,
+  "active_criteria_count": 168,
+  "verified_criteria_count": 168,
   "reverse_traceability": {
     "untagged_files_count": 0,
     "untagged_src_symbols_count": 0,
@@ -1103,6 +1103,51 @@
         "src/client/components/TaskModal.tsx",
         "src/client/components/task-modal/DetailsNotesField.tsx",
         "src/client/components/task-modal/format-renderer.tsx"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "UI-016",
+      "title": "Tracking Task Red Highlight Restricted to Past Due Dates",
+      "spec_file": "specs/ui.md",
+      "is_planned": false,
+      "sha256": "3d0b830052015be4b59cba01f35b261d2fba267bafcb492e8fbb37fa6eb71c1b",
+      "verified_sha256": "3d0b830052015be4b59cba01f35b261d2fba267bafcb492e8fbb37fa6eb71c1b",
+      "acceptance_criteria": [
+        "AC-UI-016.1",
+        "AC-UI-016.2",
+        "AC-UI-016.3"
+      ],
+      "verified_criteria": [
+        "AC-UI-016.1",
+        "AC-UI-016.2",
+        "AC-UI-016.3"
+      ],
+      "implementation_files": [
+        "src/client/components/board/SwimlaneTaskCard.tsx",
+        "src/client/components/cockpit/CockpitExecutionDeck.tsx",
+        "src/client/components/mobile/MobileTaskCard.tsx",
+        "src/shared/types.ts"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "requirement_id": "UI-017",
+      "title": "Calendar Tracking Task Yellow Background Highlight",
+      "spec_file": "specs/ui.md",
+      "is_planned": false,
+      "sha256": "cf9424c21a7855965b2513074ce89f9a30b2f3426ef70972dc0350ffa0318f7c",
+      "verified_sha256": "cf9424c21a7855965b2513074ce89f9a30b2f3426ef70972dc0350ffa0318f7c",
+      "acceptance_criteria": [
+        "AC-UI-017.1",
+        "AC-UI-017.2"
+      ],
+      "verified_criteria": [
+        "AC-UI-017.1",
+        "AC-UI-017.2"
+      ],
+      "implementation_files": [
+        "src/client/components/calendar/CalendarGridViews.tsx"
       ],
       "status": "VERIFIED"
     }

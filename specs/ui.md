@@ -174,6 +174,25 @@ Acceptance Criteria:
 - AC-UI-015.2: When the user clicks or activates the rendered Task Details & Notes preview, the system shall switch immediately into edit mode and focus the editable notes input with the raw markup text intact.
 - AC-UI-015.3: While rendering formatted Task Details & Notes in preview mode, the system shall safely neutralize untrusted markup as plain text without executing embedded scripts or applying formatting outside the task modal notes container.
 
+## UI-016: Tracking Task Red Highlight Restricted to Past Due Dates
+
+When rendering an active task in status `tracking`, the system shall retain the standard card surface unless the task has a due date strictly earlier than today's local calendar date.
+
+Acceptance Criteria:
+- AC-UI-016.1: When a task card renders a task in status `tracking` without a past due date, the system shall render the standard Chronos card surface background even when its action date matches today.
+- AC-UI-016.2: When a task card renders a task in status `tracking` whose due date is strictly earlier than today's local calendar date, the system shall apply the dark red highlight surface across desktop board, cockpit, and mobile views.
+- AC-UI-016.3: While evaluating non-tracking active tasks for urgency highlighting, the system shall preserve today-action red card highlighting without modifying tracking roll-forward schedules or non-tracking task surfaces.
+
+## UI-017: Calendar Tracking Task Yellow Background Highlight
+
+When the Calendar view renders action or due badges for an active task in status `tracking`, the system shall display those calendar event badges with a yellow background surface across Month and Week views.
+
+Acceptance Criteria:
+- AC-UI-017.1: When rendering calendar event badges in Month or Week view for a task in status `tracking`, the system shall apply a yellow background surface and contrasting yellow text while keeping accessible text readability.
+- AC-UI-017.2: While rendering calendar event badges for non-tracking tasks, the system shall preserve green-tinted styling for action dates and rose-tinted styling for due dates.
+
+
+
 
 
 

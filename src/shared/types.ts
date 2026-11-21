@@ -270,14 +270,45 @@ export function isDateInCurrentMondayWeek(
 }
 
 /**
- * Compute Chronos dark-mode card background and border classes, switching to high-visibility crimson when action_date is today.
+ * Check whether `dueDate` (`YYYY-MM-DD`) is strictly earlier than today's local calendar date.
+ */
+// [spec: UI-016]
+export function isDueDatePast(
+  dueDate: string | null | undefined,
+  todayStr?: string,
+): boolean {
+  if (!dueDate || !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) return false;
+  return dueDate < (todayStr || formatLocalDateYMD());
+}
+
+/**
+ * Determine whether a task card should use the urgent dark-red highlight surface.
+ * Tracking tasks highlight red only when due_date is strictly in the past;
+ * all other active tasks highlight red when action_date equals today.
  */
 // [spec: UI-010]
+// [spec: UI-016]
+export function shouldHighlightTaskCardRed(
+  task: Pick<Task, "status" | "action_date" | "due_date">,
+  todayStr?: string,
+): boolean {
+  if (task.status === "tracking") {
+    return isDueDatePast(task.due_date, todayStr);
+  }
+  return isActionDateToday(task.action_date, todayStr);
+}
+
+/**
+ * Compute Chronos dark-mode card background and border classes, switching to high-visibility crimson when highlighted.
+ */
+// [spec: UI-010]
+// [spec: UI-016]
 export function getTaskCardSurfaceClasses(
-  actionDate: string | null | undefined,
+  task: Pick<Task, "status" | "action_date" | "due_date">,
   normalBorderClass = "border-[#2A3235]",
+  todayStr?: string,
 ): string {
-  return isActionDateToday(actionDate)
+  return shouldHighlightTaskCardRed(task, todayStr)
     ? "bg-[#4A1215] border-red-500/70"
     : `bg-[#1C2224] ${normalBorderClass}`;
 }

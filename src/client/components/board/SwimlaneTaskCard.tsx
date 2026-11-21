@@ -2,12 +2,13 @@
 // [spec: UI-002]
 // [spec: UI-005]
 // [spec: UI-010]
+// [spec: UI-016]
 // [spec: TASK-006]
 import { h } from "preact";
 import {
   type Task,
   formatDisplayDateDMY,
-  isActionDateToday,
+  shouldHighlightTaskCardRed,
 } from "../../../shared/types.js";
 import type { CardDensity } from "../TopBar.js";
 
@@ -102,15 +103,18 @@ export function SwimlaneTaskCard({
   onDropCard,
 }: SwimlaneTaskCardProps) {
   const priStyle = PRIORITY_STYLES[task.priority] || PRIORITY_STYLES.week;
-  const isUrgentToday = isActionDateToday(task.action_date);
+  const isUrgentToday = shouldHighlightTaskCardRed(task);
   const cardBgClass = isUrgentToday ? "bg-[#4A1215]" : "bg-[#1C2224]";
   const cardBorderClass = isUrgentToday
     ? "border border-red-500/70"
     : "border border-[#2A3235]";
+  const trackingBorderClass = isUrgentToday
+    ? "border-2 border-dashed border-red-500/70"
+    : "border-2 border-dashed border-amber-500/60";
   const frameBorderClass = isDraggedOver
     ? "ring-2 ring-emerald-400 border-emerald-400 shadow-md"
     : isTracking
-      ? "border-2 border-dashed border-amber-500/60"
+      ? trackingBorderClass
       : cardBorderClass;
 
   const handleDragStart = (e: DragEvent) => {
@@ -200,7 +204,7 @@ export function SwimlaneTaskCard({
         isDraggedOver
           ? "ring-2 ring-emerald-400 border-emerald-400 shadow-md"
           : isTracking
-            ? "border-2 border-dashed border-amber-500/60 shadow-amber-950/20"
+            ? `${trackingBorderClass} shadow-amber-950/20`
             : cardBorderClass
       }`}
       onClick={handleCardClick}

@@ -218,17 +218,18 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     // Close modal
     await reorderModal.locator('[data-testid="close-modal-btn"]').click();
 
-    // Verify board renders Beta before Alpha
+    // Verify board renders Beta before Alpha once async reorder completes
     const pods = page.locator('[data-testid^="swimlane-pod-"]');
-    const podIds = await pods.evaluateAll((list) =>
-      list.map((el) =>
-        el.getAttribute("data-testid")?.replace("swimlane-pod-", ""),
-      ),
-    );
-
-    const betaIdx = podIds.indexOf(p2.id);
-    const alphaIdx = podIds.indexOf(p1.id);
-    expect(betaIdx).toBeLessThan(alphaIdx);
+    await expect
+      .poll(async () => {
+        const podIds = await pods.evaluateAll((list) =>
+          list.map((el) =>
+            el.getAttribute("data-testid")?.replace("swimlane-pod-", ""),
+          ),
+        );
+        return podIds.indexOf(p2.id) - podIds.indexOf(p1.id);
+      })
+      .toBeLessThan(0);
   });
 
   // [verifies: UI-001/AC-UI-001.6]
@@ -609,6 +610,8 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     const targetDayCell2 = page.locator(
       `[data-testid="calendar-day-cell"][data-date="${date2}"]`,
     );
+    await targetDayCell2.scrollIntoViewIfNeeded();
+    await badgeOn1.scrollIntoViewIfNeeded();
     await badgeOn1.dragTo(targetDayCell2);
 
     // Verify task moved to date2
@@ -1612,6 +1615,229 @@ test.describe("Kaj (কাজ) Bento × Chronos UI Verification", () => {
     await expect(preview).toBeVisible();
     await expect(preview.locator("strong", { hasText: "release" })).toBeVisible();
     await expect(preview.locator("em", { hasText: "ready" })).toBeVisible();
+  });
+
+  // [verifies: UI-016/AC-UI-016.1]
+  test("retains neutral #1C2224 background on tracking tasks without past due_date even when action_date is today", async ({
+    page,
+  }) => {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+    const noDueRes = await page.request.post("/api/tasks", {
+      data: {
+        title: "Tracking Action Today No Due",
+        status: "tracking",
+        waiting_on: "Vendor quote",
+        action_date: todayStr,
+        due_date: null,
+      },
+    });
+    const dueTodayRes = await page.request.post("/api/tasks", {
+      data: {
+        title: "Tracking Action Today Due Today",
+        status: "tracking",
+        waiting_on: "Customs",
+        action_date: todayStr,
+        due_date: todayStr,
+      },
+    });
+    const tNoDue = (await noDueRes.json()) as { id: string };
+    const tDueToday = (await dueTodayRes.json()) as { id: string };
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.click('[data-testid="nav-board-btn"]');
+
+    const boardCard = page
+      .locator(`[data-testid="task-card"][data-task-id="${tNoDue.id}"]`)
+      .first();
+    await expect(boardCard).toBeVisible();
+    expect(
+      await boardCard.evaluate((el) => window.getComputedStyle(el).backgroundColor),
+    ).toBe("rgb(28, 34, 36)");
+
+    await page.click('[data-testid="density-minimal-btn"]');
+    expect(
+      await boardCard.evaluate((el) => window.getComputedStyle(el).backgroundColor),
+    ).toBe("rgb(28, 34, 36)");
+    await page.click('[data-testid="density-compact-btn"]');
+
+    await page.click('[data-testid="nav-cockpit-btn"]');
+    const cockpitCard = page
+      .locator('[data-testid="cockpit-tracking-container"]')
+      .locator(`[data-task-id="${tDueToday.id}"]`)
+      .first();
+    await expect(cockpitCard).toBeVisible();
+    expect(
+      await cockpitCard.evaluate((el) => window.getComputedStyle(el).backgroundColor),
+    ).toBe("rgb(28, 34, 36)");
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    const mobileCard = page
+      .locator('[data-testid="mobile-cockpit-view"]')
+      .locator(`[data-mobile-task-id="${tNoDue.id}"]`)
+      .first();
+    await expect(mobileCard).toBeVisible();
+    expect(
+      await mobileCard.evaluate((el) => window.getComputedStyle(el).backgroundColor),
+    ).toBe("rgb(28, 34, 36)");
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+  });
+
+  // [verifies: UI-016/AC-UI-016.2]
+  test("highlights tracking task card red across board, cockpit, and mobile when due_date is in the past", async ({
+    page,
+  }) => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const pastDueStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
+
+    const createdRes = await page.request.post("/api/tasks", {
+      data: {
+        title: "Tracking Overdue Delivery",
+        status: "tracking",
+        waiting_on: "Carrier",
+        due_date: pastDueStr,
+      },
+    });
+    const overdueTracking = (await createdRes.json()) as { id: string };
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.click('[data-testid="nav-board-btn"]');
+
+    const boardCard = page
+      .locator(`[data-testid="task-card"][data-task-id="${overdueTracking.id}"]`)
+      .first();
+    await expect(boardCard).toBeVisible();
+    expect(
+      await boardCard.evaluate((el) => window.getComputedStyle(el).backgroundColor),
+    ).toBe("rgb(74, 18, 21)");
+
+    await page.click('[data-testid="density-minimal-btn"]');
+    expect(
+      await boardCard.evaluate((el) => window.getComputedStyle(el).backgroundColor),
+    ).toBe("rgb(74, 18, 21)");
+    await page.click('[data-testid="density-compact-btn"]');
+
+    await page.click('[data-testid="nav-cockpit-btn"]');
+    const cockpitCard = page
+      .locator('[data-testid="cockpit-tracking-container"]')
+      .locator(`[data-task-id="${overdueTracking.id}"]`)
+      .first();
+    await expect(cockpitCard).toBeVisible();
+    expect(
+      await cockpitCard.evaluate((el) => window.getComputedStyle(el).backgroundColor),
+    ).toBe("rgb(74, 18, 21)");
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    const mobileCard = page
+      .locator('[data-testid="mobile-cockpit-view"]')
+      .locator(`[data-mobile-task-id="${overdueTracking.id}"]`)
+      .first();
+    await expect(mobileCard).toBeVisible();
+    expect(
+      await mobileCard.evaluate((el) => window.getComputedStyle(el).backgroundColor),
+    ).toBe("rgb(74, 18, 21)");
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+  });
+
+  // [verifies: UI-017/AC-UI-017.1]
+  test("highlights tracking task badges with yellow background in Calendar Month and Week views", async ({
+    page,
+  }) => {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+    await page.request.post("/api/tasks", {
+      data: {
+        title: "Calendar Yellow Tracking Badge",
+        status: "tracking",
+        waiting_on: "Passport Office",
+        action_date: todayStr,
+        due_date: todayStr,
+      },
+    });
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.click('[data-testid="nav-calendar-btn"]');
+
+    const monthActionBadge = page
+      .locator('[data-testid="calendar-month-grid"], [data-testid="calendar-view"]')
+      .locator('[data-testid="badge-action-date"]')
+      .filter({ hasText: "Calendar Yellow Tracking Badge" })
+      .first();
+    const monthDueBadge = page
+      .locator('[data-testid="calendar-view"]')
+      .locator('[data-testid="badge-due-date"]')
+      .filter({ hasText: "Calendar Yellow Tracking Badge" })
+      .first();
+
+    await expect(monthActionBadge).toBeVisible();
+    await expect(monthDueBadge).toBeVisible();
+    expect(
+      await monthActionBadge.evaluate((el) => window.getComputedStyle(el).backgroundColor),
+    ).toBe("rgb(74, 59, 9)");
+    expect(
+      await monthDueBadge.evaluate((el) => window.getComputedStyle(el).backgroundColor),
+    ).toBe("rgb(74, 59, 9)");
+
+    await page.click('[data-testid="view-week-btn"]');
+    const weekActionBadge = page
+      .locator('[data-testid="calendar-week-grid"]')
+      .locator('[data-testid="badge-action-date"]')
+      .filter({ hasText: "Calendar Yellow Tracking Badge" })
+      .first();
+    await expect(weekActionBadge).toBeVisible();
+    expect(
+      await weekActionBadge.evaluate((el) => window.getComputedStyle(el).backgroundColor),
+    ).toBe("rgb(74, 59, 9)");
+  });
+
+  // [verifies: UI-017/AC-UI-017.2]
+  test("preserves non-yellow action and due badge styling on non-tracking tasks in Calendar view", async ({
+    page,
+  }) => {
+    const now = new Date();
+    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
+
+    await page.request.post("/api/tasks", {
+      data: {
+        title: "Calendar Standard Todo Badge",
+        status: "todo",
+        action_date: tomorrowStr,
+        due_date: tomorrowStr,
+      },
+    });
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.click('[data-testid="nav-calendar-btn"]');
+
+    const actionBadge = page
+      .locator('[data-testid="calendar-view"]')
+      .locator('[data-testid="badge-action-date"]')
+      .filter({ hasText: "Calendar Standard Todo Badge" })
+      .first();
+    const dueBadge = page
+      .locator('[data-testid="calendar-view"]')
+      .locator('[data-testid="badge-due-date"]')
+      .filter({ hasText: "Calendar Standard Todo Badge" })
+      .first();
+
+    await expect(actionBadge).toBeVisible();
+    await expect(dueBadge).toBeVisible();
+    expect(
+      await actionBadge.evaluate((el) => window.getComputedStyle(el).backgroundColor),
+    ).not.toBe("rgb(74, 59, 9)");
+    expect(
+      await dueBadge.evaluate((el) => window.getComputedStyle(el).backgroundColor),
+    ).not.toBe("rgb(74, 59, 9)");
   });
 });
 

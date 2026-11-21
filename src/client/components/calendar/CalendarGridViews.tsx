@@ -1,4 +1,5 @@
 // [spec: UI-003]
+// [spec: UI-017]
 import { h } from "preact";
 import type { CalendarEvent, Task } from "../../../shared/types.js";
 import {
@@ -25,23 +26,27 @@ function CalendarEventBadge({
   onSelectTask,
 }: CalendarEventBadgeProps) {
   const isAction = variant === "action";
-  const colorClasses = isAction
-    ? compact
-      ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20"
-      : "bg-emerald-500/10 text-emerald-200 border border-emerald-500/30 hover:bg-emerald-500/20"
-    : compact
-      ? "bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20"
-      : "bg-rose-500/10 text-rose-200 border border-rose-500/30 hover:bg-rose-500/20";
+  const matchedTask = tasks.find((x) => x.id === ev.task_id);
+  const isTracking = matchedTask?.status === "tracking";
+  const colorClasses = isTracking
+    ? "bg-[#4A3B09] text-yellow-100 border border-yellow-500/70 hover:bg-[#5C490C]"
+    : isAction
+      ? compact
+        ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20"
+        : "bg-emerald-500/10 text-emerald-200 border border-emerald-500/30 hover:bg-emerald-500/20"
+      : compact
+        ? "bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20"
+        : "bg-rose-500/10 text-rose-200 border border-rose-500/30 hover:bg-rose-500/20";
 
   return (
     <div
       data-testid={isAction ? "badge-action-date" : "badge-due-date"}
+      data-task-status={matchedTask?.status}
       draggable={!ev.is_virtual}
       onDragStart={(e) => startCalendarEventDrag(e, ev, variant)}
       onClick={(e) => {
         e.stopPropagation();
-        const t = tasks.find((x) => x.id === ev.task_id);
-        if (t) onSelectTask(t);
+        if (matchedTask) onSelectTask(matchedTask);
       }}
       className={`${
         compact
@@ -53,7 +58,13 @@ function CalendarEventBadge({
       title={compact ? `${isAction ? "Action" : "Due"} Date: ${ev.title}` : undefined}
     >
       <span
-        className={`${isAction ? "text-emerald-400" : "text-rose-400"} ${compact ? "" : "font-bold"}`}
+        className={`${
+          isTracking
+            ? "text-yellow-300"
+            : isAction
+              ? "text-emerald-400"
+              : "text-rose-400"
+        } ${compact ? "" : "font-bold"}`}
       >
         {isAction ? "▶" : "⚑"}
       </span>

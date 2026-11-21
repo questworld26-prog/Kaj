@@ -1,6 +1,7 @@
 // [spec: UI-009]
 // [spec: UI-010]
 // [spec: UI-011]
+// [spec: UI-016]
 import { h } from "preact";
 import {
   type Task,
@@ -87,7 +88,7 @@ export function CockpitExecutionDeck({
                   key={task.id}
                   data-task-id={task.id}
                   onClick={() => onSelectTask(task)}
-                  className={`group rounded-xl border hover:border-purple-400/60 p-3 flex items-center justify-between gap-3 transition-colors cursor-pointer ${getTaskCardSurfaceClasses(task.action_date, "border-purple-500/30")}`}
+                  className={`group rounded-xl border hover:border-purple-400/60 p-3 flex items-center justify-between gap-3 transition-colors cursor-pointer ${getTaskCardSurfaceClasses(task, "border-purple-500/30")}`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <button
@@ -179,7 +180,7 @@ export function CockpitExecutionDeck({
                   key={task.id}
                   data-task-id={task.id}
                   onClick={() => onSelectTask(task)}
-                  className={`group rounded-xl border hover:border-emerald-500/50 p-3 flex items-center justify-between gap-3 transition-colors cursor-pointer ${getTaskCardSurfaceClasses(task.action_date)}`}
+                  className={`group rounded-xl border hover:border-emerald-500/50 p-3 flex items-center justify-between gap-3 transition-colors cursor-pointer ${getTaskCardSurfaceClasses(task)}`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <button
@@ -247,8 +248,9 @@ export function CockpitExecutionDeck({
             upcomingTasks.slice(0, 6).map((task) => (
               <div
                 key={task.id}
+                data-task-id={task.id}
                 onClick={() => onSelectTask(task)}
-                className={`rounded-xl border hover:border-gray-500 p-2.5 flex items-center justify-between text-xs transition-colors cursor-pointer ${getTaskCardSurfaceClasses(task.action_date)}`}
+                className={`rounded-xl border hover:border-gray-500 p-2.5 flex items-center justify-between text-xs transition-colors cursor-pointer ${getTaskCardSurfaceClasses(task)}`}
               >
                 <div className="flex items-center gap-2 truncate">
                   <span
@@ -314,8 +316,9 @@ export function CockpitExecutionDeck({
             trackingTasks.map((task) => (
               <div
                 key={task.id}
+                data-task-id={task.id}
                 onClick={() => onSelectTask(task)}
-                className={`rounded-xl border hover:border-amber-500/40 p-3 transition-colors cursor-pointer flex items-center justify-between gap-3 ${getTaskCardSurfaceClasses(task.action_date)}`}
+                className={`rounded-xl border hover:border-amber-500/40 p-3 transition-colors cursor-pointer flex items-center justify-between gap-3 ${getTaskCardSurfaceClasses(task)}`}
               >
                 <div className="min-w-0 flex items-center gap-2.5">
                   <button
