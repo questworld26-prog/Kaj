@@ -74,12 +74,31 @@ export interface TaskCosineMatch {
 }
 
 const SLASH_UPDATE_REGEX = /^\/updates?(?:@[a-z0-9_]+)?(?:\s+([\s\S]*))?$/i;
-const NATURAL_UPDATE_REGEX =
-  /^(?:(?:hi|hello|hey)[,!\s]+)?(?:(?:please|pls)\s+)?(?:(?:can\s+you\s+)?(?:give|send|share|show)\s+(?:me\s+)?(?:an?\s+)?updates?\s+(?:on|for|about)|any\s+updates?(?:\s+(?:on|for|about|please|pls))?|updates?\s+(?:on|for|about))\b[:?\s-]*([\s\S]*)$/i;
+const NATURAL_UPDATE_PATTERNS: ReadonlyArray<RegExp> = [
+  // "any update(s) [please] [on/for/about] ..."
+  /^(?:(?:hi|hello|hey)[,!\s]+)?any\s+updates?(?:\s+(?:please|pls))?(?:\s+(?:on|for|about))?\b[:?\s-]*([\s\S]*)$/i,
+  // "[please/can you/need/what is the/status] ... update(s) [please] (on|for|about) ..."
+  /^(?:(?:hi|hello|hey)[,!\s]+)?(?:(?:please|pls)\s+|(?:could|can)\s+(?:you|i)\s+(?:get|have|give|send|share|show)?\s*|need\s+|what(?:'s|\s+is)\s+the\s+|status\s+)(?:(?:give|send|share|show|get|provide)\s+(?:me\s+)?)?(?:an?\s+|me\s+)?updates?(?:\s+(?:please|pls))?\s+(?:on|for|about)\b[:?\s-]*([\s\S]*)$/i,
+  // "update(s) please [on/for/about] ..." or "update(s) (on|for|about) ..." or bare "updates?"
+  /^(?:(?:hi|hello|hey)[,!\s]+)?updates?\s+(?:please|pls)(?:\s+(?:on|for|about))?\b[:?\s-]*([\s\S]*)$/i,
+  /^(?:(?:hi|hello|hey)[,!\s]+)?updates?\s+(?:on|for|about)\b[:?\s-]*([\s\S]*)$/i,
+  /^(?:(?:hi|hello|hey)[,!\s]+)?updates?(?:\s+(?:please|pls))?\s*\?+$/i,
+];
+
+function extractNaturalUpdateBody(trimmedText: string): string | null {
+  for (const pattern of NATURAL_UPDATE_PATTERNS) {
+    const match = pattern.exec(trimmedText);
+    if (match) {
+      return (match[1] ?? "").trim();
+    }
+  }
+  return null;
+}
 
 function cleanQueryText(raw: string): string {
   return raw
     .replace(/^\s*(?:\d+[.)]\s*|[-*•]\s+)/, "")
+    .replace(/^(?:please|pls)\s+/i, "")
     .replace(/^(?:on|for|about)\s+/i, "")
     .replace(/^(?:the\s+)?following\s+tasks?(?:\s+please)?[:\s-]*/i, "")
     .replace(/\bplease\b[:?\s]*$/i, "")
@@ -89,23 +108,17 @@ function cleanQueryText(raw: string): string {
 
 /**
  * Detect whether an incoming Telegram message asks for task status updates
- * (`/updates ...`, `Any updates on ...`, `Update on ...`) rather than creating a task.
+ * (`/updates ...`, `Any updates on ...`, `Update please on ...`) rather than creating a task.
  */
 // [spec: TG-002]
 export function parseUpdateInquiry(rawText: string): ParsedUpdateInquiry | null {
   const trimmed = rawText.trim();
   if (!trimmed) return null;
 
-  let body: string | null = null;
   const slashMatch = SLASH_UPDATE_REGEX.exec(trimmed);
-  if (slashMatch) {
-    body = (slashMatch[1] ?? "").trim();
-  } else {
-    const naturalMatch = NATURAL_UPDATE_REGEX.exec(trimmed);
-    if (naturalMatch) {
-      body = (naturalMatch[1] ?? "").trim();
-    }
-  }
+  const body = slashMatch
+    ? (slashMatch[1] ?? "").trim()
+    : extractNaturalUpdateBody(trimmed);
 
   if (body === null) return null;
 

@@ -28,7 +28,7 @@ function createMockTransport() {
     async sendMessage(chatId, text, keyboard) {
       sentMessages.push({ chatId, text, keyboard });
     },
-    async answerCallbackQuery() {},
+    async answerCallbackQuery() { },
   };
 
   return { transport, sentMessages };
@@ -100,24 +100,45 @@ describe("Telegram Task Update Inquiries & Cosine Similarity (TG-002)", () => {
       },
     });
 
-    expect(sentMessages).toHaveLength(2);
-    expect(sentMessages[0].text).toContain("Passport renewal appointment");
-    expect(sentMessages[1].text).toContain("Passport renewal appointment");
-    expect(taskRepo.listTasks(true)).toHaveLength(1);
-
-    // Normal task title starting with "Update " still creates a task
     await service.handleUpdate({
       update_id: 3,
       message: {
         message_id: 3,
         chat: { id: 1001 },
         from: { id: 1001, first_name: "Oblix" },
-        text: "Update phone number for India SIP",
+        text: "Update please on Passport renewal",
       },
     });
 
-    expect(taskRepo.listTasks(true)).toHaveLength(2);
-    expect(sentMessages[2].text).toContain("Added:");
+    expect(sentMessages).toHaveLength(3);
+    expect(sentMessages[0].text).toContain("Passport renewal appointment");
+    expect(sentMessages[1].text).toContain("Passport renewal appointment");
+    expect(sentMessages[2].text).toContain("Passport renewal appointment");
+    expect(taskRepo.listTasks(true)).toHaveLength(1);
+
+    // Normal task title starting with "Update " or "Please update <action>" still creates a task
+    await service.handleUpdate({
+      update_id: 4,
+      message: {
+        message_id: 4,
+        chat: { id: 1001 },
+        from: { id: 1001, first_name: "Oblix" },
+        text: "Update phone number for India SIP",
+      },
+    });
+    await service.handleUpdate({
+      update_id: 5,
+      message: {
+        message_id: 5,
+        chat: { id: 1001 },
+        from: { id: 1001, first_name: "Oblix" },
+        text: "Please update website links",
+      },
+    });
+
+    expect(taskRepo.listTasks(true)).toHaveLength(3);
+    expect(sentMessages[3].text).toContain("Added:");
+    expect(sentMessages[4].text).toContain("Added:");
   });
 
   // [verifies: TG-002/AC-TG-002.2]
